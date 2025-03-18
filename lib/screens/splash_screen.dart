@@ -1,0 +1,77 @@
+// ignore_for_file: library_private_types_in_public_api
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../screens/login_screen.dart';
+import '../theme/app_colors.dart';
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _navigateToLogin();
+  }
+
+  void _navigateToLogin() {
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.primary,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildLogo(),
+            SizedBox(height: 20.h),
+            _buildTitle(),
+            SizedBox(height: 20.h),
+            _buildLoadingIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return Image.asset(
+      'assets/images/splash_logo.png',
+      width: 120.w,
+    );
+  }
+
+  Widget _buildTitle() {
+    return Text(
+      "Mahad Test",
+      style: TextStyle(
+        fontSize: 20.sp,
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return SpinKitThreeBounce(
+      color: Colors.white,
+      size: 20.w,
+    );
+  }
+}

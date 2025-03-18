@@ -1,0 +1,15 @@
+import 'package:test_app/core/init/systemChrome/system_chrome_init.dart';
+import 'package:test_app/core/init/widgetBuild/widget_build.dart';
+
+import '../../export_files.dart';
+import 'intl/intl_init.dart';
+
+// ignore: non_constant_identifier_names
+Future<void> FullInit() async {
+  widgetBuildInit();
+  // await dotenvInit();
+  await SystemChrome_init();
+  // await storageInit();
+  // await initLanguages();
+  intl_init();
+}
