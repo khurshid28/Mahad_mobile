@@ -2,11 +2,18 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:test_app/blocs/auth/auth_bloc.dart';
+import 'package:test_app/blocs/auth/auth_state.dart';
+import 'package:test_app/controller/auth_controller.dart';
+import 'package:test_app/core/const/const.dart';
 import 'package:test_app/core/utilitiets/phone_number_formats.dart';
 import 'package:test_app/screens/main_screen.dart';
-import 'package:test_app/theme/app_colors.dart';
+import 'package:test_app/service/loading_service.dart';
+import 'package:test_app/service/storage_service.dart';
+import 'package:test_app/service/toast_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,11 +27,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   bool isPasswordVisible = true;
 
+  LoadingService loadingService = LoadingService();
+  ToastService toastService = ToastService();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: AppColors.whiteColor,
+      backgroundColor: AppConstant.whiteColor,
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(20.w),
@@ -42,6 +52,33 @@ class _LoginScreenState extends State<LoginScreen> {
               _buildPasswordInput(),
               const Spacer(),
               _buildLoginButton(),
+
+              BlocListener<AuthBloc, AuthState>(
+                child: SizedBox(),
+                listener: (context, state) async {
+                  if (state is AuthWaitingState) {
+                    loadingService.showLoading(context);
+                  } else if (state is AuthErrorState) {
+                    loadingService.closeLoading(context);
+                    toastService.error(message: state.message ?? "Xatolik Bor");
+                  } else if (state is AuthSuccessState) {
+                    loadingService.closeLoading(context);
+                    Future.wait([
+                      StorageService().write(
+                        StorageService.access_token,
+                        state.access_token.toString(),
+                      ),
+                      StorageService().write(StorageService.user, state.user),
+                    ]);
+                    toastService.success(
+                      message: state.message ?? "Successfully",
+                    );
+                   _navigateToHome();
+
+                    
+                  }
+                },
+              ),
             ],
           ),
         ),
@@ -66,13 +103,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextFormField(
       controller: phoneController,
       keyboardType: TextInputType.phone,
-      cursorColor: AppColors.secondaryColor,
+      cursorColor: AppConstant.secondaryColor,
       decoration: _inputDecoration(
         labelText: '+998',
         hintText: 'Telefon raqam',
         iconPath: 'assets/icons/phone.svg',
       ),
-      style: TextStyle(color: AppColors.blackColor, fontSize: 16.sp),
+      style: TextStyle(color: AppConstant.blackColor, fontSize: 16.sp),
       inputFormatters: <TextInputFormatter>[uzFormat],
     );
   }
@@ -81,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextFormField(
       controller: passwordController,
       keyboardType: TextInputType.visiblePassword,
-      cursorColor: AppColors.secondaryColor,
+      cursorColor: AppConstant.secondaryColor,
       obscureText: isPasswordVisible,
       decoration: _inputDecoration(
         labelText: 'Parol',
@@ -90,55 +127,51 @@ class _LoginScreenState extends State<LoginScreen> {
         suffixIcon: IconButton(
           icon: Icon(
             isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.greyColor,
+            color: AppConstant.greyColor,
           ),
           onPressed:
               () => setState(() => isPasswordVisible = !isPasswordVisible),
         ),
       ),
-      style: TextStyle(color: AppColors.blackColor, fontSize: 16.sp),
+      style: TextStyle(color: AppConstant.blackColor, fontSize: 16.sp),
     );
   }
 
   void _navigateToHome() {
-     if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-      }
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+      );
+    }
   }
 
   Widget _buildLoginButton() {
-    return  
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            padding: EdgeInsets.symmetric(vertical: 14.h),
-          ),
-          onPressed: () {
-            // BlocProvider.of<AuthBloc>(context).add(
-            //   LoginEvent(
-            //     phone: phoneController.text,
-            //     password: passwordController.text,
-            //   ),
-            // );
-            _navigateToHome();
-          },
-          child: Center(
-            child: Text(
-              "Kirish",
-              style: TextStyle(color: Colors.white, fontSize: 16.sp),
-            ),
-          ),
-        );
-    
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppConstant.primaryColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+        padding: EdgeInsets.symmetric(vertical: 14.h),
+      ),
+      onPressed: ()async {
+      print(phoneController.text.length);
+       print(phoneController.text);
+        print(passwordController.text.length);
+         print(passwordController.text);
+      //  await AuthController.login(context, login: phoneController.text, password: passwordController.text);
+        
+      },
+      child: Center(
+        child: Text(
+          "Kirish",
+          style: TextStyle(color: Colors.white, fontSize: 16.sp),
+        ),
+      ),
+    );
+
     // return BlocBuilder<AuthBloc, AuthState>(
     //   builder: (context, state) {
-    //     return 
+    //     return
     //     },
     // );
   }
@@ -155,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SvgPicture.asset(
           iconPath,
           colorFilter: ColorFilter.mode(
-            AppColors.secondaryColor,
+            AppConstant.secondaryColor,
             BlendMode.srcIn,
           ),
         ),
@@ -163,22 +196,22 @@ class _LoginScreenState extends State<LoginScreen> {
       suffixIcon: suffixIcon,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10.r),
-        borderSide: BorderSide(color: AppColors.secondaryColor),
+        borderSide: BorderSide(color: AppConstant.secondaryColor),
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10.r),
-        borderSide: BorderSide(color: AppColors.secondaryColor),
+        borderSide: BorderSide(color: AppConstant.secondaryColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10.r),
-        borderSide: BorderSide(color: AppColors.secondaryColor),
+        borderSide: BorderSide(color: AppConstant.secondaryColor),
       ),
       labelText: labelText,
-      labelStyle: TextStyle(color: AppColors.blackColor, fontSize: 16.sp),
+      labelStyle: TextStyle(color: AppConstant.blackColor, fontSize: 16.sp),
       hintText: hintText,
-      hintStyle: TextStyle(color: AppColors.greyColor, fontSize: 16.sp),
+      hintStyle: TextStyle(color: AppConstant.greyColor, fontSize: 16.sp),
       errorStyle: TextStyle(
-        color: AppColors.redColor,
+        color: AppConstant.redColor,
         fontWeight: FontWeight.w400,
       ),
     );

@@ -6,9 +6,11 @@ class CustomAppBar extends StatelessWidget {
     super.key,
     required this.titleText,
     required this.isLeading,
+    this.actions
   });
   String titleText;
   bool isLeading;
+   List<Widget>? actions;
   @override
   Widget build(BuildContext context) {
     return
@@ -17,6 +19,7 @@ class CustomAppBar extends StatelessWidget {
       automaticallyImplyLeading: false,
       surfaceTintColor: Colors.transparent,
       backgroundColor: AppConstant.whiteColor,
+      actions: actions,
       title: Text(
               titleText,
               style: TextStyle(

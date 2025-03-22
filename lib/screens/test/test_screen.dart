@@ -1,7 +1,6 @@
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/section.dart';
 import 'package:test_app/screens/test/finish_screen.dart';
-import 'package:test_app/theme/app_colors.dart';
 
 class TestScreen extends StatefulWidget {
   final Section section;
@@ -130,7 +129,7 @@ class _TestScreenState extends State<TestScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppConstant.primaryColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),

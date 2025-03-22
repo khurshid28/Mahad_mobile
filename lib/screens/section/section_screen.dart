@@ -5,7 +5,6 @@ import 'package:test_app/models/book.dart';
 import 'package:test_app/models/result.dart';
 import 'package:test_app/models/section.dart';
 import 'package:test_app/screens/test/test_screen.dart';
-import 'package:test_app/theme/app_colors.dart';
 import 'package:test_app/widgets/result_card.dart';
 import 'package:test_app/widgets/section_card.dart';
 
@@ -131,7 +130,7 @@ class _SectionScreenState extends State<SectionScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: AppConstant.primaryColor,
                               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.r),
                               ),
@@ -158,7 +157,7 @@ class _SectionScreenState extends State<SectionScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.secondaryColor,
+                              backgroundColor: AppConstant.secondaryColor,
                               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.r),
                               ),

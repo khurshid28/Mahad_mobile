@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:test_app/core/const/const.dart';
 import 'package:test_app/export_files.dart';
-import 'package:test_app/models/book.dart';
 import 'package:test_app/models/result.dart';
 import 'package:test_app/models/section.dart';
 import 'package:test_app/screens/section/section_screen.dart';
 import 'package:test_app/widgets/my_result_card.dart';
-import 'package:test_app/widgets/section_card.dart';
 
 class MyResultScreen extends StatefulWidget {
   

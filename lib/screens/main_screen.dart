@@ -5,6 +5,7 @@ import 'package:test_app/screens/book/books_body.dart';
 import 'package:test_app/screens/book/books_screen.dart';
 import 'package:test_app/screens/home/home_screen.dart';
 import 'package:test_app/screens/profile.dart';
+import 'package:test_app/screens/rate/rate_screen.dart';
 import 'package:test_app/screens/saved/saved_body.dart';
 
 class MainScreen extends StatefulWidget {
@@ -19,7 +20,10 @@ class _MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
   List<String> appBarTitle = ['Asosiy', 'Kitoblar', 'Saqlanganlar', 'Profil'];
   List<Map<String, String>> svgIcon = [
-    {'main': 'assets/icons/house.svg', 'mainfill': 'assets/icons/housefill.svg'},
+    {
+      'main': 'assets/icons/house.svg',
+      'mainfill': 'assets/icons/housefill.svg',
+    },
     {
       'contract': 'assets/icons/magazine.svg',
       'contractfill': 'assets/icons/magazinefill.svg',
@@ -44,6 +48,38 @@ class _MainScreenState extends State<MainScreen> {
         child: CustomAppBar(
           titleText: appBarTitle[currentIndex],
           isLeading: false,
+
+          actions: [
+            GestureDetector(
+              onTap: () {
+                 Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RateScreen(),
+                          ),
+                        );
+              },
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(width: 20.w),
+                  SvgPicture.asset(
+                    "assets/icons/score.svg",
+                    height: 30.h,
+                  ),
+               SizedBox(width: 6.w),
+                  Text(
+                    "2",
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  SizedBox(width: 20.w),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
       body: selectBody(currentIndex),
@@ -59,7 +95,7 @@ class _MainScreenState extends State<MainScreen> {
         currentIndex: currentIndex,
         selectedFontSize: 12.sp,
         unselectedFontSize: 12.sp,
-        
+
         onTap: (value) {
           setState(() {
             currentIndex = value;
@@ -100,22 +136,17 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   selectBody<Widget>(int currentIndex) {
-    
-if (currentIndex==0) {
-      return  HomeScreen();
-    }
-    else if (currentIndex==1) {
-      return  BooksBody();
-    }
-     else if (currentIndex==2) {
-      return  SavedBody();
-    }
-
-   else if (currentIndex==3) {
+    if (currentIndex == 0) {
+      return HomeScreen();
+    } else if (currentIndex == 1) {
+      return BooksBody();
+    } else if (currentIndex == 2) {
+      return SavedBody();
+    } else if (currentIndex == 3) {
       return const ProfileScreen();
     }
     return HomeScreen();
-    
+
     // if (currentIndex == 0) {
     //   return const HomeScreen();
     // } else if (currentIndex == 1) {

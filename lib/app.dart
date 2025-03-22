@@ -1,3 +1,5 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:test_app/blocs/auth/auth_bloc.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/screens/splash_screen.dart';
 
@@ -11,24 +13,28 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Test App',
-          theme: ThemeData(primarySwatch: Colors.green),
-          home: const SplashScreen(),
+        return MultiBlocProvider(
+          providers: providers,
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Test App',
+            theme: ThemeData(primarySwatch: Colors.green),
+            home: const SplashScreen(),
+          ),
         );
-        // return BlocProvider(
-        //   create: (context) => AuthBloc(),
-        //   child: MaterialApp(
-        //     debugShowCheckedModeBanner: false,
-        //     title: 'Test App',
-        //     theme: ThemeData(
-        //       primarySwatch: Colors.green,
-        //     ),
-        //     home: const SplashScreen(),
-        //   ),
-        // );
+       
       },
     );
   }
 }
+
+
+
+List<BlocProvider> providers = [
+
+  BlocProvider<AuthBloc>(
+    create: (BuildContext context) => AuthBloc(),
+    lazy: false,
+  ),
+
+];

@@ -1,6 +1,4 @@
 import 'package:test_app/export_files.dart';
-import 'package:test_app/models/section.dart';
-import 'package:test_app/theme/app_colors.dart';
 
 class FinishTestScreen extends StatefulWidget {
   @override
@@ -40,7 +38,7 @@ class _FinishTestScreenState extends State<FinishTestScreen> {
                           TextSpan(
                             text: '17/25',
                             style: TextStyle(
-                        color: AppColors.primary,
+                        color:AppConstant.primaryColor,
                         fontWeight: FontWeight.w700,
                         fontSize: 24.sp,
                       ),
@@ -71,7 +69,7 @@ class _FinishTestScreenState extends State<FinishTestScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor:AppConstant.primaryColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),

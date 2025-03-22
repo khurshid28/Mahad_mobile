@@ -1,3 +1,5 @@
+import 'package:test_app/core/init/env/dotenv_init.dart';
+import 'package:test_app/core/init/storage/storage_init.dart';
 import 'package:test_app/core/init/systemChrome/system_chrome_init.dart';
 import 'package:test_app/core/init/widgetBuild/widget_build.dart';
 
@@ -7,9 +9,9 @@ import 'intl/intl_init.dart';
 // ignore: non_constant_identifier_names
 Future<void> FullInit() async {
   widgetBuildInit();
-  // await dotenvInit();
+  await dotenvInit();
   await SystemChrome_init();
-  // await storageInit();
+  await storageInit();
   // await initLanguages();
   intl_init();
 }

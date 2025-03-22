@@ -114,7 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const Spacer(),
             Text(
-              'Ilova versiyasi: 1.0.0',
+              'Ilova versiyasi: 1.0.2',
               style: TextStyle(
                 color: AppConstant.greyColor,
                 fontSize: 12.sp,
