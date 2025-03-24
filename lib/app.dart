@@ -10,6 +10,7 @@ import 'package:test_app/blocs/subject/subject_all_bloc.dart';
 import 'package:test_app/blocs/test/test_bloc.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/screens/splash_screen.dart';
+import 'package:test_app/widgets/build/build.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
             title: 'Test App',
             theme: ThemeData(primarySwatch: Colors.green),
             home: const SplashScreen(),
+             builder: MaterialAppCustomBuilder.builder,
           ),
         );
       },
