@@ -14,5 +14,6 @@ class AuthSuccessState extends AuthState {
 class AuthErrorState extends AuthState {
   String? title;
   String? message;
-  AuthErrorState({required this.message, required this.title});
+  int? statusCode;
+  AuthErrorState({required this.message, required this.title,required this.statusCode});
 }

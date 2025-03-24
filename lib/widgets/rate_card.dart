@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/rate.dart';
+import 'package:test_app/service/storage_service.dart';
 
 class RateCard extends StatelessWidget {
   final Rate rate;
@@ -10,7 +11,11 @@ class RateCard extends StatelessWidget {
   final VoidCallback onTap;
   RateCard({required this.rate, required this.onTap});
   bool IsMe() {
-    return rate.rate==2;
+   
+    Map? user = StorageService().read(StorageService.user);
+    return rate.id.toString() ==user?["id"].toString() ;
+
+  
   }
 
  
@@ -35,14 +40,14 @@ class RateCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                     rate.rate <4 ?    SvgPicture.asset(
-                          "assets/icons/${rate.rate}.svg",
+                     (rate.index+1) <4 ?    SvgPicture.asset(
+                          "assets/icons/${rate.index+1}.svg",
                           width: 40.w,
                         ): Container(
                           width: 40.w,
                           height: 40.w,
                           alignment: Alignment.center,
-                          child: Text(rate.rate.toString(),style: TextStyle(
+                          child: Text((rate.index+1).toString(),style: TextStyle(
                             fontSize: 14.sp,fontWeight: FontWeight.w700
                           ),),
                           decoration: BoxDecoration(

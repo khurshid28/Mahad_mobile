@@ -19,7 +19,9 @@ class StorageService {
   static String access_token = 'access_token';
   static String user = 'user';
 
-  
 
-  
+  static String result = 'result';
+  static String sections = 'sections';
+
+
 }

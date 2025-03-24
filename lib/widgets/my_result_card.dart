@@ -7,13 +7,14 @@ import 'package:test_app/models/result.dart';
 import 'package:test_app/models/section.dart';
 
 class MyResultCard extends StatelessWidget {
-  final Section section;
    final Result result;
   // Har bir subject uchun alohida border rangi
   final VoidCallback onTap;
-  MyResultCard({required this.section, required this.onTap,required this.result});
+  MyResultCard({ required this.onTap,required this.result});
+
+  int get test_count  =>result.test["_count"]?["test_items"] ?? 1;
   bool isFailed() {
-    return 0.56 > (section.solved / section.count);
+    return 0.56 > (result.solved / test_count);
   }
 
   @override
@@ -45,7 +46,7 @@ class MyResultCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              section.name,
+                              "${result.test?["section"]?["book"]?["subject"]?["name"]}",
                               textAlign: TextAlign.left,
                               style: TextStyle(
                                 fontSize: 14.sp,
@@ -54,7 +55,7 @@ class MyResultCard extends StatelessWidget {
                             ),
                             Text(
                              
-                               DateFormat('dd.MM.yyyy').format(result.date),
+                               "${result.test?["section"]?["book"]?["name"]}",
                               textAlign: TextAlign.left,
                               style: TextStyle(
                                 color: Colors.grey.shade600,
@@ -71,17 +72,34 @@ class MyResultCard extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        "${result.solved}/${section.count}",
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color:
-                              isFailed()
-                                  ?  AppConstant.redColor  
-                                  : AppConstant.primaryColor,
-                        ),
+                      Column(
+                         crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "${result.solved}/${test_count}",
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  isFailed()
+                                      ?  AppConstant.redColor  
+                                      : AppConstant.primaryColor,
+                            ),
+                          ),
+
+                           Text(
+                             
+                               DateFormat('dd.MM.yyyy').format(result.date),
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.w200,
+                              ),
+                            ),
+                        ],
                       ),
                       SizedBox(width: 6.w),
                       SvgPicture.asset(

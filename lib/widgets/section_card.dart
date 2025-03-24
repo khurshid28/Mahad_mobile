@@ -10,8 +10,10 @@ class SectionCard extends StatelessWidget {
   final VoidCallback onTap;
   SectionCard({required this.section, required this.onTap});
   bool isFailed() {
-    return 0.56 > (section.solved / section.count);
+    return 56 > section.percent;
   }
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +52,7 @@ class SectionCard extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              "${section.solved}/${section.count}",
+                              "test soni: ${section.count} ta",
                               textAlign: TextAlign.left,
                               style: TextStyle(
                                 color: Colors.grey.shade600,
@@ -68,14 +70,14 @@ class SectionCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        "${((section.solved / section.count) * 100).round()}%",
+                        "${section.percent}%",
                         textAlign: TextAlign.left,
                         style: TextStyle(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w600,
                           color:
                               isFailed()
-                                  ? (section.solved !=0 ?  AppConstant.redColor :Colors.grey.shade400 )
+                                  ? (isFailed() ?  AppConstant.redColor :Colors.grey.shade400 )
                                   : AppConstant.primaryColor,
                         ),
                       ),

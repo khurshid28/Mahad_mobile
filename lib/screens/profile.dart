@@ -1,5 +1,9 @@
+import 'package:test_app/core/endpoints/endpoints.dart';
 import 'package:test_app/export_files.dart';
+import 'package:test_app/screens/login_screen.dart';
 import 'package:test_app/screens/my_result/my_result_screen.dart';
+import 'package:test_app/service/logout.dart';
+import 'package:test_app/service/storage_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,9 +26,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     'Chiqish',
   ];
   List<String> tileLink = ['/settingsScreen', '/ofertaScreen'];
+  Map getUser() {
+    var user = StorageService().read(StorageService.user);
+    if (user != null) {
+      return user;
+    }
+    return {"name": "", "phone": ""};
+  }
 
   @override
   Widget build(BuildContext context) {
+    Map user = getUser();
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16.h),
       child: Center(
@@ -36,17 +48,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
               backgroundColor: AppConstant.secondaryColor,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(50.r),
-                child: Image.asset(
-                  'assets/images/profile.jpg',
-                  width: 110.w,
-                  height: 110.w,
-                  fit: BoxFit.cover,
-                ),
+                child:
+                    user["imageUrl"] != null
+                        ? Image.network(
+                          // 'assets/images/profile.jpg',
+                          Endpoints.domain + user["imageUrl"].toString(),
+                          width: 110.w,
+                          height: 110.w,
+                          fit: BoxFit.cover,
+                        )
+                        : Image.asset(
+                          'assets/images/profile.jpg',
+                          width: 110.w,
+                          height: 110.w,
+                          fit: BoxFit.cover,
+                        ),
               ),
             ),
             SizedBox(height: 10.h),
             Text(
-              'Xurshid Ismoilov',
+              user["name"].toString(),
               style: TextStyle(
                 color: AppConstant.blackColor,
                 fontSize: 18.sp,
@@ -54,7 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             Text(
-              '+998 95 064 28 27',
+              user["phone"].toString(),
               style: TextStyle(
                 color: AppConstant.greyColor,
                 fontSize: 14.sp,
@@ -83,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           if (index == tileText.length - 2) {
                             // showLicensePage(context: context);
                           } else if (index == tileText.length - 1) {
-                            // showAboutDialog(context: context);
+                           Logout(context,message: "Logout successfully");
                           } else {
                             Navigator.of(context).pushNamed(
                               tileLink[index],
@@ -114,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const Spacer(),
             Text(
-              'Ilova versiyasi: 1.0.2',
+              'Ilova versiyasi: 1.0.3',
               style: TextStyle(
                 color: AppConstant.greyColor,
                 fontSize: 12.sp,

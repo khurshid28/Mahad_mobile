@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:test_app/core/const/const.dart';
+import 'package:test_app/screens/main_screen.dart';
+import 'package:test_app/service/storage_service.dart';
 import '../screens/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -21,12 +23,19 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _navigateToLogin() {
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
+        if ((StorageService().read(StorageService.access_token)) != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        }
       }
     });
   }
@@ -51,10 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Widget _buildLogo() {
-    return Image.asset(
-      'assets/images/splash_logo.png',
-      width: 120.w,
-    );
+    return Image.asset('assets/images/splash_logo.png', width: 120.w);
   }
 
   Widget _buildTitle() {
@@ -69,9 +75,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Widget _buildLoadingIndicator() {
-    return SpinKitThreeBounce(
-      color: Colors.white,
-      size: 20.w,
-    );
+    return SpinKitThreeBounce(color: Colors.white, size: 20.w);
   }
 }

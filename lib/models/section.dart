@@ -1,8 +1,10 @@
 class Section {
+  final int? id;
+
+  final int? test_id;
   final String name;
-  final int solved;
   final int count;
+  num percent;
 
-
-  Section({required this.name, required this.solved,required this.count});
+  Section({required this.name,  this.id,required this.count,this.percent =0, required this.test_id});
 }

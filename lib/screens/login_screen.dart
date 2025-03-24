@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     toastService.error(message: state.message ?? "Xatolik Bor");
                   } else if (state is AuthSuccessState) {
                     loadingService.closeLoading(context);
-                    Future.wait([
+                    await Future.wait([
                       StorageService().write(
                         StorageService.access_token,
                         state.access_token.toString(),
@@ -101,9 +101,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildPhoneInput() {
     return TextFormField(
+
       controller: phoneController,
       keyboardType: TextInputType.phone,
       cursorColor: AppConstant.secondaryColor,
+       onChanged: (value) => setState(() {
+        
+      }),
       decoration: _inputDecoration(
         labelText: '+998',
         hintText: 'Telefon raqam',
@@ -120,6 +124,9 @@ class _LoginScreenState extends State<LoginScreen> {
       keyboardType: TextInputType.visiblePassword,
       cursorColor: AppConstant.secondaryColor,
       obscureText: isPasswordVisible,
+      onChanged: (value) => setState(() {
+        
+      }),
       decoration: _inputDecoration(
         labelText: 'Parol',
         hintText: 'Parolni kiriting',
@@ -149,16 +156,19 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLoginButton() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppConstant.primaryColor,
+        backgroundColor: (phoneController.text.length==12 && passwordController.text.length>=8) ?  AppConstant.primaryColor  :AppConstant.greyColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
         padding: EdgeInsets.symmetric(vertical: 14.h),
       ),
       onPressed: ()async {
-      print(phoneController.text.length);
-       print(phoneController.text);
-        print(passwordController.text.length);
-         print(passwordController.text);
-      //  await AuthController.login(context, login: phoneController.text, password: passwordController.text);
+       
+  
+      var login ="+998${phoneController.text.replaceAll(" ", "")}";
+      var password =passwordController.text;
+      if (login.length==13 && password.length>=8) {
+         await AuthController.login(context, login: login, password: password);
+      }
+      
         
       },
       child: Center(

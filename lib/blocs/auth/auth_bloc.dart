@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart' as dio;
+import 'package:flutter/foundation.dart';
 import 'package:test_app/blocs/auth/auth_state.dart';
 import 'package:test_app/core/endpoints/endpoints.dart';
 import '../../core/network/dio_Client.dart';
@@ -15,8 +16,10 @@ class AuthBloc extends Cubit<AuthState> {
     dio.Response response = await dioClient.post(Endpoints.login,
         data: {'login': login,'password' : password}, 
     );
-    print(response.statusCode);
-    print(response.data);
+    if (kDebugMode) {
+      print(response.statusCode);
+      print(response.data);
+    }
 
     if (response.statusCode == 200) {
       emit(
@@ -29,7 +32,7 @@ class AuthBloc extends Cubit<AuthState> {
     } else {
       emit(
         AuthErrorState(
-            title: response.data["name"], message: response.data["message"]),
+            title: response.data["error"], message: response.data["error"],statusCode: response.statusCode),
       );
     }
 

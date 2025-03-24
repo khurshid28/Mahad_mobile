@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors_in_immutables, use_key_in_widget_constructors
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/subject.dart';
 
 class SubjectCard extends StatelessWidget {
@@ -21,26 +22,26 @@ class SubjectCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: borderColor, width: 1.5), // Fanning o‘ziga mos rang
+          borderRadius: BorderRadius.circular(15.r),
+          border: Border.all(color: borderColor, width: 1.5.w), // Fanning o‘ziga mos rang
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
+              child: Image.network(
                 subject.imagePath,
-                height: 80,
-                width: 80,
+                height: 80.w,
+                width: 80.w,
                 fit: BoxFit.cover,
               ),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 10.h),
             Text(
               subject.name,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
