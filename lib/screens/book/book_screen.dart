@@ -20,28 +20,28 @@ class BookScreen extends StatefulWidget {
 }
 
 class _BookScreenState extends State<BookScreen> {
-  
-
   @override
   void initState() {
     super.initState();
     SectionController.getAll(context);
   }
 
-   num getPercent(s){
-     var test = s["test"];
-     int count = test?["_count"]?["test_items"] ?? 1 ;
-     List results = test?["results"] ?? [] ;
-     var score = 0;
-     for (var r in results) {
-      score+=(r["solved"] as int);
-     }
+  num getPercent(s) {
+    var test = s["test"];
+    int count = test?["_count"]?["test_items"] ?? 1;
+    List results = test?["results"] ?? [];
+    if (results.isEmpty) {
+      return 0;
+    }
+    var score = 0;
+    for (var r in results) {
+      score += (r["solved"] as int);
+    }
 
-     return (score * 1000/(count * results.length)).floor()/10;
-
+    return (score * 1000 / (count * results.length)).floor() / 10;
   }
 
-ToastService toastService = ToastService();
+  ToastService toastService = ToastService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,27 +53,24 @@ ToastService toastService = ToastService();
       body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-             BlocListener<SectionAllBloc, SectionAllState>(
-              child: SizedBox(),
-              listener: (context, state) async {
-                if (state is SectionAllErrorState) {
-                  if (state.statusCode == 401) {
-                    Logout(context);
-                  } else {
-                    toastService.error(message: state.message ?? "Xatolik Bor");
-                  }
-                } else if (state is SectionAllSuccessState) {}
-              },
-            ),
-            
+          BlocListener<SectionAllBloc, SectionAllState>(
+            child: SizedBox(),
+            listener: (context, state) async {
+              if (state is SectionAllErrorState) {
+                if (state.statusCode == 401) {
+                  Logout(context);
+                } else {
+                  toastService.error(message: state.message ?? "Xatolik Bor");
+                }
+              } else if (state is SectionAllSuccessState) {}
+            },
+          ),
+
           bodySection(),
         ],
       ),
-      
     );
   }
-
- 
 
   Widget bodySection() {
     return Padding(
@@ -81,9 +78,13 @@ ToastService toastService = ToastService();
       child: BlocBuilder<SectionAllBloc, SectionAllState>(
         builder: (context, state) {
           if (state is SectionAllSuccessState) {
-            final data = state.data.where(
-              (s) => s["id"].toString() == widget.book.id.toString(),
-            ).toList();
+            final data =
+                state.data
+                    .where(
+                      (s) =>
+                          s["book_id"].toString() == widget.book.id.toString(),
+                    )
+                    .toList();
             if (state.data.isEmpty) {
               return SizedBox(
                 height: 300.h,
@@ -108,20 +109,32 @@ ToastService toastService = ToastService();
                 Section section = Section(
                   name: data[index]["name"],
                   id: data[index]["id"],
-                  count:  data[index]["test"]?["_count"]?["test_items"] ?? 1,
+                  count: data[index]["test"]?["_count"]?["test_items"] ?? 0,
                   percent: getPercent(data[index]),
-                  test_id:   data[index]["test"]?["id"]
-
+                  test_id: data[index]["test"]?["id"],
                 );
+
+                Section? prev;
+                if (index != 0) {
+                  prev = Section(
+                    name: data[index - 1]["name"],
+                    id: data[index - 1]["id"],
+                    count:
+                        data[index - 1]["test"]?["_count"]?["test_items"] ?? 0,
+                    percent: getPercent(data[index - 1]),
+                    test_id: data[index - 1]["test"]?["id"],
+                  );
+                }
+
                 return SectionCard(
                   section: section,
+                  block: index != 0 && (prev?.percent ?? 0) < 60,
+                  isFailed: 60 > section.percent,
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder:
-                            (context) =>
-                                SectionScreen(section: section),
+                        builder: (context) => SectionScreen(section: section),
                       ),
                     );
                   },

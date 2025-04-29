@@ -8,17 +8,17 @@ class SectionCard extends StatelessWidget {
   final Section section;
   // Har bir subject uchun alohida border rangi
   final VoidCallback onTap;
-  SectionCard({required this.section, required this.onTap});
-  bool isFailed() {
-    return 56 > section.percent;
-  }
+   bool block;
+   bool isFailed;
+  SectionCard({required this.section, required this.onTap, this.block = false ,this.isFailed = false});
+  
 
   
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap:!block  ?  onTap : null,
       child: SizedBox(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -66,7 +66,7 @@ class SectionCard extends StatelessWidget {
                     ),
                   ),
 
-                  Row(
+              if(!block)    Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
@@ -76,8 +76,8 @@ class SectionCard extends StatelessWidget {
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w600,
                           color:
-                              isFailed()
-                                  ? (isFailed() ?  AppConstant.redColor :Colors.grey.shade400 )
+                              isFailed
+                                  ? (isFailed ?  AppConstant.redColor :Colors.grey.shade400 )
                                   : AppConstant.primaryColor,
                         ),
                       ),

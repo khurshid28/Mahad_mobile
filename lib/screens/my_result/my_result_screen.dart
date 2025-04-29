@@ -94,7 +94,10 @@ ToastService toastService = ToastService();
                   ),
                   test: state.data[index]["test"],
                 );
+               
                 var section_data = res.test?["section"];
+                  print(">>>>");
+                print( state.data[index]);
                 Section section = Section(
                   name: section_data["name"],
                   id:  section_data["id"],
@@ -102,6 +105,7 @@ ToastService toastService = ToastService();
                   test_id: res.test["id"]
 
                 );
+               
                 return MyResultCard(
                   result: res,
                   onTap: () {

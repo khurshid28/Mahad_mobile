@@ -216,7 +216,7 @@ class _SectionScreenState extends State<SectionScreen> {
                 ),
               ),
 
-              Padding(
+            if(widget.section.count  > 0)  Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
