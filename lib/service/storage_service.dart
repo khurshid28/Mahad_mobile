@@ -23,5 +23,7 @@ class StorageService {
   static String result = 'result';
   static String sections = 'sections';
 
+   static String test = 'test';
+
 
 }

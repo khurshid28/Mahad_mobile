@@ -1,3 +1,4 @@
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:test_app/core/endpoints/endpoints.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/screens/login_screen.dart';
@@ -32,6 +33,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return user;
     }
     return {"name": "", "phone": ""};
+  }
+  String version = "";
+  Future getVersion()async{
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    version = packageInfo.version;
+    setState(() {
+      
+    });
+
+  }
+
+  @override
+  void initState() {
+    getVersion();
+    super.initState();
   }
 
   @override
@@ -135,7 +151,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const Spacer(),
             Text(
-              'Ilova versiyasi: 1.0.3',
+              'Ilova versiyasi: ${version}',
               style: TextStyle(
                 color: AppConstant.greyColor,
                 fontSize: 12.sp,

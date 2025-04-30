@@ -22,7 +22,7 @@ class _CheckNetworkWidgetState extends State<CheckNetworkWidget> {
     subscription = Connectivity()
         .onConnectivityChanged
         .listen((List<ConnectivityResult>? res) async {
-      if (res!.contains(ConnectivityResult.mobile)  || res.contains(ConnectivityResult.wifi) ) {
+      if (res!.contains(ConnectivityResult.mobile)  || res.contains(ConnectivityResult.wifi)  ) {
         result = (await InternetConnectionChecker.instance.hasConnection)
             ? NetworkResult.on
             : NetworkResult.off;
@@ -30,11 +30,14 @@ class _CheckNetworkWidgetState extends State<CheckNetworkWidget> {
         result = NetworkResult.off;
       }
                setState(() => {});
+
+
+               print(">>Result : " + result.toString());
     });
   }
 
   cancelListen() {
-    subscription!.cancel();
+    subscription?.cancel();
   }
 
   initChecker() async {

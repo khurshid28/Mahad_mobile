@@ -56,9 +56,15 @@ class _SectionScreenState extends State<SectionScreen> {
   }
 
   Future clearAnswers() async {
-    await StorageService().remove(
+  
+    await Future.wait([
+      StorageService().remove(
       "${StorageService.result}-${widget.section.test_id}",
-    );
+    ),
+    StorageService().remove(
+      "${StorageService.test}-${widget.section.test_id}",
+    )
+    ]);
   }
 
   @override

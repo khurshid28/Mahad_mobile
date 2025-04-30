@@ -13,6 +13,8 @@ import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
 
+import 'dart:math' as math;
+
 class TestScreen extends StatefulWidget {
   final Section section;
   TestScreen({required this.section});
@@ -68,6 +70,78 @@ class _TestScreenState extends State<TestScreen> {
     return count;
   }
 
+  List getTestsFromStorage(List items)  {
+    var test = StorageService().read(
+      "${StorageService.test}-${widget.section.test_id}",
+    );
+    if (test == null) {
+      var res_items = [];
+      math.Random random = math.Random();
+
+      items.shuffle(random);
+      var len = items.length;
+
+      for (var i = 0; i < len; i++) {
+        var item = items[i];
+        var rightIndex = random.nextInt(4);
+        var answers = ["A", "B", "C", "D"];
+        var answersRandom = ["A", "B", "C", "D"];
+
+        var rightAnswer = answers[rightIndex];
+        answersRandom.removeAt(rightIndex);
+        answers.removeAt(rightIndex);
+
+        var ans = item["answer"] ?? "";
+        var ansText = item["answer_" + ans];
+        var extraItem = {};
+        extraItem["answer_" + rightAnswer] = ansText;
+        //change value
+        var extra =  item["answer_" + ans];
+        item["answer_" + ans]= item["answer_" + rightAnswer];
+        item["answer_" + rightAnswer] =extra;
+
+
+        answersRandom.shuffle(random);
+        print("shuffle");
+        print(item["answer"]);
+        print("Random answer : " + rightAnswer);
+        print(answersRandom);
+        
+         print(" Right : extraItem[${'answer_' + rightAnswer}] = item[${'answer_' + item["answer"]}]");
+         
+
+        for (var j = 0; j < answers.length; j++) {
+ print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
+          extraItem["answer_" + answersRandom[j]] =
+              item["answer_" + answers[j]];
+        }
+
+        res_items.add({
+          "number": i + 1,
+
+          "question": item["question"] ?? "",
+          "answer_A": extraItem["answer_A"],
+          "answer_B": extraItem["answer_B"],
+          "answer_C": extraItem["answer_C"],
+          "answer_D": extraItem["answer_D"],
+          "answer": rightAnswer,
+          "createdt": item["createdt"],
+          "updatedAt": item["updatedAt"],
+          "test_id": item["test_id"],
+        });
+
+        //
+      }
+
+     StorageService().write(
+        "${StorageService.test}-${widget.section.test_id}",
+        res_items,
+      );
+      return res_items;
+    }
+    return test;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -84,7 +158,7 @@ class _TestScreenState extends State<TestScreen> {
         surfaceTintColor: Colors.transparent,
         backgroundColor: AppConstant.whiteColor,
         title: Text(
-          "Angliya XII asr",
+        widget.section.name,
           style: TextStyle(
             color: AppConstant.blackColor,
             fontSize: 18.sp,
@@ -116,7 +190,10 @@ class _TestScreenState extends State<TestScreen> {
             } else {
               toastService.error(message: state.message ?? "Xatolik Bor");
             }
-          } else if (state is TestSuccessState) {}
+          } else if (state is TestSuccessState) {
+            await StorageService().remove( "${StorageService.test}-${widget.section.test_id}",);
+        
+          }
         },
       ),
     );
@@ -126,7 +203,7 @@ class _TestScreenState extends State<TestScreen> {
     return BlocBuilder<TestBloc, TestState>(
       builder: (context, state) {
         if (state is TestSuccessState) {
-          List test_items = state.data["test_items"] ?? [];
+          List test_items = getTestsFromStorage(state.data["test_items"] ?? []);
           var test = test_items[item_index];
           var count = test_items.length;
           var results = getAnswers(count);
@@ -248,13 +325,13 @@ class _TestScreenState extends State<TestScreen> {
                     loadingService.showLoading(context);
                   } else if (state is ResultPostErrorState) {
                     loadingService.closeLoading(context);
-                    if (state.statusCode ==401) {
+                    if (state.statusCode == 401) {
                       Logout(context);
-                    }else{
-                       toastService.error(message: state.message ?? "Xatolik Bor");
+                    } else {
+                      toastService.error(
+                        message: state.message ?? "Xatolik Bor",
+                      );
                     }
-                    
-                   
                   } else if (state is ResultPostSuccessState) {
                     loadingService.closeLoading(context);
 
@@ -291,7 +368,7 @@ class _TestScreenState extends State<TestScreen> {
                           if (item_index == count - 1) {
                             await ResultController.post(
                               context,
-                              solved:  rightAnswer(test_items),
+                              solved: rightAnswer(test_items),
                               test_id: widget.section.test_id ?? 0,
                             );
                           } else if (item_index < count - 1) {
@@ -300,7 +377,6 @@ class _TestScreenState extends State<TestScreen> {
                               item_index++;
                             });
                           }
-                         
                         },
                         child: Center(
                           child: Text(
