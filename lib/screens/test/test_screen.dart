@@ -17,7 +17,7 @@ import 'dart:math' as math;
 
 class TestScreen extends StatefulWidget {
   final Section section;
-  TestScreen({required this.section});
+  TestScreen({required this.section , });
   @override
   _TestScreenState createState() => _TestScreenState();
 }
@@ -236,7 +236,9 @@ class _TestScreenState extends State<TestScreen> {
                         4,
                         (index) => GestureDetector(
                           onTap: () async {
-                            await writeAnswer(
+                           print(test["answer"]);
+                          if ((answer?.isEmpty ?? true) ) {
+                              await writeAnswer(
                               count,
                               index: item_index,
                               result: ["A", "B", "C", "D"][index],
@@ -244,14 +246,16 @@ class _TestScreenState extends State<TestScreen> {
                             setState(() {
                               answer = ["A", "B", "C", "D"][index];
                             });
+                          }
                           },
                           child: Container(
-                            width: 1.sw - 32,
+                            width: 1.sw - 32.w,
+                            
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 16.h),
                               child: Row(
                                 children: [
-                                  ["A", "B", "C", "D"][index] == answer
+                                   ((answer?.isNotEmpty ?? false  ) && ["A", "B", "C", "D"][index] == test["answer"])
                                       ? Container(
                                         width: 34.w,
                                         height: 34.w,
@@ -260,10 +264,10 @@ class _TestScreenState extends State<TestScreen> {
                                           borderRadius: BorderRadius.circular(
                                             12.r,
                                           ),
-                                          color: AppConstant.primaryColor,
+                                          color:  AppConstant.primaryColor ,
                                         ),
                                         child: SvgPicture.asset(
-                                          'assets/icons/check.svg',
+                                         'assets/icons/check.svg'  ,
                                           width: 18.w,
                                           colorFilter: const ColorFilter.mode(
                                             AppConstant.whiteColor,
@@ -271,7 +275,31 @@ class _TestScreenState extends State<TestScreen> {
                                           ),
                                         ),
                                       )
-                                      : Container(
+                                      : 
+
+                                      answer == ["A", "B", "C", "D"][index] ?
+                                       Container(
+                                        width: 34.w,
+                                        height: 34.w,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            12.r,
+                                          ),
+                                          color:  AppConstant.redColor ,
+                                        ),
+                                        child: SvgPicture.asset(
+                                         'assets/icons/close.svg',
+                                          width: 18.w,
+                                          colorFilter: const ColorFilter.mode(
+                                            AppConstant.whiteColor,
+                                            BlendMode.srcIn,
+                                          ),
+                                        ),
+                                      ) :
+                                      
+                                      
+                                      Container(
                                         width: 34.w,
                                         height: 34.w,
 
@@ -298,6 +326,7 @@ class _TestScreenState extends State<TestScreen> {
                                           ),
                                         ),
                                       ),
+                                
                                   SizedBox(width: 10.w),
                                   SizedBox(
                                     width: 305.w,
@@ -354,7 +383,7 @@ class _TestScreenState extends State<TestScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Padding(
+                 Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -365,11 +394,23 @@ class _TestScreenState extends State<TestScreen> {
                           padding: EdgeInsets.symmetric(vertical: 14.h),
                         ),
                         onPressed: () async {
-                          if (item_index == count - 1) {
+                          if (item_index == count - 1 ) {
+                            test_items.map((e)=>{
+                                ...(e as Map),
+                                "my_answer" : results[e["number"].toString()]
+
+                              }).toList().forEach((k){
+                                print(">>>>> number  : ${k['number']}");
+                                print(k);
+                              });
                             await ResultController.post(
                               context,
                               solved: rightAnswer(test_items),
                               test_id: widget.section.test_id ?? 0,
+                              answers:  test_items.map((e)=>{
+                                ...(e as Map),
+                                "my_answer" : results[e["number"].toString()]
+                              }).toList()
                             );
                           } else if (item_index < count - 1) {
                             setState(() {

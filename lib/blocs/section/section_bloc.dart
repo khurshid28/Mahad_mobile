@@ -22,7 +22,7 @@ class SectionBloc extends Cubit<SectionState> {
       }
     ));
     if (kDebugMode) {
-       print(response.realUri);
+      print(response.realUri);
       print(response.statusCode);
       print(response.data);
     }

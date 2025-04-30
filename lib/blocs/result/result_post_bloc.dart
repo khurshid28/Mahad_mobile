@@ -11,12 +11,12 @@ class ResultPostBloc extends Cubit<ResultPostState> {
   DioClient dioClient = DioClient();
   ResultPostBloc() : super(ResultPostIntialState());
 
-  Future post({required int solved, required int test_id}) async {
+  Future post({required int solved, required int test_id,required List answers}) async {
     emit(ResultPostWaitingState());
     String? token = StorageService().read(StorageService.access_token);
     dio.Response response = await dioClient.post(
       Endpoints.result,
-      data: {"test_id": test_id, "solved": solved},
+      data: {"test_id": test_id, "solved": solved,"answers" : answers},
 
       options: dio.Options(headers: {"Authorization": "Bearer $token"}),
     );

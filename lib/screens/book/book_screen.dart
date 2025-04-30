@@ -129,7 +129,8 @@ class _BookScreenState extends State<BookScreen> {
 
                 return SectionCard(
                   section: section,
-                  block: index != 0 && (prev?.percent ?? 0) < 60,
+                  // block:  index != 0 && (prev?.percent ?? 0) < 60,
+                  block: false,
                   isFailed: 60 > section.percent,
                   onTap: () {
                     Navigator.push(

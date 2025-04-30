@@ -8,6 +8,7 @@ import 'package:test_app/export_files.dart';
 import 'package:test_app/models/book.dart';
 import 'package:test_app/models/result.dart';
 import 'package:test_app/models/section.dart';
+import 'package:test_app/screens/test/finished_test_screen.dart';
 import 'package:test_app/screens/test/test_screen.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
@@ -215,7 +216,24 @@ class _SectionScreenState extends State<SectionScreen> {
                       return ResultCard(
                         result: res,
                         count: widget.section.count,
-                        onTap: () {},
+                        onTap: () async{
+                         
+                            await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => FinishedTestScreen(
+                              section: Section(
+                                name: state.data["name"].toString(),
+                                count: results.length,
+                                test_id: state.data["test"]?["id"],
+                                
+                              ),
+                              answers: results[index]["answers"],
+                            ),
+                      ),
+                    );
+                        },
                       );
                     }),
                   ],
