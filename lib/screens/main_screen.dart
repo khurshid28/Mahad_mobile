@@ -55,6 +55,7 @@ class _MainScreenState extends State<MainScreen> {
   num getPercent(List results){
      
      double score = 0;
+     if(results.isEmpty) return 0;
      for (var r in results) {
       score+=(r["solved"] as int)/(r["test"]?["_count"]?["test_items"] ?? 1);
      }

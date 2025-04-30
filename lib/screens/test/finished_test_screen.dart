@@ -17,19 +17,15 @@ import 'dart:math' as math;
 class FinishedTestScreen extends StatefulWidget {
   final Section section;
   final List answers;
-  FinishedTestScreen({required this.section , required this.answers });
+  FinishedTestScreen({required this.section, required this.answers});
   @override
   _FinishedTestScreenState createState() => _FinishedTestScreenState();
 }
 
 class _FinishedTestScreenState extends State<FinishedTestScreen> {
-
-
-
   int item_index = 0;
 
-
-  List getTestsFromStorage(List items)  {
+  List getTestsFromStorage(List items) {
     var test = StorageService().read(
       "${StorageService.test}-${widget.section.test_id}",
     );
@@ -55,22 +51,24 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
         var extraItem = {};
         extraItem["answer_" + rightAnswer] = ansText;
         //change value
-        var extra =  item["answer_" + ans];
-        item["answer_" + ans]= item["answer_" + rightAnswer];
-        item["answer_" + rightAnswer] =extra;
-
+        var extra = item["answer_" + ans];
+        item["answer_" + ans] = item["answer_" + rightAnswer];
+        item["answer_" + rightAnswer] = extra;
 
         answersRandom.shuffle(random);
         print("shuffle");
         print(item["answer"]);
         print("Random answer : " + rightAnswer);
         print(answersRandom);
-        
-         print(" Right : extraItem[${'answer_' + rightAnswer}] = item[${'answer_' + item["answer"]}]");
-         
+
+        print(
+          " Right : extraItem[${'answer_' + rightAnswer}] = item[${'answer_' + item["answer"]}]",
+        );
 
         for (var j = 0; j < answers.length; j++) {
- print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
+          print(
+            "extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]",
+          );
           extraItem["answer_" + answersRandom[j]] =
               item["answer_" + answers[j]];
         }
@@ -92,7 +90,7 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
         //
       }
 
-     StorageService().write(
+      StorageService().write(
         "${StorageService.test}-${widget.section.test_id}",
         res_items,
       );
@@ -117,7 +115,7 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
         surfaceTintColor: Colors.transparent,
         backgroundColor: AppConstant.whiteColor,
         title: Text(
-        widget.section.name,
+          widget.section.name,
           style: TextStyle(
             color: AppConstant.blackColor,
             fontSize: 18.sp,
@@ -150,221 +148,212 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
               toastService.error(message: state.message ?? "Xatolik Bor");
             }
           } else if (state is TestSuccessState) {
-            await StorageService().remove( "${StorageService.test}-${widget.section.test_id}",);
-        
+            await StorageService().remove(
+              "${StorageService.test}-${widget.section.test_id}",
+            );
           }
         },
       ),
     );
   }
 
-  Widget bodySection() {
-      List test_items = widget.answers;
-          var test = test_items[item_index];
-          var count = test_items.length;
-         
+  String realText(String data) {
+    List<String> d = data.split(".");
+    if (d.length > 1 && int.tryParse(d[0].toString()) != null) {
+      return d[1];
+    }
 
-          String? answer = widget.answers[item_index]["my_answer"];
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    List<String> b = data.split(" ");
+    if (b.length > 1 && int.tryParse(b[0].toString()) != null) {
+      return b[1];
+    }
+    return data;
+  }
+
+  Widget bodySection() {
+    List test_items = widget.answers;
+    var test = test_items[item_index];
+    var count = test_items.length;
+
+    String? answer = widget.answers[item_index]["my_answer"];
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 1.sw - 64,
+                  child: Text(
+                    "${test['number']}.${realText(test['question'].toString())}",
+                    textAlign: TextAlign.start,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16.sp,
+                    ),
+                  ),
+                ),
+
+                ...List.generate(
+                  4,
+                  (index) => Container(
+                    width: 1.sw - 32.w,
+
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
+                      child: Row(
+                        children: [
+                          ((answer?.isNotEmpty ?? false) &&
+                                  ["A", "B", "C", "D"][index] == test["answer"])
+                              ? Container(
+                                width: 34.w,
+                                height: 34.w,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  color: AppConstant.primaryColor,
+                                ),
+                                child: SvgPicture.asset(
+                                  'assets/icons/check.svg',
+                                  width: 18.w,
+                                  colorFilter: const ColorFilter.mode(
+                                    AppConstant.whiteColor,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                              )
+                              : answer == ["A", "B", "C", "D"][index]
+                              ? Container(
+                                width: 34.w,
+                                height: 34.w,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  color: AppConstant.redColor,
+                                ),
+                                child: SvgPicture.asset(
+                                  'assets/icons/close.svg',
+                                  width: 18.w,
+                                  colorFilter: const ColorFilter.mode(
+                                    AppConstant.whiteColor,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                              )
+                              : Container(
+                                width: 34.w,
+                                height: 34.w,
+
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  border: Border.all(
+                                    color: Colors.grey.shade500,
+                                    width: 3.w,
+                                  ),
+                                ),
+                                child: Text(
+                                  ["A", "B", "C", "D"][index].toString(),
+                                  style: TextStyle(
+                                    color: Colors.grey.shade500,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+
+                          SizedBox(width: 10.w),
+                          SizedBox(
+                            width: 305.w,
+                            child: Text(
+                              test["answer_${["A", "B", "C", "D"][index]}"]
+                                  .toString(),
+                              style: TextStyle(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        SizedBox(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: SizedBox(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 1.sw - 64,
-                        child: Text(
-                          "${test['number']}.${test['question']}",
-                          textAlign: TextAlign.start,
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16.sp,
-                          ),
-                        ),
-                      ),
-
-                      ...List.generate(
-                        4,
-                        (index) => Container(
-                          width: 1.sw - 32.w,
-                          
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16.h),
-                            child: Row(
-                              children: [
-                                 ((answer?.isNotEmpty ?? false  ) && ["A", "B", "C", "D"][index] == test["answer"])
-                                    ? Container(
-                                      width: 34.w,
-                                      height: 34.w,
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          12.r,
-                                        ),
-                                        color:  AppConstant.primaryColor ,
-                                      ),
-                                      child: SvgPicture.asset(
-                                       'assets/icons/check.svg'  ,
-                                        width: 18.w,
-                                        colorFilter: const ColorFilter.mode(
-                                          AppConstant.whiteColor,
-                                          BlendMode.srcIn,
-                                        ),
-                                      ),
-                                    )
-                                    : 
-                        
-                                    answer == ["A", "B", "C", "D"][index] ?
-                                     Container(
-                                      width: 34.w,
-                                      height: 34.w,
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          12.r,
-                                        ),
-                                        color:  AppConstant.redColor ,
-                                      ),
-                                      child: SvgPicture.asset(
-                                       'assets/icons/close.svg',
-                                        width: 18.w,
-                                        colorFilter: const ColorFilter.mode(
-                                          AppConstant.whiteColor,
-                                          BlendMode.srcIn,
-                                        ),
-                                      ),
-                                    ) :
-                                    
-                                    
-                                    Container(
-                                      width: 34.w,
-                                      height: 34.w,
-                        
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          12.r,
-                                        ),
-                                        border: Border.all(
-                                          color: Colors.grey.shade500,
-                                          width: 3.w,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        [
-                                          "A",
-                                          "B",
-                                          "C",
-                                          "D",
-                                        ][index].toString(),
-                                        style: TextStyle(
-                                          color: Colors.grey.shade500,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                    ),
-                              
-                                SizedBox(width: 10.w),
-                                SizedBox(
-                                  width: 305.w,
-                                  child: Text(
-                                    test["answer_${["A", "B", "C", "D"][index]}"]
-                                        .toString(),
-                                    style: TextStyle(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppConstant.primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                  ),
+                  onPressed: () async {
+                    if (item_index == count - 1) {
+                      Navigator.pop(context);
+                    } else if (item_index < count - 1) {
+                      setState(() {
+                        answer = "";
+                        item_index++;
+                      });
+                    }
+                  },
+                  child: Center(
+                    child: Text(
+                      item_index == count - 1
+                          ? "Test oynaga qaytish"
+                          : "Davom qilish",
+                      style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                    ),
                   ),
                 ),
               ),
 
-          
-              SizedBox(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                 Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppConstant.primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 14.h),
-                        ),
-                        onPressed: () async {
-                          if (item_index == count - 1 ) {
-                          Navigator.pop(context);
-                          } else if (item_index < count - 1) {
-                            setState(() {
-                              answer = "";
-                              item_index++;
-                            });
-                          }
-                        },
-                        child: Center(
-                          child: Text(
-                            item_index == count - 1
-                                ? "Test oynaga qaytish" 
-                                : "Davom qilish",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16.sp,
-                            ),
-                          ),
-                        ),
+              if (item_index > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shadowColor: Colors.transparent,
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                    ),
+                    onPressed: () {
+                      if (item_index > 0) {
+                        setState(() {
+                          answer = "";
+                          item_index--;
+                        });
+                      }
+                      // Navigator.pop(context);
+                    },
+                    child: Center(
+                      child: Text(
+                        "Orqaga qaytish",
+                        style: TextStyle(color: Colors.black, fontSize: 16.sp),
                       ),
                     ),
-
-                    if (item_index > 0)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            shadowColor: Colors.transparent,
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            padding: EdgeInsets.symmetric(vertical: 14.h),
-                          ),
-                          onPressed: () {
-                            if (item_index > 0) {
-                              setState(() {
-                                answer = "";
-                                item_index--;
-                              });
-                            }
-                            // Navigator.pop(context);
-                          },
-                          child: Center(
-                            child: Text(
-                              "Orqaga qaytish",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    SizedBox(height: 32.h),
-                  ],
+                  ),
                 ),
-              ),
+              SizedBox(height: 32.h),
             ],
-          );
-     
+          ),
+        ),
+      ],
+    );
   }
 }

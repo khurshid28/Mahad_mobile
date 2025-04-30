@@ -12,7 +12,6 @@ import 'package:test_app/service/toast_service.dart';
 import 'package:test_app/widgets/rate_card.dart';
 
 class RateScreen extends StatefulWidget {
-  
   @override
   _RateScreenState createState() => _RateScreenState();
 }
@@ -25,33 +24,36 @@ class _RateScreenState extends State<RateScreen> {
   //   Rate(name: "Shermat Aliyev", rate: 4,try_count: 2,avg: 22.5,imagePath:"assets/images/profile.jpg" ),
   //   Rate(name: "Elbek Ergashov", rate: 5,try_count: 0,avg: 0,imagePath:"assets/images/profile.jpg" ),
   //   Rate(name: "Shaxriyor G'ulomov", rate: 6,try_count: 0,avg: 0,imagePath:"assets/images/profile.jpg" ),
-   
+
   // ];
 
- 
+  num getPercent(List results) {
+    double score = 0;
+    if (results.isEmpty) {
+      return 0;
+    }
+    for (var r in results) {
+      score +=
+          (r["solved"] as int) / (r["test"]?["_count"]?["test_items"] ?? 1);
+    }
 
-  num getPercent(List results){
-     
-     double score = 0;
-     for (var r in results) {
-      score+=(r["solved"] as int)/(r["test"]?["_count"]?["test_items"] ?? 1);
-     }
-
-     return (score * 1000/(results.length)).floor()/10;
-
+    return (score * 1000 / (results.length)).floor() / 10;
   }
-  List sortRates(List data){
-    data.sort((a, b) => getPercent(b["results"]).compareTo(getPercent(a["results"])));
-   return data;
+
+  List sortRates(List data) {
+    data.sort(
+      (a, b) => getPercent(b["results"]).compareTo(getPercent(a["results"])),
+    );
+    return data;
   }
+
   @override
-  void initState() { 
+  void initState() {
     super.initState();
     RateController.getAll(context);
   }
 
-  
-  ToastService toastService =ToastService();
+  ToastService toastService = ToastService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,11 +62,12 @@ class _RateScreenState extends State<RateScreen> {
         child: CustomAppBar(titleText: "Liderlar", isLeading: true),
       ),
       backgroundColor: AppConstant.whiteColor,
-      body: 
-      Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-              BlocListener<RateBloc, RateState>(
+      body: SingleChildScrollView(
+        padding: EdgeInsets.only(bottom: 16.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            BlocListener<RateBloc, RateState>(
               child: SizedBox(),
               listener: (context, state) async {
                 if (state is RateErrorState) {
@@ -78,19 +81,19 @@ class _RateScreenState extends State<RateScreen> {
                 }
               },
             ),
-       
-          bodySection(),
-        ],
+        
+            bodySection(),
+          ],
+        ),
       ),
     );
   }
 
-  Widget bodySection(){
-
-    return  BlocBuilder<RateBloc, RateState>(
-              builder: (context, state)  {
-                if (state is RateSuccessState) {
- if (state.data.isEmpty) {
+  Widget bodySection() {
+    return BlocBuilder<RateBloc, RateState>(
+      builder: (context, state) {
+        if (state is RateSuccessState) {
+          if (state.data.isEmpty) {
             return SizedBox(
               height: 300.h,
               child: Center(
@@ -109,21 +112,27 @@ class _RateScreenState extends State<RateScreen> {
               ),
             );
           }
-                  
-                  final data = sortRates(state.data);
-                 return Padding(
+
+          final data = sortRates(state.data);
+          return Padding(
             padding: EdgeInsets.symmetric(vertical: 16.h),
             child: Column(
               children: List.generate(
                 data.length,
-                (index) => RateCard(rate: Rate( avg: getPercent(data[index]["results"]), try_count:  (data[index]["results"] as List).length, name: data[index]["name"].toString(),index: index,id : data[index]["id"]), onTap: () {
-                }),
+                (index) => RateCard(
+                  rate: Rate(
+                    avg: getPercent(data[index]["results"]),
+                    try_count: (data[index]["results"] as List).length,
+                    name: data[index]["name"].toString(),
+                    index: index,
+                    id: data[index]["id"],
+                  ),
+                  onTap: () {},
+                ),
               ),
             ),
           );
- 
-
-                } else if (state is RateWaitingState) {
+        } else if (state is RateWaitingState) {
           return SizedBox(
             height: 300.h,
             child: Center(
@@ -156,9 +165,8 @@ class _RateScreenState extends State<RateScreen> {
           );
         }
 
-                return SizedBox();
-              },
-            );
-        
+        return SizedBox();
+      },
+    );
   }
 }

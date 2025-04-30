@@ -148,6 +148,19 @@ class _TestScreenState extends State<TestScreen> {
     TestController.getByid(context, id: widget.section.test_id ?? 0);
   }
 
+  String realText(String data) {
+    List<String> d = data.split(".");
+    if (d.length > 1 && int.tryParse(d[0].toString()) != null) {
+      return d[1];
+    }
+
+    List<String> b = data.split(" ");
+    if (b.length > 1 && int.tryParse(b[0].toString()) != null) {
+      return b[1];
+    }
+    return data;
+  }
+
   LoadingService loadingService = LoadingService();
   ToastService toastService = ToastService();
   @override
@@ -222,7 +235,7 @@ class _TestScreenState extends State<TestScreen> {
                       SizedBox(
                         width: 1.sw - 64,
                         child: Text(
-                          "${test['number']}.${test['question']}",
+                          "${test['number']}.${realText(test['question'].toString())}",
                           textAlign: TextAlign.start,
                           style: TextStyle(
                             color: Colors.black,
