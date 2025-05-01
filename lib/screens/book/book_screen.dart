@@ -14,7 +14,13 @@ import 'package:test_app/widgets/section_card.dart';
 
 class BookScreen extends StatefulWidget {
   final Book book;
-  BookScreen({required this.book});
+  final bool stepBlock;
+  final bool fullBlock;
+  BookScreen({
+    required this.book,
+    this.fullBlock = false,
+    this.stepBlock = true,
+  });
   @override
   _BookScreenState createState() => _BookScreenState();
 }
@@ -85,7 +91,7 @@ class _BookScreenState extends State<BookScreen> {
                           s["book_id"].toString() == widget.book.id.toString(),
                     )
                     .toList();
-            if (state.data.isEmpty) {
+            if (data.isEmpty) {
               return SizedBox(
                 height: 300.h,
                 child: Center(
@@ -104,7 +110,7 @@ class _BookScreenState extends State<BookScreen> {
                 ),
               );
             }
-            
+
             return Column(
               children: List.generate(data.length, (index) {
                 Section section = Section(
@@ -129,8 +135,11 @@ class _BookScreenState extends State<BookScreen> {
 
                 return SectionCard(
                   section: section,
-                  // block:  index != 0 && (prev?.percent ?? 0) < 60,
-                  block: false,
+                  block:
+                      widget.fullBlock ||
+                      (widget.stepBlock &&
+                          index != 0 &&
+                          (prev?.percent ?? 0) < 60),
                   isFailed: 60 > section.percent,
                   onTap: () {
                     Navigator.push(

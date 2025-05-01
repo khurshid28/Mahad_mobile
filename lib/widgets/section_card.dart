@@ -69,7 +69,7 @@ class SectionCard extends StatelessWidget {
               if(!block)    Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                    if(!isFailed)  Text(
                         "${section.percent}%",
                         textAlign: TextAlign.left,
                         style: TextStyle(

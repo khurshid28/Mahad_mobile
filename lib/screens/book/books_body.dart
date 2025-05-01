@@ -204,6 +204,8 @@ class _BooksBodyState extends State<BooksBody> {
                               (context) => BookScreen(
                                 book:
                                     book,
+                                     fullBlock: filterdata[index]["fullBlock"],
+                                     stepBlock: filterdata[index]["stepBlock"],
                               ),
                         ),
                       );

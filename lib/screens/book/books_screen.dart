@@ -220,6 +220,8 @@ class _BooksScreenState extends State<BooksScreen> {
                               (context) => BookScreen(
                                 book:
                                     book,
+                                       fullBlock: filterdata[index]["fullBlock"],
+                                     stepBlock: filterdata[index]["stepBlock"],
                               ),
                         ),
                       );

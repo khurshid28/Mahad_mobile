@@ -23,82 +23,6 @@ class FinishedTestScreen extends StatefulWidget {
 }
 
 class _FinishedTestScreenState extends State<FinishedTestScreen> {
-  int item_index = 0;
-
-  List getTestsFromStorage(List items) {
-    var test = StorageService().read(
-      "${StorageService.test}-${widget.section.test_id}",
-    );
-    if (test == null) {
-      var res_items = [];
-      math.Random random = math.Random();
-
-      items.shuffle(random);
-      var len = items.length;
-
-      for (var i = 0; i < len; i++) {
-        var item = items[i];
-        var rightIndex = random.nextInt(4);
-        var answers = ["A", "B", "C", "D"];
-        var answersRandom = ["A", "B", "C", "D"];
-
-        var rightAnswer = answers[rightIndex];
-        answersRandom.removeAt(rightIndex);
-        answers.removeAt(rightIndex);
-
-        var ans = item["answer"] ?? "";
-        var ansText = item["answer_" + ans];
-        var extraItem = {};
-        extraItem["answer_" + rightAnswer] = ansText;
-        //change value
-        var extra = item["answer_" + ans];
-        item["answer_" + ans] = item["answer_" + rightAnswer];
-        item["answer_" + rightAnswer] = extra;
-
-        answersRandom.shuffle(random);
-        print("shuffle");
-        print(item["answer"]);
-        print("Random answer : " + rightAnswer);
-        print(answersRandom);
-
-        print(
-          " Right : extraItem[${'answer_' + rightAnswer}] = item[${'answer_' + item["answer"]}]",
-        );
-
-        for (var j = 0; j < answers.length; j++) {
-          print(
-            "extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]",
-          );
-          extraItem["answer_" + answersRandom[j]] =
-              item["answer_" + answers[j]];
-        }
-
-        res_items.add({
-          "number": i + 1,
-
-          "question": item["question"] ?? "",
-          "answer_A": extraItem["answer_A"],
-          "answer_B": extraItem["answer_B"],
-          "answer_C": extraItem["answer_C"],
-          "answer_D": extraItem["answer_D"],
-          "answer": rightAnswer,
-          "createdt": item["createdt"],
-          "updatedAt": item["updatedAt"],
-          "test_id": item["test_id"],
-        });
-
-        //
-      }
-
-      StorageService().write(
-        "${StorageService.test}-${widget.section.test_id}",
-        res_items,
-      );
-      return res_items;
-    }
-    return test;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -138,22 +62,11 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
         ),
       ),
       backgroundColor: Colors.grey.shade200,
-      body: BlocListener<TestBloc, TestState>(
-        child: bodySection(),
-        listener: (context, state) async {
-          if (state is TestErrorState) {
-            if (state.statusCode == 401) {
-              Logout(context);
-            } else {
-              toastService.error(message: state.message ?? "Xatolik Bor");
-            }
-          } else if (state is TestSuccessState) {
-            await StorageService().remove(
-              "${StorageService.test}-${widget.section.test_id}",
-            );
-          }
-        },
-      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: 16.h
+        ),
+        child: bodySection()),
     );
   }
 
@@ -172,15 +85,15 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
 
   Widget bodySection() {
     List test_items = widget.answers;
-    var test = test_items[item_index];
-    var count = test_items.length;
 
-    String? answer = widget.answers[item_index]["my_answer"];
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(test_items.length, (item_index) {
+        var test = test_items[item_index];
+
+        String? answer = widget.answers[item_index]["my_answer"];
+        return Padding(
+          padding:  EdgeInsets.all(16.0),
           child: SizedBox(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,7 +116,6 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
                   4,
                   (index) => Container(
                     width: 1.sw - 32.w,
-
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 16.h),
                       child: Row(
@@ -280,80 +192,13 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
                     ),
                   ),
                 ),
+             
+            if(test_items.length - 1  > item_index)   customDivider()
               ],
             ),
           ),
-        ),
-
-        SizedBox(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppConstant.primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                  ),
-                  onPressed: () async {
-                    if (item_index == count - 1) {
-                      Navigator.pop(context);
-                    } else if (item_index < count - 1) {
-                      setState(() {
-                        answer = "";
-                        item_index++;
-                      });
-                    }
-                  },
-                  child: Center(
-                    child: Text(
-                      item_index == count - 1
-                          ? "Test oynaga qaytish"
-                          : "Davom qilish",
-                      style: TextStyle(color: Colors.white, fontSize: 16.sp),
-                    ),
-                  ),
-                ),
-              ),
-
-              if (item_index > 0)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shadowColor: Colors.transparent,
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 14.h),
-                    ),
-                    onPressed: () {
-                      if (item_index > 0) {
-                        setState(() {
-                          answer = "";
-                          item_index--;
-                        });
-                      }
-                      // Navigator.pop(context);
-                    },
-                    child: Center(
-                      child: Text(
-                        "Orqaga qaytish",
-                        style: TextStyle(color: Colors.black, fontSize: 16.sp),
-                      ),
-                    ),
-                  ),
-                ),
-              SizedBox(height: 32.h),
-            ],
-          ),
-        ),
-      ],
+        );
+      }),
     );
   }
 }
