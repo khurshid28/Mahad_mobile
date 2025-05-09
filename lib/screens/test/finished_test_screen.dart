@@ -26,7 +26,7 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
   @override
   void initState() {
     super.initState();
-    TestController.getByid(context, id: widget.section.test_id ?? 0);
+    TestController.getByid(context, id: int.tryParse(widget.section.test_id.toString()) ?? 0);
   }
 
   LoadingService loadingService = LoadingService();
@@ -39,7 +39,7 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
         surfaceTintColor: Colors.transparent,
         backgroundColor: AppConstant.whiteColor,
         title: Text(
-          widget.section.name,
+          widget.section.name ?? "",
           style: TextStyle(
             color: AppConstant.blackColor,
             fontSize: 18.sp,

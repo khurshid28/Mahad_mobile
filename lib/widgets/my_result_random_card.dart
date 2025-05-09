@@ -1,24 +1,24 @@
 // ignore_for_file: prefer_const_constructors_in_immutables, use_key_in_widget_constructors
 
-import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:test_app/export_files.dart';
-import 'package:test_app/models/section.dart';
+import 'package:test_app/models/result.dart';
 
-class SectionCard extends StatelessWidget {
-  final Section section;
+class MyResultRandomCard extends StatelessWidget {
+   final Result result;
+    int count;
   // Har bir subject uchun alohida border rangi
   final VoidCallback onTap;
-   bool block;
-   bool isFailed;
-  SectionCard({required this.section, required this.onTap, this.block = false ,this.isFailed = false});
-  
+  MyResultRandomCard({ required this.onTap,required this.result,required this.count});
 
-  
+  bool isFailed() {
+    return 0.56 > (result.solved / count);
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap:!block  ?  onTap : null,
+      onTap: onTap,
       child: SizedBox(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -44,15 +44,43 @@ class SectionCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              section.name ?? "",
+                              "ARALASH",
                               textAlign: TextAlign.left,
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
-                            Text(
-                              "test soni: ${section.count} ta",
+                           
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Column(
+                         crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "${result.solved}/${count}",
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  isFailed()
+                                      ?  AppConstant.redColor  
+                                      : AppConstant.primaryColor,
+                            ),
+                          ),
+
+                           Text(
+                             
+                               DateFormat('dd.MM.yyyy').format(result.date),
                               textAlign: TextAlign.left,
                               style: TextStyle(
                                 color: Colors.grey.shade600,
@@ -60,26 +88,7 @@ class SectionCard extends StatelessWidget {
                                 fontWeight: FontWeight.w200,
                               ),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-              if(!block)    Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                    if(!isFailed)  Text(
-                        "${section.percent}%",
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w600,
-                          color:
-                              isFailed
-                                  ? (isFailed ?  AppConstant.redColor :Colors.grey.shade400 )
-                                  : AppConstant.primaryColor,
-                        ),
+                        ],
                       ),
                       SizedBox(width: 6.w),
                       SvgPicture.asset(

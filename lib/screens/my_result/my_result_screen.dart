@@ -1,17 +1,16 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_app/blocs/result/result_all_bloc.dart';
 import 'package:test_app/blocs/result/result_all_state.dart';
 import 'package:test_app/controller/result_controller.dart';
-import 'package:test_app/core/const/const.dart';
-import 'package:test_app/core/endpoints/endpoints.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/result.dart';
 import 'package:test_app/models/section.dart';
 import 'package:test_app/screens/section/section_screen.dart';
+import 'package:test_app/screens/test/finished_test_screen.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/toast_service.dart';
 import 'package:test_app/widgets/my_result_card.dart';
+import 'package:test_app/widgets/my_result_random_card.dart';
 
 class MyResultScreen extends StatefulWidget {
   @override
@@ -89,24 +88,51 @@ ToastService toastService = ToastService();
               children: List.generate(state.data.length, (index) {
                 Result res = Result(
                   solved: state.data[index]["solved"],
+                  
                   date: DateTime.parse(
                     state.data[index]["updatedAt"].toString(),
                   ),
                   test: state.data[index]["test"],
+                  type: state.data[index]["type"]
                 );
                
-                var section_data = res.test?["section"];
-                  print(">>>>");
-                print( state.data[index]);
-                Section section = Section(
-                  name: section_data["name"],
-                  id:  section_data["id"],
-                  count: res.test["_count"]?["test_items"] ?? 1,
-                  test_id: res.test["id"]
+                
+                // print(">>>>");
+                // print( state.data[index]);
 
-                );
                
-                return MyResultCard(
+                if (res.type == "RANDOM") {
+                    Section section = Section(
+                  name: "RANDOM",
+                  id: 0,
+                  count: 0,
+                  test_id: null
+                );
+                  return MyResultRandomCard(
+                  result: res,
+                  count : (state.data[index]["answers"] ??  []).length,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) =>
+                                FinishedTestScreen(section: section,answers: state.data[index]["answers"] ??  [],),
+                      ),
+                    );
+                  },
+                );
+                }else{
+
+               
+               
+                  Section section = Section(
+                  name: res.test?["section"]?["name"],
+                  id:  res.test?["section"]?["id"],
+                  count: res.test?["_count"]?["test_items"] ?? 1,
+                  test_id: res.test["id"].toString()
+                );
+                  return MyResultCard(
                   result: res,
                   onTap: () {
                     Navigator.push(
@@ -119,6 +145,7 @@ ToastService toastService = ToastService();
                     );
                   },
                 );
+                }
 
                 //   MyResultCard(section: sections[index],result: results[index], onTap: () {
                 //        Navigator.push(

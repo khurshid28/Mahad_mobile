@@ -1,22 +1,24 @@
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/foundation.dart';
-import 'package:test_app/blocs/result/result_post_state.dart';
-import 'package:test_app/core/endpoints/endpoints.dart';
-import 'package:test_app/service/storage_service.dart';
+
+import '../../core/endpoints/endpoints.dart';
 import '../../core/network/dio_Client.dart';
 import '../../export_files.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class ResultPostBloc extends Cubit<ResultPostState> {
-  DioClient dioClient = DioClient();
-  ResultPostBloc() : super(ResultPostIntialState());
+import '../../service/storage_service.dart';
+import 'random_test_state.dart';
 
-  Future post({required int solved,  int? test_id,required List answers,String? type}) async {
-    emit(ResultPostWaitingState());
+class RandomTestBloc extends Cubit<RandomTestState> {
+  DioClient dioClient = DioClient();
+  RandomTestBloc() : super(RandomTestIntialState());
+
+  Future get({required int count, required List<int> sections}) async {
+    emit(RandomTestWaitingState());
     String? token = StorageService().read(StorageService.access_token);
     dio.Response response = await dioClient.post(
-      Endpoints.result,
-      data: {"test_id": test_id, "solved": solved,"answers" : answers ,"type" : type},
+      "${Endpoints.test}/random",
+      data: {"count": count, "sections": sections},
 
       options: dio.Options(headers: {"Authorization": "Bearer $token"}),
     );
@@ -26,11 +28,16 @@ class ResultPostBloc extends Cubit<ResultPostState> {
       print(response.data);
     }
 
-    if (response.statusCode == 201) {
-      emit(ResultPostSuccessState(data: response.data));
+    if (response.statusCode == 200) {
+      emit(
+        RandomTestSuccessState(
+          data: response.data["data"],
+          id: response.data["id"],
+        ),
+      );
     } else {
       emit(
-        ResultPostErrorState(
+        RandomTestErrorState(
           title: response.data["error"],
           message: response.data["error"],
           statusCode: response.statusCode,

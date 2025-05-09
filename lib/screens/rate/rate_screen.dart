@@ -27,15 +27,23 @@ class _RateScreenState extends State<RateScreen> {
 
   // ];
 
+  
+
   num getPercent(List results) {
     double score = 0;
     if (results.isEmpty) {
       return 0;
     }
     for (var r in results) {
-      score +=
+      if (r["type"]=="RANDOM") {
+         score +=
+          (r["solved"] as int) / ((r["answers"]?? []).length);
+      }else{
+         score +=
           (r["solved"] as int) / (r["test"]?["_count"]?["test_items"] ?? 1);
+      }
     }
+   
 
     return (score * 1000 / (results.length)).floor() / 10;
   }

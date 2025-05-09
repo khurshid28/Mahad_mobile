@@ -53,8 +53,12 @@ class _BookScreenState extends State<BookScreen> {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
-        child: CustomAppBar(titleText: widget.book.name, isLeading: true),
+        child: CustomAppBar(titleText: widget.book.name, isLeading: true
+        
+        ),
+        
       ),
+      
       backgroundColor: AppConstant.whiteColor,
       body: Column(
         mainAxisSize: MainAxisSize.min,
@@ -118,7 +122,7 @@ class _BookScreenState extends State<BookScreen> {
                   id: data[index]["id"],
                   count: data[index]["test"]?["_count"]?["test_items"] ?? 0,
                   percent: getPercent(data[index]),
-                  test_id: data[index]["test"]?["id"],
+                  test_id: data[index]["test"]?["id"].toString(),
                 );
 
                 Section? prev;
@@ -129,7 +133,7 @@ class _BookScreenState extends State<BookScreen> {
                     count:
                         data[index - 1]["test"]?["_count"]?["test_items"] ?? 0,
                     percent: getPercent(data[index - 1]),
-                    test_id: data[index - 1]["test"]?["id"],
+                    test_id: data[index - 1]["test"]?["id"].toString(),
                   );
                 }
 
@@ -151,15 +155,6 @@ class _BookScreenState extends State<BookScreen> {
                   },
                 );
 
-                //   MyResultCard(section: sections[index],result: results[index], onTap: () {
-                //        Navigator.push(
-                //                 context,
-                //                 MaterialPageRoute(
-                //                   builder: (context) => SectionScreen(section: sections[index],),
-                //                 ),
-                //               );
-                //   }),
-                // ),
               }),
             );
             // return Expanded(

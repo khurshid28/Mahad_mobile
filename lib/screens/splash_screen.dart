@@ -65,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Widget _buildTitle() {
     return Text(
-      "Mahad Test",
+      "Test PLatform",
       style: TextStyle(
         fontSize: 20.sp,
         color: Colors.white,

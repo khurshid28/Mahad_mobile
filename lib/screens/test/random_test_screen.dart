@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_app/blocs/result/result_post_bloc.dart';
 import 'package:test_app/blocs/result/result_post_state.dart';
+import 'package:test_app/blocs/test/random_test_bloc.dart';
+import 'package:test_app/blocs/test/random_test_state.dart';
 import 'package:test_app/blocs/test/test_bloc.dart';
 import 'package:test_app/blocs/test/test_state.dart';
 import 'package:test_app/controller/result_controller.dart';
@@ -15,14 +17,16 @@ import 'package:test_app/service/toast_service.dart';
 
 import 'dart:math' as math;
 
-class TestScreen extends StatefulWidget {
+class RandomTestScreen extends StatefulWidget {
   final Section section;
-  TestScreen({required this.section , });
+ List<int>  sections;
+ int count;
+  RandomTestScreen({required this.section , required this.sections,required this.count});
   @override
-  _TestScreenState createState() => _TestScreenState();
+  _RandomTestScreenState createState() => _RandomTestScreenState();
 }
 
-class _TestScreenState extends State<TestScreen> {
+class _RandomTestScreenState extends State<RandomTestScreen> {
   Map getAnswers(int count) {
     var res = StorageService().read(
       "${StorageService.result}-${widget.section.test_id}",
@@ -102,18 +106,18 @@ class _TestScreenState extends State<TestScreen> {
 
 
         answersRandom.shuffle(random);
-        print("shuffle");
-        print(item["answer"]);
-        print("Random answer : " + rightAnswer);
-        print(answersRandom);
+        // print("shuffle");
+        // print(item["answer"]);
+        // print("Random answer : " + rightAnswer);
+        // print(answersRandom);
         
-         print(" Right : extraItem[${'answer_' + rightAnswer}] = item[${'answer_' + item["answer"]}]");
+        //  print(" Right : extraItem[${'answer_' + rightAnswer}] = item[${'answer_' + item["answer"]}]");
          
 
         for (var j = 0; j < answers.length; j++) {
- print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
-          extraItem["answer_" + answersRandom[j]] =
-              item["answer_" + answers[j]];
+//  print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
+//           extraItem["answer_" + answersRandom[j]] =
+//               item["answer_" + answers[j]];
         }
 
         res_items.add({
@@ -145,7 +149,9 @@ class _TestScreenState extends State<TestScreen> {
   @override
   void initState() {
     super.initState();
-    TestController.getByid(context, id: int.tryParse(widget.section.test_id.toString()) ?? 0 );
+    TestController.getRandom(context, count:widget.count,sections:widget.sections);
+    print(widget.count);
+    print(widget.sections);
   }
 
   String realText(String data) {
@@ -194,10 +200,10 @@ class _TestScreenState extends State<TestScreen> {
         ),
       ),
       backgroundColor: Colors.grey.shade200,
-      body: BlocListener<TestBloc, TestState>(
+      body: BlocListener<RandomTestBloc, RandomTestState>(
         child: bodySection(),
         listener: (context, state) async {
-          if (state is TestErrorState) {
+          if (state is RandomTestErrorState) {
             if (state.statusCode == 401) {
               Logout(context);
             } else {
@@ -213,12 +219,13 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   Widget bodySection() {
-    return BlocBuilder<TestBloc, TestState>(
+    return BlocBuilder<RandomTestBloc, RandomTestState>(
       builder: (context, state) {
-        if (state is TestSuccessState) {
-          List test_items = getTestsFromStorage(state.data["test_items"] ?? []);
+        if (state is RandomTestSuccessState) {
+          List test_items = getTestsFromStorage(state.data ?? []);
           var test = test_items[item_index];
           var count = test_items.length;
+    
           var results = getAnswers(count);
 
           String? answer = results["${item_index + 1}"];
@@ -266,8 +273,7 @@ class _TestScreenState extends State<TestScreen> {
                             
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 16.h),
-                              child:
-                               Row(
+                              child: Row(
                                 children: [
                                    ((answer?.isNotEmpty ?? false  ) && ["A", "B", "C", "D"][index] == test["answer"])
                                       ? Container(
@@ -420,11 +426,11 @@ class _TestScreenState extends State<TestScreen> {
                             await ResultController.post(
                               context,
                               solved: rightAnswer(test_items),
-                              test_id:int.tryParse(widget.section.test_id.toString()) ?? 0,
                               answers:  test_items.map((e)=>{
                                 ...(e as Map),
                                 "my_answer" : results[e["number"].toString()]
-                              }).toList()
+                              }).toList(),
+                              type: "RANDOM"
                             );
                           } else if (item_index < count - 1) {
                             setState(() {
@@ -485,7 +491,7 @@ class _TestScreenState extends State<TestScreen> {
               ),
             ],
           );
-        } else if (state is TestWaitingState) {
+        } else if (state is RandomTestWaitingState) {
           return SizedBox(
             height: 300.h,
             child: Center(

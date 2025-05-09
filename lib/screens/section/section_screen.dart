@@ -73,7 +73,7 @@ class _SectionScreenState extends State<SectionScreen> {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
-        child: CustomAppBar(titleText: widget.section.name, isLeading: true),
+        child: CustomAppBar(titleText: widget.section.name ?? "", isLeading: true),
       ),
       backgroundColor: AppConstant.whiteColor,
       body: SingleChildScrollView(
@@ -140,7 +140,7 @@ class _SectionScreenState extends State<SectionScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          widget.section.name,
+                          widget.section.name ?? "",
                           textAlign: TextAlign.left,
                           style: TextStyle(
                             fontSize: 18.sp,

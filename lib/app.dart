@@ -7,6 +7,7 @@ import 'package:test_app/blocs/result/result_post_bloc.dart';
 import 'package:test_app/blocs/section/section_all_bloc.dart';
 import 'package:test_app/blocs/section/section_bloc.dart';
 import 'package:test_app/blocs/subject/subject_all_bloc.dart';
+import 'package:test_app/blocs/test/random_test_bloc.dart';
 import 'package:test_app/blocs/test/test_bloc.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/screens/splash_screen.dart';
@@ -40,28 +41,28 @@ class MyApp extends StatelessWidget {
 List<BlocProvider> providers = [
   BlocProvider<AuthBloc>(
     create: (BuildContext context) => AuthBloc(),
-    lazy: false,
+    lazy: true,
   ),
 
   BlocProvider<SubjectAllBloc>(
     create: (BuildContext context) => SubjectAllBloc(),
-    lazy: false,
+    lazy: true,
   ),
 
   BlocProvider<BookAllBloc>(
     create: (BuildContext context) => BookAllBloc(),
-    lazy: false,
+    lazy: true,
   ),
 
   BlocProvider<ResultAllBloc>(
     create: (BuildContext context) => ResultAllBloc(),
-    lazy: false,
+    lazy: true,
   ),
 
 
  BlocProvider<ResultPostBloc>(
     create: (BuildContext context) => ResultPostBloc(),
-    lazy: false,
+    lazy: true,
   ),
    BlocProvider<SectionAllBloc>(
     create: (BuildContext context) => SectionAllBloc(),
@@ -70,14 +71,18 @@ List<BlocProvider> providers = [
 
    BlocProvider<SectionBloc>(
     create: (BuildContext context) => SectionBloc(),
-    lazy: false,
+    lazy: true,
   ),
    BlocProvider<RateBloc>(
     create: (BuildContext context) => RateBloc(),
-    lazy: false,
+    lazy: true,
   ),
     BlocProvider<TestBloc>(
     create: (BuildContext context) => TestBloc(),
-    lazy: false,
+    lazy: true,
+  ),
+  BlocProvider<RandomTestBloc>(
+    create: (BuildContext context) => RandomTestBloc(),
+    lazy: true,
   ),
 ];

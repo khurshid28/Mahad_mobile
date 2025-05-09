@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_app/blocs/rate/rate_state.dart';
 import 'package:test_app/blocs/rate/rate_bloc.dart';
 import 'package:test_app/controller/rate_controller.dart';
+import 'package:test_app/controller/section_controller.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/screens/book/books_body.dart';
 import 'package:test_app/screens/home/home_screen.dart';
@@ -71,6 +72,7 @@ class _MainScreenState extends State<MainScreen> {
   void initState() { 
     super.initState();
     RateController.getAll(context);
+    SectionController.getAll(context);
   }
   @override
   Widget build(BuildContext context) {

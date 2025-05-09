@@ -25,5 +25,14 @@ class StorageService {
 
    static String test = 'test';
 
+static String random = 'random';
+
+static String login = 'login';
+static String password = 'password';
+
+
+
+
+
 
 }

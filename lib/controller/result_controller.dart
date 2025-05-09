@@ -26,9 +26,9 @@ class ResultController {
     }
   }
 
-  static Future<void> post(BuildContext context,{required int solved, required int test_id,required List answers}) async {
+  static Future<void> post(BuildContext context,{required int solved,  int? test_id,required List answers,String? type}) async {
     try {
-      await BlocProvider.of<ResultPostBloc>(context).post(solved: solved,test_id: test_id,answers: answers);
+      await BlocProvider.of<ResultPostBloc>(context).post(solved: solved,test_id: test_id,answers: answers ,type : type);
     } catch (e, track) {
       if (kDebugMode) {
         print("Controller Error >>$e");

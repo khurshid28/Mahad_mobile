@@ -31,6 +31,13 @@ class _LoginScreenState extends State<LoginScreen> {
   ToastService toastService = ToastService();
 
   @override
+  void initState() {
+    phoneController.text = StorageService().read(StorageService.login) ?? "";
+     passwordController.text = StorageService().read(StorageService.password) ?? "";
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -69,13 +76,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         state.access_token.toString(),
                       ),
                       StorageService().write(StorageService.user, state.user),
+                      StorageService().write(
+                        StorageService.login,
+                        phoneController.text,
+                      ),
+                      StorageService().write(
+                        StorageService.password,
+                        passwordController.text,
+                      ),
                     ]);
                     toastService.success(
                       message: state.message ?? "Successfully",
                     );
-                   _navigateToHome();
-
-                    
+                    _navigateToHome();
                   }
                 },
               ),
@@ -94,20 +107,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildTitle() {
     return Text(
-      "Mahad Test tizimiga kirish",
+      "Test tizimiga kirish",
       style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold),
     );
   }
 
   Widget _buildPhoneInput() {
+    
     return TextFormField(
-
       controller: phoneController,
       keyboardType: TextInputType.phone,
       cursorColor: AppConstant.secondaryColor,
-       onChanged: (value) => setState(() {
-        
-      }),
+       autofillHints:  [ "Telefon raqam"],
+      onChanged: (value) => setState(() {}),
       decoration: _inputDecoration(
         labelText: '+998',
         hintText: 'Telefon raqam',
@@ -124,9 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
       keyboardType: TextInputType.visiblePassword,
       cursorColor: AppConstant.secondaryColor,
       obscureText: isPasswordVisible,
-      onChanged: (value) => setState(() {
-        
-      }),
+      onChanged: (value) => setState(() {}),
       decoration: _inputDecoration(
         labelText: 'Parol',
         hintText: 'Parolni kiriting',
@@ -154,22 +164,24 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildLoginButton() {
-    return ElevatedButton(
+    return 
+    
+    ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: (phoneController.text.length==12 && passwordController.text.length>=8) ?  AppConstant.primaryColor  :AppConstant.greyColor,
+        backgroundColor:
+            (phoneController.text.length == 12 &&
+                    passwordController.text.length >= 8)
+                ? AppConstant.primaryColor
+                : AppConstant.greyColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
         padding: EdgeInsets.symmetric(vertical: 14.h),
       ),
-      onPressed: ()async {
-       
-  
-      var login ="+998${phoneController.text.replaceAll(" ", "")}";
-      var password =passwordController.text;
-      if (login.length==13 && password.length>=8) {
-         await AuthController.login(context, login: login, password: password);
-      }
-      
-        
+      onPressed: () async {
+        var login = "+998${phoneController.text.replaceAll(" ", "")}";
+        var password = passwordController.text;
+        if (login.length == 13 && password.length >= 8) {
+          await AuthController.login(context, login: login, password: password);
+        }
       },
       child: Center(
         child: Text(
@@ -226,4 +238,5 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
 }
