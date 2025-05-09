@@ -73,7 +73,6 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
     }
     return count;
   }
-
   List getTestsFromStorage(List items)  {
     var test = StorageService().read(
       "${StorageService.test}-${widget.section.test_id}",
@@ -115,9 +114,9 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
          
 
         for (var j = 0; j < answers.length; j++) {
-//  print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
-//           extraItem["answer_" + answersRandom[j]] =
-//               item["answer_" + answers[j]];
+ print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
+          extraItem["answer_" + answersRandom[j]] =
+              item["answer_" + answers[j]];
         }
 
         res_items.add({

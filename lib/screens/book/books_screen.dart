@@ -141,6 +141,7 @@ class _BooksScreenState extends State<BooksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // resizeToAvoidBottomInset: false,
       backgroundColor: AppConstant.whiteColor,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
@@ -170,245 +171,37 @@ class _BooksScreenState extends State<BooksScreen> {
                     onTap: () async {
                       await showModalBottomSheet(
                         isScrollControlled: true,
+                        
                         showDragHandle: true,
                         context: context,
                         builder:
                             (
                               context,
-                            ) => BlocBuilder<SectionAllBloc, SectionAllState>(
-                              builder: (context, stateSectionAll) {
-                                if (stateSectionAll is SectionAllSuccessState) {
-                                  var sections = stateSectionAll.data;
-                                  return StatefulBuilder(
-                                    builder: (context, sts) {
-                                      return FractionallySizedBox(
-                                        heightFactor: 0.9,
-                                        widthFactor: 1,
-                                        child: SingleChildScrollView(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 16.w,
-                                            vertical: 16.h,
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Text(
-                                                    "Kitoblar va bo'limlar",
-                                                    style: TextStyle(
-                                                      color:
-                                                          AppConstant
-                                                              .blackColor,
-                                                      fontSize: 18.sp,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              SizedBox(height: 16.h),
-                                              ...List.generate(selectedItems.length, (
-                                                index,
-                                              ) {
-                                                var sortedSections =
-                                                    sections
-                                                        .where(
-                                                          (e) =>
-                                                              e["book_id"]
-                                                                  .toString() ==
-                                                              data[index]["id"]
-                                                                  .toString(),
-                                                        )
-                                                        .toList();
-
-                                                if ((selectedItems[index]["items"]
-                                                        as List)
-                                                    .isEmpty) {
-                                                  selectedItems[index]["items"] =
-                                                      sortedSections.map((e) {
-                                                        e["selected"] = false;
-                                                        return e;
-                                                      }).toList();
-                                                }
-
-                                                return Column(
+                            ) =>  
+                                 Padding(
+                                 padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom, // Push up on keyboard
+          ),
+                                  child: BlocBuilder<SectionAllBloc, SectionAllState>(
+                                    builder: (context, stateSectionAll) {
+                                      if (stateSectionAll is SectionAllSuccessState) {
+                                        var sections = stateSectionAll.data;
+                                        return StatefulBuilder(
+                                          builder: (context, sts) {
+                                            return FractionallySizedBox(
+                                              heightFactor: 0.9,
+                                              widthFactor: 1,
+                                              child: SingleChildScrollView(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 16.w,
+                                                  vertical: 16.h,
+                                                ),
+                                                child: Column(
                                                   children: [
-                                                    GestureDetector(
-                                                      onTap: () {
-                                                        sts(() {
-                                                          var value =
-                                                              selectedItems[index]["selected"];
-                                                          selectedItems[index]["selected"] =
-                                                              !value;
-
-                                                          selectedItems[index]["items"] =
-                                                              (selectedItems[index]["items"]
-                                                                      as List)
-                                                                  .map((e) {
-                                                                    e["selected"] =
-                                                                        !value;
-
-                                                                    return e;
-                                                                  })
-                                                                  .toList();
-                                                        });
-                                                      },
-                                                      child: Row(
-                                                        children: [
-                                                          selectedItems[index]["selected"]
-                                                              ? Container(
-                                                                width: 34.w,
-                                                                height: 34.w,
-                                                                alignment:
-                                                                    Alignment
-                                                                        .center,
-                                                                decoration: BoxDecoration(
-                                                                  borderRadius:
-                                                                      BorderRadius.circular(
-                                                                        12.r,
-                                                                      ),
-                                                                  color:
-                                                                      AppConstant
-                                                                          .primaryColor,
-                                                                ),
-                                                                child: SvgPicture.asset(
-                                                                  'assets/icons/check.svg',
-                                                                  width: 18.w,
-                                                                  colorFilter: const ColorFilter.mode(
-                                                                    AppConstant
-                                                                        .whiteColor,
-                                                                    BlendMode
-                                                                        .srcIn,
-                                                                  ),
-                                                                ),
-                                                              )
-                                                              : Container(
-                                                                width: 34.w,
-                                                                height: 34.w,
-
-                                                                alignment:
-                                                                    Alignment
-                                                                        .center,
-                                                                decoration: BoxDecoration(
-                                                                  borderRadius:
-                                                                      BorderRadius.circular(
-                                                                        12.r,
-                                                                      ),
-                                                                  border: Border.all(
-                                                                    color:
-                                                                        Colors
-                                                                            .grey
-                                                                            .shade500,
-                                                                    width: 3.w,
-                                                                  ),
-                                                                ),
-                                                              ),
-
-                                                          SizedBox(width: 10.w),
-                                                          SizedBox(
-                                                            width: 260.w,
-                                                            child: Text(
-                                                              data[index]["name"]
-                                                                  .toString(),
-                                                              style:
-                                                                  TextStyle(),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    if (selectedItems[index]["selected"])
-                                                      ...List.generate(
-                                                        sortedSections.length,
-                                                        (i) => Padding(
-                                                          padding:
-                                                              EdgeInsets.symmetric(
-                                                                horizontal:
-                                                                    16.w,
-                                                                vertical: 4.h,
-                                                              ),
-                                                          child: GestureDetector(
-                                                            onTap: () {
-                                                              selectedItems[index]["items"][i]["selected"] =
-                                                                  !selectedItems[index]["items"][i]["selected"];
-                                                              sts(() {});
-                                                            },
-                                                            child: Row(
-                                                              children: [
-                                                                selectedItems[index]["items"][i]["selected"]
-                                                                    ? Container(
-                                                                      width:
-                                                                          34.w,
-                                                                      height:
-                                                                          34.w,
-                                                                      alignment:
-                                                                          Alignment
-                                                                              .center,
-                                                                      decoration: BoxDecoration(
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(
-                                                                              12.r,
-                                                                            ),
-                                                                        color:
-                                                                            AppConstant.primaryColor,
-                                                                      ),
-                                                                      child: SvgPicture.asset(
-                                                                        'assets/icons/check.svg',
-                                                                        width:
-                                                                            18.w,
-                                                                        colorFilter: const ColorFilter.mode(
-                                                                          AppConstant
-                                                                              .whiteColor,
-                                                                          BlendMode
-                                                                              .srcIn,
-                                                                        ),
-                                                                      ),
-                                                                    )
-                                                                    : Container(
-                                                                      width:
-                                                                          34.w,
-                                                                      height:
-                                                                          34.w,
-
-                                                                      alignment:
-                                                                          Alignment
-                                                                              .center,
-                                                                      decoration: BoxDecoration(
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(
-                                                                              12.r,
-                                                                            ),
-                                                                        border: Border.all(
-                                                                          color:
-                                                                              Colors.grey.shade500,
-                                                                          width:
-                                                                              3.w,
-                                                                        ),
-                                                                      ),
-                                                                    ),
-
-                                                                SizedBox(
-                                                                  width: 10.w,
-                                                                ),
-                                                                SizedBox(
-                                                                  width: 244.w,
-                                                                  child: Text(
-                                                                    selectedItems[index]["items"][i]["name"]
-                                                                        .toString(),
-                                                                    style:
-                                                                        TextStyle(),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    SizedBox(height: 16.h),
                                                     Row(
                                                       children: [
                                                         Text(
-                                                          "Test sonini kiriting",
+                                                          "Kitoblar va bo'limlar",
                                                           style: TextStyle(
                                                             color:
                                                                 AppConstant
@@ -421,132 +214,335 @@ class _BooksScreenState extends State<BooksScreen> {
                                                       ],
                                                     ),
                                                     SizedBox(height: 16.h),
-                                                    Row(
-                                                      children: [
-                                                        SizedBox(
-                                                          width: 108.w,
-                                                          child: TextFormField(
-                                                            controller:
-                                                                numberOfTestController,
-                                                            keyboardType:
-                                                                TextInputType
-                                                                    .number,
-                                                            cursorColor:
-                                                                AppConstant
-                                                                    .blackColor,
-                                                            onChanged:
-                                                                (value) =>
-                                                                    sts(
-                                                                      () {},
-                                                                    ),
-                                                            decoration:
-                                                                inputDecoration(
-                                                                  labelText: "",
-                                                                  hintText: '',
-                                                                  iconPath:
-                                                                      'assets/icons/magazine.svg',
-                                                                ),
-                                                            style: TextStyle(
-                                                              color:
-                                                                  AppConstant
-                                                                      .blackColor,
-                                                              fontSize: 16.sp,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    SizedBox(height: 16.h),
-                                                    ElevatedButton(
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor:
-                                                            (checkTestBoshlash())
-                                                                ? AppConstant
-                                                                    .primaryColor
-                                                                : AppConstant
-                                                                    .greyColor,
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                8.r,
-                                                              ),
-                                                        ),
-                                                        padding:
-                                                            EdgeInsets.symmetric(
-                                                              vertical: 14.h,
-                                                            ),
-                                                      ),
-                                                      onPressed: () async {
-                                                        // var login = "+998${phoneController.text.replaceAll(" ", "")}";
-                                                        // var password = passwordController.text;
-                                                        // if (login.length == 13 && password.length >= 8) {
-                                                        //   await AuthController.login(context, login: login, password: password);
-                                                        // }
-                                                        if (checkTestBoshlash()) {
-                                                          // var count =
-                                                          //     countAll();
-                                                          // if (int.parse(
-                                                          //       numberOfTestController
-                                                          //           .text,
-                                                          //     ) <=
-                                                          //     count) {
-                                                          Navigator.pop(context);
-                                                            final uuid = Uuid();
-                                                            
-                                                            await Navigator.push(
-                                                              context,
-                                                              MaterialPageRoute(
-                                                                builder:
-                                                                    (
-                                                                      context,
-                                                                    ) => RandomTestScreen(
-                                                                      sections:
-                                                                          selecteds(),
-                                                                      count:
-                                                                          int.parse(numberOfTestController.text),
-                                                                      section: Section(
-                                                                        name:
-                                                                            "Random",
-                                                                        count:
-                                                                            0,
-                                                                        test_id:
-                                                                            uuid.v4(),
+                                                    ...List.generate(selectedItems.length, (
+                                                      index,
+                                                    ) {
+                                                      var sortedSections =
+                                                          sections
+                                                              .where(
+                                                                (e) =>
+                                                                    e["book_id"]
+                                                                        .toString() ==
+                                                                    data[index]["id"]
+                                                                        .toString(),
+                                                              )
+                                                              .toList();
+                                  
+                                                      if ((selectedItems[index]["items"]
+                                                              as List)
+                                                          .isEmpty) {
+                                                        selectedItems[index]["items"] =
+                                                            sortedSections.map((e) {
+                                                              e["selected"] = false;
+                                                              return e;
+                                                            }).toList();
+                                                      }
+                                  
+                                                      return Column(
+                                                        children: [
+                                                          GestureDetector(
+                                                            onTap: () {
+                                                              sts(() {
+                                                                var value =
+                                                                    selectedItems[index]["selected"];
+                                                                selectedItems[index]["selected"] =
+                                                                    !value;
+                                  
+                                                                selectedItems[index]["items"] =
+                                                                    (selectedItems[index]["items"]
+                                                                            as List)
+                                                                        .map((e) {
+                                                                          e["selected"] =
+                                                                              !value;
+                                  
+                                                                          return e;
+                                                                        })
+                                                                        .toList();
+                                                              });
+                                                            },
+                                                            child: Row(
+                                                              children: [
+                                                                selectedItems[index]["selected"]
+                                                                    ? Container(
+                                                                      width: 34.w,
+                                                                      height: 34.w,
+                                                                      alignment:
+                                                                          Alignment
+                                                                              .center,
+                                                                      decoration: BoxDecoration(
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(
+                                                                              12.r,
+                                                                            ),
+                                                                        color:
+                                                                            AppConstant
+                                                                                .primaryColor,
+                                                                      ),
+                                                                      child: SvgPicture.asset(
+                                                                        'assets/icons/check.svg',
+                                                                        width: 18.w,
+                                                                        colorFilter: const ColorFilter.mode(
+                                                                          AppConstant
+                                                                              .whiteColor,
+                                                                          BlendMode
+                                                                              .srcIn,
+                                                                        ),
+                                                                      ),
+                                                                    )
+                                                                    : Container(
+                                                                      width: 34.w,
+                                                                      height: 34.w,
+                                  
+                                                                      alignment:
+                                                                          Alignment
+                                                                              .center,
+                                                                      decoration: BoxDecoration(
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(
+                                                                              12.r,
+                                                                            ),
+                                                                        border: Border.all(
+                                                                          color:
+                                                                              Colors
+                                                                                  .grey
+                                                                                  .shade500,
+                                                                          width: 3.w,
+                                                                        ),
                                                                       ),
                                                                     ),
-                                                              ),
-                                                            );
-                                                          // } else {
-                                                          //   toastService.error(
-                                                          //     message:
-                                                          //         "Jami test $count ta ",
-                                                          //   );
-                                                          // }
-                                                        }
-                                                      },
-                                                      child: Center(
-                                                        child: Text(
-                                                          "Testni boshlash",
-                                                          style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 16.sp,
+                                  
+                                                                SizedBox(width: 10.w),
+                                                                SizedBox(
+                                                                  width: 260.w,
+                                                                  child: Text(
+                                                                    data[index]["name"]
+                                                                        .toString(),
+                                                                    style:
+                                                                        TextStyle(),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
                                                           ),
-                                                        ),
-                                                      ),
-                                                    ),
+                                                          if (selectedItems[index]["selected"])
+                                                            ...List.generate(
+                                                              sortedSections.length,
+                                                              (i) => Padding(
+                                                                padding:
+                                                                    EdgeInsets.symmetric(
+                                                                      horizontal:
+                                                                          16.w,
+                                                                      vertical: 4.h,
+                                                                    ),
+                                                                child: GestureDetector(
+                                                                  onTap: () {
+                                                                    selectedItems[index]["items"][i]["selected"] =
+                                                                        !selectedItems[index]["items"][i]["selected"];
+                                                                    sts(() {});
+                                                                  },
+                                                                  child: Row(
+                                                                    children: [
+                                                                      selectedItems[index]["items"][i]["selected"]
+                                                                          ? Container(
+                                                                            width:
+                                                                                34.w,
+                                                                            height:
+                                                                                34.w,
+                                                                            alignment:
+                                                                                Alignment
+                                                                                    .center,
+                                                                            decoration: BoxDecoration(
+                                                                              borderRadius:
+                                                                                  BorderRadius.circular(
+                                                                                    12.r,
+                                                                                  ),
+                                                                              color:
+                                                                                  AppConstant.primaryColor,
+                                                                            ),
+                                                                            child: SvgPicture.asset(
+                                                                              'assets/icons/check.svg',
+                                                                              width:
+                                                                                  18.w,
+                                                                              colorFilter: const ColorFilter.mode(
+                                                                                AppConstant
+                                                                                    .whiteColor,
+                                                                                BlendMode
+                                                                                    .srcIn,
+                                                                              ),
+                                                                            ),
+                                                                          )
+                                                                          : Container(
+                                                                            width:
+                                                                                34.w,
+                                                                            height:
+                                                                                34.w,
+                                  
+                                                                            alignment:
+                                                                                Alignment
+                                                                                    .center,
+                                                                            decoration: BoxDecoration(
+                                                                              borderRadius:
+                                                                                  BorderRadius.circular(
+                                                                                    12.r,
+                                                                                  ),
+                                                                              border: Border.all(
+                                                                                color:
+                                                                                    Colors.grey.shade500,
+                                                                                width:
+                                                                                    3.w,
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                  
+                                                                      SizedBox(
+                                                                        width: 10.w,
+                                                                      ),
+                                                                      SizedBox(
+                                                                        width: 244.w,
+                                                                        child: Text(
+                                                                          selectedItems[index]["items"][i]["name"]
+                                                                              .toString(),
+                                                                          style:
+                                                                              TextStyle(),
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          SizedBox(height: 16.h),
+                                                        
+                                                         ],
+                                                      );
+                                                    }),
+                                                        Row(
+                                                            children: [
+                                                              SizedBox(
+                                                                width: 108.w,
+                                                                child: TextFormField(
+                                                                  controller:
+                                                                      numberOfTestController,
+                                                                  keyboardType:
+                                                                      TextInputType
+                                                                          .number,
+                                                                  cursorColor:
+                                                                      AppConstant
+                                                                          .blackColor,
+                                                                  onChanged:
+                                                                      (value) =>
+                                                                          sts(
+                                                                            () {},
+                                                                          ),
+                                                                  decoration:
+                                                                      inputDecoration(
+                                                                        labelText: "",
+                                                                        hintText: '',
+                                                                        iconPath:
+                                                                            'assets/icons/magazine.svg',
+                                                                      ),
+                                                                  style: TextStyle(
+                                                                    color:
+                                                                        AppConstant
+                                                                            .blackColor,
+                                                                    fontSize: 16.sp,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          SizedBox(height: 16.h),
+                                                          ElevatedButton(
+                                                            style: ElevatedButton.styleFrom(
+                                                              backgroundColor:
+                                                                  (checkTestBoshlash())
+                                                                      ? AppConstant
+                                                                          .primaryColor
+                                                                      : AppConstant
+                                                                          .greyColor,
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      8.r,
+                                                                    ),
+                                                              ),
+                                                              padding:
+                                                                  EdgeInsets.symmetric(
+                                                                    vertical: 14.h,
+                                                                  ),
+                                                            ),
+                                                            onPressed: () async {
+                                                              // var login = "+998${phoneController.text.replaceAll(" ", "")}";
+                                                              // var password = passwordController.text;
+                                                              // if (login.length == 13 && password.length >= 8) {
+                                                              //   await AuthController.login(context, login: login, password: password);
+                                                              // }
+                                                              if (checkTestBoshlash()) {
+                                                                // var count =
+                                                                //     countAll();
+                                                                // if (int.parse(
+                                                                //       numberOfTestController
+                                                                //           .text,
+                                                                //     ) <=
+                                                                //     count) {
+                                                                Navigator.pop(context);
+                                                                  final uuid = Uuid();
+                                                                  
+                                                                  await Navigator.push(
+                                                                    context,
+                                                                    MaterialPageRoute(
+                                                                      builder:
+                                                                          (
+                                                                            context,
+                                                                          ) => RandomTestScreen(
+                                                                            sections:
+                                                                                selecteds(),
+                                                                            count:
+                                                                                int.parse(numberOfTestController.text),
+                                                                            section: Section(
+                                                                              name:
+                                                                                  "Random",
+                                                                              count:
+                                                                                  0,
+                                                                              test_id:
+                                                                                  uuid.v4(),
+                                                                            ),
+                                                                          ),
+                                                                    ),
+                                                                  );
+                                                                // } else {
+                                                                //   toastService.error(
+                                                                //     message:
+                                                                //         "Jami test $count ta ",
+                                                                //   );
+                                                                // }
+                                                              }
+                                                            },
+                                                            child: Center(
+                                                              child: Text(
+                                                                "Testni boshlash",
+                                                                style: TextStyle(
+                                                                  color: Colors.white,
+                                                                  fontSize: 16.sp,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                           SizedBox(height: 16.h),
+                                                     
                                                   ],
-                                                );
-                                              }),
-                                            ],
-                                          ),
-                                        ),
-                                      );
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      } else {
+                                        return SizedBox();
+                                      }
                                     },
-                                  );
-                                } else {
-                                  return SizedBox();
-                                }
-                              },
-                            ),
+                                  ),
+                                )
+                           ,
                       );
                     },
                     child: Row(

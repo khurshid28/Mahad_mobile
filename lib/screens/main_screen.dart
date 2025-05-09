@@ -79,6 +79,7 @@ class _MainScreenState extends State<MainScreen> {
     // print("Access_token :"+ StorageService().read(StorageService.access_token));
     return Scaffold(
       key: scaffoldKey,
+    
       backgroundColor: AppConstant.whiteColor,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
