@@ -23,9 +23,9 @@ class StorageService {
   static String result = 'result';
   static String sections = 'sections';
 
-   static String test = 'test';
+   static String test = 'test-v2';
 
-static String random = 'random';
+// static String random = 'random';
 
 static String login = 'login';
 static String password = 'password';

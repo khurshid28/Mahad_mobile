@@ -251,7 +251,7 @@ class _SectionScreenState extends State<SectionScreen> {
                     padding: EdgeInsets.symmetric(vertical: 14.h),
                   ),
                   onPressed: () async {
-                    await Navigator.push(
+                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder:
@@ -259,7 +259,7 @@ class _SectionScreenState extends State<SectionScreen> {
                               section: Section(
                                 name: state.data["name"].toString(),
                                 count: results.length,
-                                test_id: state.data["test"]?["id"],
+                                test_id: (state.data["test"]?["id"] ?? 0).toString(),
                               ),
                             ),
                       ),
@@ -293,7 +293,7 @@ class _SectionScreenState extends State<SectionScreen> {
                       setState(() {
                         answers = null;
                       });
-                      await Navigator.push(
+                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder:
@@ -301,7 +301,7 @@ class _SectionScreenState extends State<SectionScreen> {
                                 section: Section(
                                   name: state.data["name"].toString(),
                                   count: results.length,
-                                  test_id: state.data["test"]?["id"],
+                                  test_id: (state.data["test"]?["id"] ?? 0).toString(),
                                 ),
                               ),
                         ),

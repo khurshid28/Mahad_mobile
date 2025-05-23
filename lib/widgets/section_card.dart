@@ -30,7 +30,7 @@ class SectionCard extends StatelessWidget {
                 children: [
                   SizedBox(
                     // color: Colors.red.shade300,
-                    width: 270.w,
+                    width: 250.w,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

@@ -17,7 +17,7 @@ import 'dart:math' as math;
 
 class TestScreen extends StatefulWidget {
   final Section section;
-  TestScreen({required this.section , });
+  TestScreen({required this.section});
   @override
   _TestScreenState createState() => _TestScreenState();
 }
@@ -40,6 +40,9 @@ class _TestScreenState extends State<TestScreen> {
   Future clearAnswers() async {
     await StorageService().remove(
       "${StorageService.result}-${widget.section.test_id}",
+    );
+    await StorageService().remove(
+      "${StorageService.test}-${widget.section.test_id}",
     );
   }
 
@@ -70,10 +73,11 @@ class _TestScreenState extends State<TestScreen> {
     return count;
   }
 
-  List getTestsFromStorage(List items)  {
+  Map? getTestsFromStorage(List items) {
     var test = StorageService().read(
       "${StorageService.test}-${widget.section.test_id}",
     );
+
     if (test == null) {
       var res_items = [];
       math.Random random = math.Random();
@@ -96,22 +100,20 @@ class _TestScreenState extends State<TestScreen> {
         var extraItem = {};
         extraItem["answer_" + rightAnswer] = ansText;
         //change value
-        var extra =  item["answer_" + ans];
-        item["answer_" + ans]= item["answer_" + rightAnswer];
-        item["answer_" + rightAnswer] =extra;
-
+        var extra = item["answer_" + ans];
+        item["answer_" + ans] = item["answer_" + rightAnswer];
+        item["answer_" + rightAnswer] = extra;
 
         answersRandom.shuffle(random);
-        print("shuffle");
-        print(item["answer"]);
-        print("Random answer : " + rightAnswer);
-        print(answersRandom);
-        
-         print(" Right : extraItem[${'answer_' + rightAnswer}] = item[${'answer_' + item["answer"]}]");
-         
+        // print("shuffle");
+        // print(item["answer"]);
+        // print("Random answer : " + rightAnswer);
+        // print(answersRandom);
+
+        //  print(" Right : extraItem[${'answer_' + rightAnswer}] = item[${'answer_' + item["answer"]}]");
 
         for (var j = 0; j < answers.length; j++) {
- print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
+          //  print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
           extraItem["answer_" + answersRandom[j]] =
               item["answer_" + answers[j]];
         }
@@ -133,19 +135,65 @@ class _TestScreenState extends State<TestScreen> {
         //
       }
 
-     StorageService().write(
+      var now = DateTime.now();
+
+      Map? data = {
+        "time": now.toString(),
+        "finish_time":
+            now.add(Duration(seconds: res_items.length * 30)).toString(),
+        "data": res_items,
+      };
+
+      StorageService().write(
         "${StorageService.test}-${widget.section.test_id}",
-        res_items,
+        data,
       );
-      return res_items;
+      return data;
     }
     return test;
   }
 
+  Timer? timer;
   @override
   void initState() {
     super.initState();
-    TestController.getByid(context, id: int.tryParse(widget.section.test_id.toString()) ?? 0 );
+    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (mounted) {
+        if (remainingTime <= 0) {
+          Future.delayed(Duration(milliseconds: 200), () async {
+            var count = test_items.length;
+            var results = getAnswers(count);
+
+            await ResultController.post(
+              context,
+              solved: rightAnswer(test_items),
+              test_id: int.tryParse(widget.section.test_id.toString()) ?? 0,
+              answers:
+                  test_items
+                      .map(
+                        (e) => {
+                          ...(e as Map),
+                          "my_answer": results[e["number"].toString()],
+                        },
+                      )
+                      .toList(),
+            );
+          });
+        }
+        //
+        setState(() {});
+      }
+    });
+    TestController.getByid(
+      context,
+      id: int.tryParse(widget.section.test_id.toString()) ?? 0,
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    timer?.cancel();
   }
 
   String realText(String data) {
@@ -161,6 +209,13 @@ class _TestScreenState extends State<TestScreen> {
     return data;
   }
 
+  // int currentQuestion = 0;
+  // int totalQuestions = 30;
+
+  int remainingTime = 3599;
+  List test_items = [];
+  // int remainingTime = 900; // 15 daqiqa
+
   LoadingService loadingService = LoadingService();
   ToastService toastService = ToastService();
   @override
@@ -171,7 +226,7 @@ class _TestScreenState extends State<TestScreen> {
         surfaceTintColor: Colors.transparent,
         backgroundColor: AppConstant.whiteColor,
         title: Text(
-        widget.section.name ?? "",
+          widget.section.name ?? "",
           style: TextStyle(
             color: AppConstant.blackColor,
             fontSize: 18.sp,
@@ -204,8 +259,9 @@ class _TestScreenState extends State<TestScreen> {
               toastService.error(message: state.message ?? "Xatolik Bor");
             }
           } else if (state is TestSuccessState) {
-            await StorageService().remove( "${StorageService.test}-${widget.section.test_id}",);
-        
+            // await StorageService().remove(
+            //   "${StorageService.test}-${widget.section.test_id}",
+            // );
           }
         },
       ),
@@ -216,7 +272,30 @@ class _TestScreenState extends State<TestScreen> {
     return BlocBuilder<TestBloc, TestState>(
       builder: (context, state) {
         if (state is TestSuccessState) {
-          List test_items = getTestsFromStorage(state.data["test_items"] ?? []);
+          Map? storage_data = getTestsFromStorage(
+            state.data["test_items"] ?? [],
+          );
+
+          test_items = storage_data?["data"] ?? [];
+          remainingTime =
+              (DateTime.tryParse(
+                        (storage_data?["finish_time"] ?? "").toString(),
+                      ) ??
+                      DateTime.now())
+                  .difference(DateTime.now())
+                  .inSeconds;
+          // print(">>>>" + remainingTime.toString());
+          // print(storage_data?["finish_time"] ?? "");
+          int minutes = remainingTime ~/ 60;
+          int seconds = remainingTime % 60;
+          // for (var i = 0; i < 20; i++) {
+          //   print("TIME >>");
+          //   print(storage_data?["time"]);
+          //   print(storage_data?["finish_time"]);
+          // }
+          print(
+            "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}",
+          );
           var test = test_items[item_index];
           var count = test_items.length;
           var results = getAnswers(count);
@@ -235,6 +314,23 @@ class _TestScreenState extends State<TestScreen> {
                       SizedBox(
                         width: 1.sw - 64,
                         child: Text(
+                          remainingTime >= 0
+                              ? "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"
+                              : "Tugash vaqti:  00:00",
+                          style: TextStyle(
+                            color:
+                                remainingTime > 0
+                                    ? AppConstant.blueColor1
+                                    : AppConstant.redColor,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      SizedBox(
+                        width: 1.sw - 64,
+                        child: Text(
                           "${test['number']}.${realText(test['question'].toString())}",
                           textAlign: TextAlign.start,
                           style: TextStyle(
@@ -249,27 +345,28 @@ class _TestScreenState extends State<TestScreen> {
                         4,
                         (index) => GestureDetector(
                           onTap: () async {
-                           print(test["answer"]);
-                          if ((answer?.isEmpty ?? true) ) {
+                            print(test["answer"]);
+                            if ((answer?.isEmpty ?? true)) {
                               await writeAnswer(
-                              count,
-                              index: item_index,
-                              result: ["A", "B", "C", "D"][index],
-                            );
-                            setState(() {
-                              answer = ["A", "B", "C", "D"][index];
-                            });
-                          }
+                                count,
+                                index: item_index,
+                                result: ["A", "B", "C", "D"][index],
+                              );
+                              setState(() {
+                                answer = ["A", "B", "C", "D"][index];
+                              });
+                            }
                           },
                           child: Container(
                             width: 1.sw - 32.w,
-                            
+
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 16.h),
-                              child:
-                               Row(
+                              child: Row(
                                 children: [
-                                   ((answer?.isNotEmpty ?? false  ) && ["A", "B", "C", "D"][index] == test["answer"])
+                                  ((answer?.isNotEmpty ?? false) &&
+                                          ["A", "B", "C", "D"][index] ==
+                                              test["answer"])
                                       ? Container(
                                         width: 34.w,
                                         height: 34.w,
@@ -278,10 +375,10 @@ class _TestScreenState extends State<TestScreen> {
                                           borderRadius: BorderRadius.circular(
                                             12.r,
                                           ),
-                                          color:  AppConstant.primaryColor ,
+                                          color: AppConstant.primaryColor,
                                         ),
                                         child: SvgPicture.asset(
-                                         'assets/icons/check.svg'  ,
+                                          'assets/icons/check.svg',
                                           width: 18.w,
                                           colorFilter: const ColorFilter.mode(
                                             AppConstant.whiteColor,
@@ -289,10 +386,8 @@ class _TestScreenState extends State<TestScreen> {
                                           ),
                                         ),
                                       )
-                                      : 
-
-                                      answer == ["A", "B", "C", "D"][index] ?
-                                       Container(
+                                      : answer == ["A", "B", "C", "D"][index]
+                                      ? Container(
                                         width: 34.w,
                                         height: 34.w,
                                         alignment: Alignment.center,
@@ -300,20 +395,18 @@ class _TestScreenState extends State<TestScreen> {
                                           borderRadius: BorderRadius.circular(
                                             12.r,
                                           ),
-                                          color:  AppConstant.redColor ,
+                                          color: AppConstant.redColor,
                                         ),
                                         child: SvgPicture.asset(
-                                         'assets/icons/close.svg',
+                                          'assets/icons/close.svg',
                                           width: 18.w,
                                           colorFilter: const ColorFilter.mode(
                                             AppConstant.whiteColor,
                                             BlendMode.srcIn,
                                           ),
                                         ),
-                                      ) :
-                                      
-                                      
-                                      Container(
+                                      )
+                                      : Container(
                                         width: 34.w,
                                         height: 34.w,
 
@@ -340,7 +433,7 @@ class _TestScreenState extends State<TestScreen> {
                                           ),
                                         ),
                                       ),
-                                
+
                                   SizedBox(width: 10.w),
                                   SizedBox(
                                     width: 305.w,
@@ -397,7 +490,7 @@ class _TestScreenState extends State<TestScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                 Padding(
+                    Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -408,23 +501,38 @@ class _TestScreenState extends State<TestScreen> {
                           padding: EdgeInsets.symmetric(vertical: 14.h),
                         ),
                         onPressed: () async {
-                          if (item_index == count - 1 ) {
-                            test_items.map((e)=>{
-                                ...(e as Map),
-                                "my_answer" : results[e["number"].toString()]
-
-                              }).toList().forEach((k){
-                                print(">>>>> number  : ${k['number']}");
-                                print(k);
-                              });
+                          if (item_index == count - 1) {
+                            test_items
+                                .map(
+                                  (e) => {
+                                    ...(e as Map),
+                                    "my_answer":
+                                        results[e["number"].toString()],
+                                  },
+                                )
+                                .toList()
+                                .forEach((k) {
+                                  print(">>>>> number  : ${k['number']}");
+                                  print(k);
+                                });
                             await ResultController.post(
                               context,
                               solved: rightAnswer(test_items),
-                              test_id:int.tryParse(widget.section.test_id.toString()) ?? 0,
-                              answers:  test_items.map((e)=>{
-                                ...(e as Map),
-                                "my_answer" : results[e["number"].toString()]
-                              }).toList()
+                              test_id:
+                                  int.tryParse(
+                                    widget.section.test_id.toString(),
+                                  ) ??
+                                  0,
+                              answers:
+                                  test_items
+                                      .map(
+                                        (e) => {
+                                          ...(e as Map),
+                                          "my_answer":
+                                              results[e["number"].toString()],
+                                        },
+                                      )
+                                      .toList(),
                             );
                           } else if (item_index < count - 1) {
                             setState(() {
