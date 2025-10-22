@@ -1,4 +1,4 @@
-package com.khurshid28.mahad_test_app
+package com.khurshid28.tester_mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
