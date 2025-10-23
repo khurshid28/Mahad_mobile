@@ -1,8 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_app/blocs/result/result_post_bloc.dart';
 import 'package:test_app/blocs/result/result_post_state.dart';
-import 'package:test_app/blocs/test/random_test_bloc.dart';
-import 'package:test_app/blocs/test/random_test_state.dart';
 import 'package:test_app/blocs/test/test_bloc.dart';
 import 'package:test_app/blocs/test/test_state.dart';
 import 'package:test_app/controller/result_controller.dart';
@@ -17,24 +15,17 @@ import 'package:test_app/service/toast_service.dart';
 
 import 'dart:math' as math;
 
-class RandomTestScreen extends StatefulWidget {
+class TestScreenNotime extends StatefulWidget {
   final Section section;
-  List<int> sections;
-  int count;
-  RandomTestScreen({
-    required this.section,
-    required this.sections,
-    required this.count,
-  });
+  TestScreenNotime({required this.section});
   @override
-  _RandomTestScreenState createState() => _RandomTestScreenState();
+  _TestScreenNotimeState createState() => _TestScreenNotimeState();
 }
 
-class _RandomTestScreenState extends State<RandomTestScreen> {
+class _TestScreenNotimeState extends State<TestScreenNotime> {
   Map getAnswers(int count) {
-    String res_key = "${StorageService.result}-${test_random_id}";
     var res = StorageService().read(
-      "${StorageService.result}-${test_random_id}",
+      "${StorageService.result}-${widget.section.test_id}",
     );
     if (res == null) {
       var new_res = {};
@@ -50,6 +41,9 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
     await StorageService().remove(
       "${StorageService.result}-${widget.section.test_id}",
     );
+    await StorageService().remove(
+      "${StorageService.test}-${widget.section.test_id}",
+    );
   }
 
   Future writeAnswer(
@@ -57,15 +51,16 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
     required int index,
     required String result,
   }) async {
-    String res_key = "${StorageService.result}-${test_random_id}";
     var res = getAnswers(count);
     res["${index + 1}"] = result;
 
-    await StorageService().write(res_key, res);
+    await StorageService().write(
+      "${StorageService.result}-${widget.section.test_id}",
+      res,
+    );
   }
 
   int item_index = 0;
-  int test_random_id = 0;
 
   int rightAnswer(List items) {
     var res = getAnswers(items.length);
@@ -79,9 +74,10 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
   }
 
   Map? getTestsFromStorage(List items) {
-    String test_key = "${StorageService.test}-${test_random_id}";
-    var test = StorageService().read(test_key);
-    print(test_key);
+    var test = StorageService().read(
+      "${StorageService.test}-${widget.section.test_id}",
+    );
+
     if (test == null) {
       var res_items = [];
       math.Random random = math.Random();
@@ -139,86 +135,31 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
         //
       }
 
-      var now = DateTime.now();
-      int finish_time = getFinishTime(len); // in minutes
-
-      // for (var i = 0; i < 20; i++) {
-      //   print(getFinishTime(100));
-      // }
 
       Map? data = {
-        "time": now.toString(),
-        "finish_time": now.add(Duration(seconds: finish_time)).toString(),
+        
         "data": res_items,
       };
 
-      StorageService().write(test_key, data);
+      StorageService().write(
+        "${StorageService.test}-${widget.section.test_id}",
+        data,
+      );
       return data;
     }
     return test;
   }
 
-  int remainingTime = 3599;
-  List test_items = [];
-
-  getFinishTime(int count) {
-    Map? user = StorageService().read(StorageService.user);
-
-    if (user?["group"]?["fullTime"] == null) {
-      return ((user?["group"]?["timeMinutes"] ?? 0) * count);
-    } else {
-      return user?["group"]?["fullTime"] == 0
-          ? ((user?["group"]?["timeMinutes"] ?? 0) * count)
-          : user?["group"]?["fullTime"];
-    }
-  }
-
   @override
   void initState() {
-    test_random_id = math.Random().nextInt(100000);
-    print("INITTTTTTTTTTTTTTTTTTTTTTTTT >>");
     super.initState();
-    TestController.getRandom(
+    TestController.getByid(
       context,
-      count: widget.count,
-      sections: widget.sections,
+      id: int.tryParse(widget.section.test_id.toString()) ?? 0,
     );
-    timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (mounted) {
-        if (remainingTime <= 0) {
-          Future.delayed(Duration(milliseconds: 200), () async {
-            var count = test_items.length;
-            var results = getAnswers(count);
-
-            await ResultController.post(
-              context,
-              solved: rightAnswer(test_items),
-              test_id: int.tryParse(widget.section.test_id.toString()) ?? 0,
-              answers:
-                  test_items
-                      .map(
-                        (e) => {
-                          ...(e as Map),
-                          "my_answer": results[e["number"].toString()],
-                        },
-                      )
-                      .toList(),
-            );
-          });
-        }
-        //
-        setState(() {});
-      }
-    });
   }
 
-  Timer? timer;
-
-  @override
-  void dispose() {
-    super.dispose();
-    timer?.cancel();
-  }
+ 
 
   String realText(String data) {
     List<String> d = data.split(".");
@@ -233,10 +174,17 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
     return data;
   }
 
+  // int currentQuestion = 0;
+  // int totalQuestions = 30;
+
+  List test_items = [];
+  // int remainingTime = 900; // 15 daqiqa
+
   LoadingService loadingService = LoadingService();
   ToastService toastService = ToastService();
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -245,7 +193,7 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
         title: Text(
           widget.section.name ?? "",
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+  overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: AppConstant.blackColor,
             fontSize: 18.sp,
@@ -268,16 +216,16 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
         ),
       ),
       backgroundColor: Colors.grey.shade200,
-      body: BlocListener<RandomTestBloc, RandomTestState>(
+      body: BlocListener<TestBloc, TestState>(
         child: bodySection(),
         listener: (context, state) async {
-          if (state is RandomTestErrorState) {
+          if (state is TestErrorState) {
             if (state.statusCode == 401) {
               Logout(context);
             } else {
               toastService.error(message: state.message ?? "Xatolik Bor");
             }
-          } else if (state is RandomTestSuccessState) {
+          } else if (state is TestSuccessState) {
             // await StorageService().remove(
             //   "${StorageService.test}-${widget.section.test_id}",
             // );
@@ -288,35 +236,27 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
   }
 
   Widget bodySection() {
-    return BlocBuilder<RandomTestBloc, RandomTestState>(
+    return BlocBuilder<TestBloc, TestState>(
       builder: (context, state) {
-        if (state is RandomTestSuccessState) {
-          Map? storage_data = getTestsFromStorage(state.data ?? []);
-          test_items = storage_data?["data"] ?? [];
-          var test = test_items[item_index];
-          var count = test_items.length;
-          test_items = storage_data?["data"] ?? [];
+        if (state is TestSuccessState) {
+          Map? storage_data = getTestsFromStorage(
+            state.data["test_items"] ?? [],
+          );
 
-          var results = getAnswers(count);
-          remainingTime =
-              (DateTime.tryParse(
-                        (storage_data?["finish_time"] ?? "").toString(),
-                      ) ??
-                      DateTime.now())
-                  .difference(DateTime.now())
-                  .inSeconds;
+          test_items = storage_data?["data"] ?? [];
+       
           // print(">>>>" + remainingTime.toString());
           // print(storage_data?["finish_time"] ?? "");
-          int minutes = remainingTime ~/ 60;
-          int seconds = remainingTime % 60;
+        
           // for (var i = 0; i < 20; i++) {
           //   print("TIME >>");
           //   print(storage_data?["time"]);
           //   print(storage_data?["finish_time"]);
           // }
-          print(
-            "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}",
-          );
+          
+          var test = test_items[item_index];
+          var count = test_items.length;
+          var results = getAnswers(count);
 
           String? answer = results["${item_index + 1}"];
           return Column(
@@ -333,24 +273,14 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
                         width: 1.sw - 64,
                         child: Row(
                           children: [
-                            Text(
-                              (remainingTime >= 0
-                                  ? "Tugash vaqti:  ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"
-                                  : "Tugash vaqti:  00:00"),
+                           
+
+                             Text(
+                              "[${item_index+1}/${count}]",
                               style: TextStyle(
                                 color:
-                                    remainingTime > 0
-                                        ? AppConstant.blueColor1
-                                        : AppConstant.redColor,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                            SizedBox(width: 16.w),
-                            Text(
-                              "[${item_index + 1}/${count}]",
-                              style: TextStyle(
-                                color: AppConstant.primaryColor,
+                                    AppConstant.primaryColor
+                                       ,
                                 fontWeight: FontWeight.w900,
                                 fontSize: 18.sp,
                               ),
@@ -549,6 +479,11 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
                             await ResultController.post(
                               context,
                               solved: rightAnswer(test_items),
+                              test_id:
+                                  int.tryParse(
+                                    widget.section.test_id.toString(),
+                                  ) ??
+                                  0,
                               answers:
                                   test_items
                                       .map(
@@ -559,7 +494,6 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
                                         },
                                       )
                                       .toList(),
-                              type: "RANDOM",
                             );
                           } else if (item_index < count - 1) {
                             setState(() {
@@ -620,7 +554,7 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
               ),
             ],
           );
-        } else if (state is RandomTestWaitingState) {
+        } else if (state is TestWaitingState) {
           return SizedBox(
             height: 300.h,
             child: Center(

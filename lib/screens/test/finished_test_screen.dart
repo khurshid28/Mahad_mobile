@@ -40,6 +40,8 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
         backgroundColor: AppConstant.whiteColor,
         title: Text(
           widget.section.name ?? "",
+          maxLines: 1,
+  overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: AppConstant.blackColor,
             fontSize: 18.sp,

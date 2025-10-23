@@ -136,11 +136,11 @@ class _TestScreenState extends State<TestScreen> {
       }
 
       var now = DateTime.now();
+      int finish_time = getFinishTime(res_items.length); // in minutes
 
       Map? data = {
         "time": now.toString(),
-        "finish_time":
-            now.add(Duration(seconds: res_items.length * 30)).toString(),
+        "finish_time": now.add(Duration(seconds: finish_time)).toString(),
         "data": res_items,
       };
 
@@ -154,6 +154,19 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   Timer? timer;
+
+  getFinishTime(int count) {
+    Map? user = StorageService().read(StorageService.user);
+
+    if (user?["group"]?["fullTime"] == null) {
+      return ((user?["group"]?["timeMinutes"] ?? 0) * count);
+    } else {
+      return user?["group"]?["fullTime"] == 0
+          ? ((user?["group"]?["timeMinutes"] ?? 0) * count)
+          : user?["group"]?["fullTime"];
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -227,6 +240,8 @@ class _TestScreenState extends State<TestScreen> {
         backgroundColor: AppConstant.whiteColor,
         title: Text(
           widget.section.name ?? "",
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: AppConstant.blackColor,
             fontSize: 18.sp,
@@ -313,18 +328,31 @@ class _TestScreenState extends State<TestScreen> {
                     children: [
                       SizedBox(
                         width: 1.sw - 64,
-                        child: Text(
-                          remainingTime >= 0
-                              ? "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"
-                              : "Tugash vaqti:  00:00",
-                          style: TextStyle(
-                            color:
-                                remainingTime > 0
-                                    ? AppConstant.blueColor1
-                                    : AppConstant.redColor,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16.sp,
-                          ),
+                        child: Row(
+                          children: [
+                            Text(
+                              remainingTime >= 0
+                                  ? "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"
+                                  : "Tugash vaqti:  00:00",
+                              style: TextStyle(
+                                color:
+                                    remainingTime > 0
+                                        ? AppConstant.blueColor1
+                                        : AppConstant.redColor,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16.sp,
+                              ),
+                            ),
+                            SizedBox(width: 16.w),
+                            Text(
+                              "[${item_index + 1}/${count}]",
+                              style: TextStyle(
+                                color: AppConstant.primaryColor,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 18.sp,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       SizedBox(height: 16.h),

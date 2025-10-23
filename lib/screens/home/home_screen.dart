@@ -94,6 +94,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:test_app/blocs/subject/subject_all_bloc.dart';
 import 'package:test_app/blocs/subject/subject_all_state.dart';
 import 'package:test_app/controller/subject_controller.dart';
@@ -142,9 +143,30 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    checkForUpdate();
     SubjectController.getAll(context);
   }
+Future<void> checkForUpdate() async {
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+        
+        // Flexible update boshlash
+        // await InAppUpdate.startFlexibleUpdate();
 
+        // // Yuklab bo‘lingach darhol o‘rnatish
+        // await InAppUpdate.completeFlexibleUpdate();
+
+
+        await InAppUpdate.performImmediateUpdate();
+
+        debugPrint("Update completed and app restarting...");
+      
+      }
+    } catch (e) {
+      debugPrint("Update check error: $e");
+    }
+  }
   List _filterSubjects(List subjects) {
     return  subjects
               .where(

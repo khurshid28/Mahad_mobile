@@ -10,6 +10,7 @@ import 'package:test_app/models/result.dart';
 import 'package:test_app/models/section.dart';
 import 'package:test_app/screens/test/finished_test_screen.dart';
 import 'package:test_app/screens/test/test_screen.dart';
+import 'package:test_app/screens/test/test_screen_notime.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
@@ -57,15 +58,19 @@ class _SectionScreenState extends State<SectionScreen> {
   }
 
   Future clearAnswers() async {
-  
     await Future.wait([
       StorageService().remove(
-      "${StorageService.result}-${widget.section.test_id}",
-    ),
-    StorageService().remove(
-      "${StorageService.test}-${widget.section.test_id}",
-    )
+        "${StorageService.result}-${widget.section.test_id}",
+      ),
+      StorageService().remove(
+        "${StorageService.test}-${widget.section.test_id}",
+      ),
     ]);
+  }
+
+  bool hasTime() {
+    Map? user = StorageService().read(StorageService.user);
+    return user?["group"]?["hasTime"] ?? false;
   }
 
   @override
@@ -73,7 +78,10 @@ class _SectionScreenState extends State<SectionScreen> {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
-        child: CustomAppBar(titleText: widget.section.name ?? "", isLeading: true),
+        child: CustomAppBar(
+          titleText: widget.section.name ?? "",
+          isLeading: true,
+        ),
       ),
       backgroundColor: AppConstant.whiteColor,
       body: SingleChildScrollView(
@@ -216,23 +224,22 @@ class _SectionScreenState extends State<SectionScreen> {
                       return ResultCard(
                         result: res,
                         count: widget.section.count,
-                        onTap: () async{
-                         
-                            await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => FinishedTestScreen(
-                              section: Section(
-                                name: state.data["name"].toString(),
-                                count: results.length,
-                                test_id: state.data["test"]?["id"],
-                                
-                              ),
-                              answers: results[index]["answers"],
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => FinishedTestScreen(
+                                    section: Section(
+                                      name: state.data["name"].toString(),
+                                      count: results.length,
+                                      test_id:
+                                          state.data["test"]?["id"]?.toString(),
+                                    ),
+                                    answers: results[index]["answers"],
+                                  ),
                             ),
-                      ),
-                    );
+                          );
                         },
                       );
                     }),
@@ -240,42 +247,56 @@ class _SectionScreenState extends State<SectionScreen> {
                 ),
               ),
 
-            if(widget.section.count  > 0)  Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppConstant.primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                  ),
-                  onPressed: () async {
-                     Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => TestScreen(
-                              section: Section(
-                                name: state.data["name"].toString(),
-                                count: results.length,
-                                test_id: (state.data["test"]?["id"] ?? 0).toString(),
-                              ),
-                            ),
+              if (widget.section.count > 0)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConstant.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
-                    );
-                    setState(() {
-                      answers = getAnswers();
-                    });
-                  },
-                  child: Center(
-                    child: Text(
-                      answers != null ? "Davom qilish" : "Testni boshlash",
-                      style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                    ),
+                    onPressed: () async {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) =>
+                                  hasTime()
+                                      ? TestScreen(
+                                        section: Section(
+                                          name: state.data["name"].toString(),
+                                          count: results.length,
+                                          test_id:
+                                              (state.data["test"]?["id"] ?? 0)
+                                                  .toString(),
+                                        ),
+                                      )
+                                      : TestScreenNotime(
+                                        section: Section(
+                                          name: state.data["name"].toString(),
+                                          count: results.length,
+                                          test_id:
+                                              (state.data["test"]?["id"] ?? 0)
+                                                  .toString(),
+                                        ),
+                                      ),
+                        ),
+                      );
+                      setState(() {
+                        answers = getAnswers();
+                      });
+                    },
+                    child: Center(
+                      child: Text(
+                        answers != null ? "Davom qilish" : "Testni boshlash",
+                        style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                      ),
                     ),
                   ),
                 ),
-              ),
 
               if (answers != null)
                 Padding(
@@ -293,17 +314,30 @@ class _SectionScreenState extends State<SectionScreen> {
                       setState(() {
                         answers = null;
                       });
-                       Navigator.push(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder:
-                              (context) => TestScreen(
-                                section: Section(
-                                  name: state.data["name"].toString(),
-                                  count: results.length,
-                                  test_id: (state.data["test"]?["id"] ?? 0).toString(),
-                                ),
-                              ),
+                              (context) =>
+                                  hasTime()
+                                      ? TestScreen(
+                                        section: Section(
+                                          name: state.data["name"].toString(),
+                                          count: results.length,
+                                          test_id:
+                                              (state.data["test"]?["id"] ?? 0)
+                                                  .toString(),
+                                        ),
+                                      )
+                                      : TestScreenNotime(
+                                        section: Section(
+                                          name: state.data["name"].toString(),
+                                          count: results.length,
+                                          test_id:
+                                              (state.data["test"]?["id"] ?? 0)
+                                                  .toString(),
+                                        ),
+                                      ),
                         ),
                       );
                       setState(() {

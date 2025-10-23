@@ -15,7 +15,9 @@ import 'package:test_app/models/book.dart';
 import 'package:test_app/models/subject.dart';
 import 'package:test_app/screens/book/book_screen.dart';
 import 'package:test_app/screens/test/random_test_screen.dart';
+import 'package:test_app/screens/test/random_test_screen_notime.dart';
 import 'package:test_app/service/logout.dart';
+import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
 import 'package:test_app/widgets/BookCard.dart';
 import 'package:uuid/uuid.dart';
@@ -138,6 +140,12 @@ class _BooksScreenState extends State<BooksScreen> {
     return res;
   }
 
+
+
+  bool hasTime(){
+    Map? user = StorageService().read(StorageService.user);
+    return user?["group"]?["hasTime"] ?? false;
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -494,7 +502,20 @@ class _BooksScreenState extends State<BooksScreen> {
                                                                       builder:
                                                                           (
                                                                             context,
-                                                                          ) => RandomTestScreen(
+                                                                          ) => hasTime() ? RandomTestScreen(
+                                                                            sections:
+                                                                                selecteds(),
+                                                                            count:
+                                                                                int.parse(numberOfTestController.text),
+                                                                            section: Section(
+                                                                              name:
+                                                                                  "Random",
+                                                                              count:
+                                                                                  0,
+                                                                              test_id:
+                                                                                  uuid.v4(),
+                                                                            ),
+                                                                          ) : RandomTestScreenNotime(
                                                                             sections:
                                                                                 selecteds(),
                                                                             count:

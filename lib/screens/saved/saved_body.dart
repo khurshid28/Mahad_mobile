@@ -67,7 +67,7 @@ class _SavedBodyState extends State<SavedBody> {
                   name: sections[index]["name"],
                   id: sections[index]["id"],
                   count: sections[index]["test"]?["_count"]?["test_items"] ?? 1,
-                  test_id: sections[index]["test"]?["id"],
+                  test_id: sections[index]["test"]?["id"]?.toString(),
                 );
                 await Navigator.push(
                   context,
