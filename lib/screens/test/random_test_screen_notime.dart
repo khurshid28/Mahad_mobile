@@ -7,6 +7,7 @@ import 'package:test_app/blocs/test/test_bloc.dart';
 import 'package:test_app/blocs/test/test_state.dart';
 import 'package:test_app/controller/result_controller.dart';
 import 'package:test_app/controller/test_controller.dart';
+import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/section.dart';
 import 'package:test_app/screens/test/finish_screen.dart';
@@ -214,7 +215,9 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
           ),
         ),
       ),
-      backgroundColor: Colors.grey.shade200,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF1A1A1A)
+          : Colors.grey.shade200,
       body: BlocListener<RandomTestBloc, RandomTestState>(
         child: bodySection(),
         listener: (context, state) async {
@@ -283,7 +286,7 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
                           "${test['number']}.${realText(test['question'].toString())}",
                           textAlign: TextAlign.start,
                           style: TextStyle(
-                            color: Colors.black,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                             fontWeight: FontWeight.w500,
                             fontSize: 16.sp,
                           ),
@@ -541,32 +544,8 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
         } else if (state is RandomTestWaitingState) {
           return SizedBox(
             height: 300.h,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(
-                    color: AppConstant.primaryColor,
-                    strokeWidth: 6.w,
-                    strokeAlign: 2,
-                    strokeCap: StrokeCap.round,
-                    backgroundColor: AppConstant.primaryColor.withOpacity(0.2),
-                  ),
-                  SizedBox(height: 48.h),
-                  SizedBox(
-                    height: 30.h,
-                    child: Text(
-                      "Ma\'lumot yuklanmoqda...",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w300,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            child: CommonLoading(
+              message: "Ma\'lumot yuklanmoqda...",
             ),
           );
         } else {

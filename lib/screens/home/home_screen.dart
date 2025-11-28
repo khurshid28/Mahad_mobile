@@ -90,22 +90,22 @@
 //   }
 // }
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:in_app_update/in_app_update.dart';
+import 'package:test_app/blocs/special_test/special_test_bloc.dart';
 import 'package:test_app/blocs/subject/subject_all_bloc.dart';
 import 'package:test_app/blocs/subject/subject_all_state.dart';
 import 'package:test_app/controller/subject_controller.dart';
 import 'package:test_app/core/const/const.dart';
 import 'package:test_app/core/endpoints/endpoints.dart';
+import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/subject.dart';
 import 'package:test_app/screens/book/books_screen.dart';
+import 'package:test_app/screens/special_test/special_test_list_screen.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/toast_service.dart';
-import 'package:test_app/widgets/custom_text_field.dart';
 import 'package:test_app/widgets/subject_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -145,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     checkForUpdate();
     SubjectController.getAll(context);
+    context.read<SpecialTestBloc>().add(LoadSpecialTests());
   }
 Future<void> checkForUpdate() async {
     try {
@@ -180,8 +181,74 @@ Future<void> checkForUpdate() async {
   ToastService toastService = ToastService();
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: AppConstant.whiteColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButton: BlocBuilder<SpecialTestBloc, SpecialTestState>(
+        builder: (context, state) {
+          int testCount = 0;
+          if (state is SpecialTestsLoaded) {
+            // Faqat aktiv testlarni sanash
+            testCount = state.tests.where((test) => test.isActive).length;
+          }
+          
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SpecialTestListScreen(),
+                    ),
+                  );
+                },
+                backgroundColor: AppConstant.primaryColor,
+                icon: const Icon(Icons.star, color: Colors.white),
+                label: const Text(
+                  'Maxsus Testlar',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              if (testCount > 0)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: testCount > 99 ? 6.w : 8.w,
+                      vertical: 4.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppConstant.accentOrange,
+                      borderRadius: BorderRadius.circular(12.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppConstant.accentOrange.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      testCount > 99 ? '99+' : testCount.toString(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
@@ -196,12 +263,12 @@ Future<void> checkForUpdate() async {
                   horizontal: 10.w,
                   vertical: 15.h,
                 ),
-                fillColor: Colors.grey.shade200,
+                fillColor: isDark ? const Color(0xFF3A3A3A) : Colors.grey.shade200,
                 filled: true,
 
                 hintText: "Fan qidirish",
                 hintStyle: TextStyle(
-                  color: Colors.grey.shade600,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                   fontWeight: FontWeight.w400,
                 ),
                 prefixIcon: Padding(
@@ -216,7 +283,7 @@ Future<void> checkForUpdate() async {
                     "assets/icons/search.svg",
                     width: 10.w,
                     height: 10.h,
-                    color: Colors.grey.shade600,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                   ),
                 ),
                 border: OutlineInputBorder(
@@ -226,6 +293,15 @@ Future<void> checkForUpdate() async {
               ),
             ),
             SizedBox(height: 20.h),
+            BlocListener<SpecialTestBloc, SpecialTestState>(
+              listener: (context, state) {
+                if (state is SpecialTestError) {
+                  // Silently handle error - don't show to user
+                  // Special tests are optional feature
+                }
+              },
+              child: const SizedBox(),
+            ),
             BlocListener<SubjectAllBloc, SubjectAllState>(
               child: SizedBox(),
               listener: (context, state) async {
@@ -305,32 +381,8 @@ Future<void> checkForUpdate() async {
         } else if (state is SubjectAllWaitingState) {
           return SizedBox(
             height: 300.h,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(
-                    color: AppConstant.primaryColor,
-                    strokeWidth: 6.w,
-                    strokeAlign: 2,
-                    strokeCap: StrokeCap.round,
-                    backgroundColor: AppConstant.primaryColor.withOpacity(0.2),
-                  ),
-                  SizedBox(height: 48.h),
-                  SizedBox(
-                    height: 30.h,
-                    child: Text(
-                      "Ma\'lumot yuklanmoqda...",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w300,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            child: CommonLoading(
+              message: "Ma'lumot yuklanmoqda...",
             ),
           );
         } else {

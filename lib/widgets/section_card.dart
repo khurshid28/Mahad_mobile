@@ -49,13 +49,16 @@ class SectionCard extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 fontWeight: FontWeight.w400,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                               ),
                             ),
                             Text(
                               "test soni: ${section.count} ta",
                               textAlign: TextAlign.left,
                               style: TextStyle(
-                                color: Colors.grey.shade600,
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey.shade400
+                                    : Colors.grey.shade600,
                                 fontSize: 10.sp,
                                 fontWeight: FontWeight.w200,
                               ),

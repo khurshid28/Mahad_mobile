@@ -6,9 +6,12 @@ import 'package:test_app/blocs/result/result_all_bloc.dart';
 import 'package:test_app/blocs/result/result_post_bloc.dart';
 import 'package:test_app/blocs/section/section_all_bloc.dart';
 import 'package:test_app/blocs/section/section_bloc.dart';
+import 'package:test_app/blocs/special_test/special_test_bloc.dart';
 import 'package:test_app/blocs/subject/subject_all_bloc.dart';
 import 'package:test_app/blocs/test/random_test_bloc.dart';
 import 'package:test_app/blocs/test/test_bloc.dart';
+import 'package:test_app/blocs/theme/theme_bloc.dart';
+import 'package:test_app/core/theme/app_theme.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/screens/splash_screen.dart';
 import 'package:test_app/widgets/build/build.dart';
@@ -18,27 +21,38 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: const Size(390.0, 845.0),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) {
-        return MultiBlocProvider(
-          providers: providers,
-          child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Test App',
-            theme: ThemeData(primarySwatch: Colors.green),
-            home: const SplashScreen(),
-             builder: MaterialAppCustomBuilder.builder,
-          ),
-        );
-      },
+    return MultiBlocProvider(
+      providers: providers,
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, themeState) {
+          return ScreenUtilInit(
+            designSize: const Size(390.0, 845.0),
+            minTextAdapt: true,
+            splitScreenMode: true,
+            builder: (context, child) {
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'Test App',
+                theme: AppTheme.lightTheme,
+                darkTheme: AppTheme.darkTheme,
+                themeMode: themeState.themeMode,
+                home: const SplashScreen(),
+                builder: MaterialAppCustomBuilder.builder,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
 
 List<BlocProvider> providers = [
+  BlocProvider<ThemeBloc>(
+    create: (BuildContext context) => ThemeBloc()..add(LoadTheme()),
+    lazy: false,
+  ),
+
   BlocProvider<AuthBloc>(
     create: (BuildContext context) => AuthBloc(),
     lazy: true,
@@ -83,6 +97,10 @@ List<BlocProvider> providers = [
   ),
   BlocProvider<RandomTestBloc>(
     create: (BuildContext context) => RandomTestBloc(),
+    lazy: true,
+  ),
+  BlocProvider<SpecialTestBloc>(
+    create: (BuildContext context) => SpecialTestBloc(),
     lazy: true,
   ),
 ];

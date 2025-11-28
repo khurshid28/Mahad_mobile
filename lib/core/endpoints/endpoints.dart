@@ -18,5 +18,7 @@ class Endpoints {
 
   static String rate = dotenv.env["rate"] ?? "";
 
+  static String specialTest = dotenv.env["special_test"] ?? "";
+
   
 }

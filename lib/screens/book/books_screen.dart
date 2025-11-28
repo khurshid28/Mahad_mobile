@@ -7,8 +7,8 @@ import 'package:test_app/blocs/section/section_all_state.dart';
 import 'package:test_app/blocs/subject/subject_all_bloc.dart';
 import 'package:test_app/blocs/subject/subject_all_state.dart';
 import 'package:test_app/controller/book_controller.dart';
-import 'package:test_app/controller/test_controller.dart';
 import 'package:test_app/core/const/const.dart';
+import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/core/endpoints/endpoints.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/book.dart';
@@ -759,32 +759,8 @@ class _BooksScreenState extends State<BooksScreen> {
         } else if (state is BookAllWaitingState) {
           return SizedBox(
             height: 300.h,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(
-                    color: AppConstant.primaryColor,
-                    strokeWidth: 6.w,
-                    strokeAlign: 2,
-                    strokeCap: StrokeCap.round,
-                    backgroundColor: AppConstant.primaryColor.withOpacity(0.2),
-                  ),
-                  SizedBox(height: 48.h),
-                  SizedBox(
-                    height: 30.h,
-                    child: Text(
-                      "Ma\'lumot yuklanmoqda...",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w300,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            child: CommonLoading(
+              message: "Ma\'lumot yuklanmoqda...",
             ),
           );
         } else {

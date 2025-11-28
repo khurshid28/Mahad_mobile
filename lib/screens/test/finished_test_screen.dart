@@ -63,7 +63,9 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
           ),
         ),
       ),
-      backgroundColor: Colors.grey.shade200,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF1A1A1A)
+          : Colors.grey.shade200,
       body: SingleChildScrollView(
         padding: EdgeInsets.only(
           bottom: 16.h
@@ -107,7 +109,7 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
                     "${test['number']}.${realText(test['question'].toString())}",
                     textAlign: TextAlign.start,
                     style: TextStyle(
-                      color: Colors.black,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                       fontWeight: FontWeight.w500,
                       fontSize: 16.sp,
                     ),

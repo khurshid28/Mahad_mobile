@@ -43,38 +43,88 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstant.primaryColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildLogo(),
-            SizedBox(height: 20.h),
-            _buildTitle(),
-            SizedBox(height: 20.h),
-            _buildLoadingIndicator(),
-          ],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppConstant.primaryColor,
+              AppConstant.primaryDark,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildLogo(),
+              SizedBox(height: 24.h),
+              _buildTitle(),
+              SizedBox(height: 40.h),
+              _buildLoadingIndicator(),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildLogo() {
-    return Image.asset('assets/images/splash_logo.png', width: 120.w);
-  }
-
-  Widget _buildTitle() {
-    return Text(
-      "Test PLatform",
-      style: TextStyle(
-        fontSize: 20.sp,
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
+    return Container(
+      padding: EdgeInsets.all(24.w),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Image.asset(
+        'assets/images/splash_logo.png',
+        width: 100.w,
+        height: 100.w,
       ),
     );
   }
 
+  Widget _buildTitle() {
+    return Column(
+      children: [
+        Text(
+          "Test Platform",
+          style: TextStyle(
+            fontSize: 28.sp,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Text(
+          "Bilimingizni sinab ko'ring",
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: Colors.white.withOpacity(0.9),
+            fontWeight: FontWeight.w400,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildLoadingIndicator() {
-    return SpinKitThreeBounce(color: Colors.white, size: 20.w);
+    return SpinKitWave(
+      color: Colors.white,
+      size: 40.w,
+      itemCount: 5,
+    );
   }
 }

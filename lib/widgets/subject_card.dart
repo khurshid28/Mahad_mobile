@@ -17,13 +17,22 @@ class SubjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: backgroundColor,
+          color: isDark 
+              ? backgroundColor.withOpacity(0.2) 
+              : backgroundColor,
           borderRadius: BorderRadius.circular(15.r),
-          border: Border.all(color: borderColor, width: 1.5.w), // Fanning o‘ziga mos rang
+          border: Border.all(
+            color: isDark 
+                ? borderColor.withOpacity(0.5)
+                : borderColor, 
+            width: 1.5.w,
+          ), // Fanning o'ziga mos rang
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -43,7 +52,7 @@ class SubjectCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
               ),
             ),
           ],
