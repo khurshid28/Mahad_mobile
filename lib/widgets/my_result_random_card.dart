@@ -12,7 +12,8 @@ class MyResultRandomCard extends StatelessWidget {
   MyResultRandomCard({ required this.onTap,required this.result,required this.count});
 
   bool isFailed() {
-    return 0.56 > (result.solved / count);
+    if (result.solved == null || count == 0) return false;
+    return 0.56 > (result.solved! / count);
   }
 
   @override
@@ -66,7 +67,7 @@ class MyResultRandomCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            "${result.solved}/${count}",
+                            "${result.solved ?? 0}/${count}",
                             textAlign: TextAlign.left,
                             style: TextStyle(
                               fontSize: 14.sp,

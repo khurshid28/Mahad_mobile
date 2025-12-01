@@ -14,7 +14,8 @@ class MyResultCard extends StatelessWidget {
 
   int get test_count  =>result.test["_count"]?["test_items"] ?? 1;
   bool isFailed() {
-    return 0.56 > (result.solved / test_count);
+    if (result.solved == null) return false;
+    return 0.56 > (result.solved! / test_count);
   }
 
   @override
@@ -77,7 +78,7 @@ class MyResultCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            "${result.solved}/${test_count}",
+                            "${result.solved ?? 0}/${test_count}",
                             textAlign: TextAlign.left,
                             style: TextStyle(
                               fontSize: 14.sp,

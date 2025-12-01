@@ -5,13 +5,12 @@ import 'package:test_app/controller/result_controller.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/result.dart';
-import 'package:test_app/models/section.dart';
-import 'package:test_app/screens/section/section_screen.dart';
-import 'package:test_app/screens/test/finished_test_screen.dart';
+import 'package:test_app/screens/my_result/result_detail_screen.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/toast_service.dart';
 import 'package:test_app/widgets/my_result_card.dart';
 import 'package:test_app/widgets/my_result_random_card.dart';
+import 'package:test_app/widgets/my_result_special_test_card.dart';
 
 class MyResultScreen extends StatefulWidget {
   @override
@@ -87,76 +86,102 @@ ToastService toastService = ToastService();
             }
             return Column(
               children: List.generate(state.data.length, (index) {
-                Result res = Result(
-                  solved: state.data[index]["solved"],
-                  
-                  date: DateTime.parse(
-                    state.data[index]["updatedAt"].toString(),
-                  ),
-                  test: state.data[index]["test"],
-                  type: state.data[index]["type"]
-                );
-               
+                final resultData = state.data[index];
                 
-                // print(">>>>");
-                // print( state.data[index]);
-
-               
-                if (res.type == "RANDOM") {
-                    Section section = Section(
-                  name: "RANDOM",
-                  id: 0,
-                  count: 0,
-                  test_id: null
-                );
-                  return MyResultRandomCard(
-                  result: res,
-                  count : (state.data[index]["answers"] ??  []).length,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) =>
-                                FinishedTestScreen(section: section,answers: state.data[index]["answers"] ??  [],),
-                      ),
-                    );
-                  },
-                );
-                }else{
-
-               
-               
-                  Section section = Section(
-                  name: res.test?["section"]?["name"],
-                  id:  res.test?["section"]?["id"],
-                  count: res.test?["_count"]?["test_items"] ?? 1,
-                  test_id: res.test["id"].toString()
-                );
-                  return MyResultCard(
-                  result: res,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) =>
-                                SectionScreen(section: section),
-                      ),
-                    );
-                  },
-                );
+                // Convert answers to List if needed
+                List<dynamic>? answersList;
+                if (resultData["answers"] != null) {
+                  if (resultData["answers"] is List) {
+                    answersList = resultData["answers"] as List<dynamic>;
+                  } else if (resultData["answers"] is Map) {
+                    // If it's a Map, convert values to list
+                    answersList = (resultData["answers"] as Map).values.toList();
+                  }
                 }
-
-                //   MyResultCard(section: sections[index],result: results[index], onTap: () {
-                //        Navigator.push(
-                //                 context,
-                //                 MaterialPageRoute(
-                //                   builder: (context) => SectionScreen(section: sections[index],),
-                //                 ),
-                //               );
-                //   }),
-                // ),
+                
+                Result res = Result(
+                  solved: resultData["solved"] ?? 0,
+                  date: DateTime.parse(resultData["updatedAt"].toString()).add(const Duration(hours: 5)),
+                  test: resultData["test"],
+                  type: resultData["type"],
+                  answers: answersList,
+                );
+               
+                // RANDOM test
+                if (res.type == "RANDOM") {
+                  final count = answersList?.length ?? 0;
+                  return MyResultRandomCard(
+                    result: res,
+                    count: count,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ResultDetailScreen(
+                            result: res,
+                            totalQuestions: count,
+                            testName: "Aralash Test",
+                            subjectName: null,
+                            bookName: null,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+                
+                // SpecialTest
+                else if (res.type == "SpecialTest" && resultData["specialTest"] != null) {
+                  final specialTest = resultData["specialTest"];
+                  final questionCount = specialTest["question_count"] ?? 0;
+                  return MyResultSpecialTestCard(
+                    result: res,
+                    specialTest: specialTest,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ResultDetailScreen(
+                            result: res,
+                            totalQuestions: questionCount,
+                            testName: specialTest["name"] ?? "Maxsus Test",
+                            subjectName: null,
+                            bookName: null,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+                
+                // Book test (oddiy test)
+                else if (res.test != null) {
+                  final testCount = res.test?["_count"]?["test_items"] ?? 1;
+                  final subjectName = res.test?["section"]?["book"]?["subject"]?["name"];
+                  final bookName = res.test?["section"]?["book"]?["name"];
+                  final sectionName = res.test?["section"]?["name"];
+                  
+                  return MyResultCard(
+                    result: res,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ResultDetailScreen(
+                            result: res,
+                            totalQuestions: testCount,
+                            testName: sectionName ?? "Test",
+                            subjectName: subjectName,
+                            bookName: bookName,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+                
+                // Fallback - agar hech narsa mos kelmasa
+                return SizedBox.shrink();
               }),
             );
             // return Expanded(

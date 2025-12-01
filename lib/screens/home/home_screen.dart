@@ -189,8 +189,8 @@ Future<void> checkForUpdate() async {
         builder: (context, state) {
           int testCount = 0;
           if (state is SpecialTestsLoaded) {
-            // Faqat aktiv testlarni sanash
-            testCount = state.tests.where((test) => test.isActive).length;
+            // Faqat aktiv va yechilmagan testlarni sanash
+            testCount = state.tests.where((test) => test.isActive && test.hasAttempted != true).length;
           }
           
           return Stack(

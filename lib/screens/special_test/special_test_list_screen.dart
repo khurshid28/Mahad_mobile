@@ -192,7 +192,7 @@ class _SpecialTestCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isActive
+          onTap: isActive && test.hasAttempted != true
               ? () {
                   Navigator.push(
                     context,
@@ -213,14 +213,18 @@ class _SpecialTestCard extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.all(12.w),
                       decoration: BoxDecoration(
-                        color: isActive
+                        color: isActive && test.hasAttempted != true
                             ? const Color(0xFF4CAF50).withOpacity(0.1)
                             : Colors.grey.shade200,
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Icon(
-                        Icons.assignment_outlined,
-                        color: isActive
+                        test.hasAttempted == true
+                            ? Icons.check_circle
+                            : Icons.assignment_outlined,
+                        color: test.hasAttempted == true
+                            ? const Color(0xFF9C27B0)
+                            : isActive
                             ? const Color(0xFF4CAF50)
                             : Colors.grey.shade400,
                         size: 24.sp,
