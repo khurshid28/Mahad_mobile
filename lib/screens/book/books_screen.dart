@@ -150,7 +150,9 @@ class _BooksScreenState extends State<BooksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // resizeToAvoidBottomInset: false,
-      backgroundColor: AppConstant.whiteColor,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF1A1A1A)
+          : Colors.grey.shade50,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
         child: CustomAppBar(
@@ -179,8 +181,7 @@ class _BooksScreenState extends State<BooksScreen> {
                     onTap: () async {
                       await showModalBottomSheet(
                         isScrollControlled: true,
-                        
-                        showDragHandle: true,
+                        backgroundColor: Colors.transparent,
                         context: context,
                         builder:
                             (
@@ -188,7 +189,7 @@ class _BooksScreenState extends State<BooksScreen> {
                             ) =>  
                                  Padding(
                                  padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom, // Push up on keyboard
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
                                   child: BlocBuilder<SectionAllBloc, SectionAllState>(
                                     builder: (context, stateSectionAll) {
@@ -196,32 +197,71 @@ class _BooksScreenState extends State<BooksScreen> {
                                         var sections = stateSectionAll.data;
                                         return StatefulBuilder(
                                           builder: (context, sts) {
-                                            return FractionallySizedBox(
-                                              heightFactor: 0.9,
-                                              widthFactor: 1,
-                                              child: SingleChildScrollView(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal: 16.w,
-                                                  vertical: 16.h,
+                                            return Container(
+                                              height: 0.9.sh,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(30.r),
+                                                  topRight: Radius.circular(30.r),
                                                 ),
-                                                child: Column(
-                                                  children: [
-                                                    Row(
+                                              ),
+                                              child: Column(
+                                                children: [
+                                                  Container(
+                                                    padding: EdgeInsets.symmetric(
+                                                      horizontal: 16.w,
+                                                      vertical: 20.h,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        colors: [
+                                                          AppConstant.primaryColor,
+                                                          AppConstant.primaryColor.withOpacity(0.8),
+                                                        ],
+                                                      ),
+                                                      borderRadius: BorderRadius.only(
+                                                        topLeft: Radius.circular(30.r),
+                                                        topRight: Radius.circular(30.r),
+                                                      ),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                       children: [
                                                         Text(
                                                           "Kitoblar va bo'limlar",
                                                           style: TextStyle(
-                                                            color:
-                                                                AppConstant
-                                                                    .blackColor,
-                                                            fontSize: 18.sp,
-                                                            fontWeight:
-                                                                FontWeight.w600,
+                                                            color: Colors.white,
+                                                            fontSize: 20.sp,
+                                                            fontWeight: FontWeight.w700,
+                                                          ),
+                                                        ),
+                                                        GestureDetector(
+                                                          onTap: () => Navigator.pop(context),
+                                                          child: Container(
+                                                            padding: EdgeInsets.all(8.w),
+                                                            decoration: BoxDecoration(
+                                                              color: Colors.white.withOpacity(0.2),
+                                                              shape: BoxShape.circle,
+                                                            ),
+                                                            child: Icon(
+                                                              Icons.close,
+                                                              color: Colors.white,
+                                                              size: 20.sp,
+                                                            ),
                                                           ),
                                                         ),
                                                       ],
                                                     ),
-                                                    SizedBox(height: 16.h),
+                                                  ),
+                                                  Expanded(
+                                                    child: SingleChildScrollView(
+                                                      padding: EdgeInsets.symmetric(
+                                                        horizontal: 16.w,
+                                                        vertical: 16.h,
+                                                      ),
+                                                      child: Column(
+                                                        children: [
                                                     ...List.generate(selectedItems.length, (
                                                       index,
                                                     ) {
@@ -270,54 +310,44 @@ class _BooksScreenState extends State<BooksScreen> {
                                                             },
                                                             child: Row(
                                                               children: [
-                                                                selectedItems[index]["selected"]
-                                                                    ? Container(
-                                                                      width: 34.w,
-                                                                      height: 34.w,
-                                                                      alignment:
-                                                                          Alignment
-                                                                              .center,
-                                                                      decoration: BoxDecoration(
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(
-                                                                              12.r,
+                                                                Container(
+                                                                  width: 34.w,
+                                                                  height: 34.w,
+                                                                  alignment: Alignment.center,
+                                                                  decoration: BoxDecoration(
+                                                                    borderRadius: BorderRadius.circular(12.r),
+                                                                    gradient: selectedItems[index]["selected"]
+                                                                        ? LinearGradient(
+                                                                            colors: [
+                                                                              AppConstant.primaryColor,
+                                                                              AppConstant.primaryColor.withOpacity(0.8),
+                                                                            ],
+                                                                          )
+                                                                        : null,
+                                                                    border: !selectedItems[index]["selected"]
+                                                                        ? Border.all(
+                                                                            color: Colors.grey.shade400,
+                                                                            width: 2.w,
+                                                                          )
+                                                                        : null,
+                                                                    boxShadow: selectedItems[index]["selected"]
+                                                                        ? [
+                                                                            BoxShadow(
+                                                                              color: AppConstant.primaryColor.withOpacity(0.3),
+                                                                              blurRadius: 8,
+                                                                              offset: Offset(0, 3),
                                                                             ),
-                                                                        color:
-                                                                            AppConstant
-                                                                                .primaryColor,
-                                                                      ),
-                                                                      child: SvgPicture.asset(
-                                                                        'assets/icons/check.svg',
-                                                                        width: 18.w,
-                                                                        colorFilter: const ColorFilter.mode(
-                                                                          AppConstant
-                                                                              .whiteColor,
-                                                                          BlendMode
-                                                                              .srcIn,
-                                                                        ),
-                                                                      ),
-                                                                    )
-                                                                    : Container(
-                                                                      width: 34.w,
-                                                                      height: 34.w,
-                                  
-                                                                      alignment:
-                                                                          Alignment
-                                                                              .center,
-                                                                      decoration: BoxDecoration(
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(
-                                                                              12.r,
-                                                                            ),
-                                                                        border: Border.all(
-                                                                          color:
-                                                                              Colors
-                                                                                  .grey
-                                                                                  .shade500,
-                                                                          width: 3.w,
-                                                                        ),
-                                                                      ),
-                                                                    ),
+                                                                          ]
+                                                                        : null,
+                                                                  ),
+                                                                  child: selectedItems[index]["selected"]
+                                                                      ? Icon(
+                                                                          Icons.check_rounded,
+                                                                          color: Colors.white,
+                                                                          size: 20.sp,
+                                                                        )
+                                                                      : null,
+                                                                ),
                                   
                                                                 SizedBox(width: 10.w),
                                                                 SizedBox(
@@ -350,57 +380,44 @@ class _BooksScreenState extends State<BooksScreen> {
                                                                   },
                                                                   child: Row(
                                                                     children: [
-                                                                      selectedItems[index]["items"][i]["selected"]
-                                                                          ? Container(
-                                                                            width:
-                                                                                34.w,
-                                                                            height:
-                                                                                34.w,
-                                                                            alignment:
-                                                                                Alignment
-                                                                                    .center,
-                                                                            decoration: BoxDecoration(
-                                                                              borderRadius:
-                                                                                  BorderRadius.circular(
-                                                                                    12.r,
+                                                                      Container(
+                                                                        width: 34.w,
+                                                                        height: 34.w,
+                                                                        alignment: Alignment.center,
+                                                                        decoration: BoxDecoration(
+                                                                          borderRadius: BorderRadius.circular(12.r),
+                                                                          gradient: selectedItems[index]["items"][i]["selected"]
+                                                                              ? LinearGradient(
+                                                                                  colors: [
+                                                                                    AppConstant.accentOrange,
+                                                                                    AppConstant.accentOrange.withOpacity(0.8),
+                                                                                  ],
+                                                                                )
+                                                                              : null,
+                                                                          border: !selectedItems[index]["items"][i]["selected"]
+                                                                              ? Border.all(
+                                                                                  color: Colors.grey.shade400,
+                                                                                  width: 2.w,
+                                                                                )
+                                                                              : null,
+                                                                          boxShadow: selectedItems[index]["items"][i]["selected"]
+                                                                              ? [
+                                                                                  BoxShadow(
+                                                                                    color: AppConstant.accentOrange.withOpacity(0.3),
+                                                                                    blurRadius: 8,
+                                                                                    offset: Offset(0, 3),
                                                                                   ),
-                                                                              color:
-                                                                                  AppConstant.primaryColor,
-                                                                            ),
-                                                                            child: SvgPicture.asset(
-                                                                              'assets/icons/check.svg',
-                                                                              width:
-                                                                                  18.w,
-                                                                              colorFilter: const ColorFilter.mode(
-                                                                                AppConstant
-                                                                                    .whiteColor,
-                                                                                BlendMode
-                                                                                    .srcIn,
-                                                                              ),
-                                                                            ),
-                                                                          )
-                                                                          : Container(
-                                                                            width:
-                                                                                34.w,
-                                                                            height:
-                                                                                34.w,
-                                  
-                                                                            alignment:
-                                                                                Alignment
-                                                                                    .center,
-                                                                            decoration: BoxDecoration(
-                                                                              borderRadius:
-                                                                                  BorderRadius.circular(
-                                                                                    12.r,
-                                                                                  ),
-                                                                              border: Border.all(
-                                                                                color:
-                                                                                    Colors.grey.shade500,
-                                                                                width:
-                                                                                    3.w,
-                                                                              ),
-                                                                            ),
-                                                                          ),
+                                                                                ]
+                                                                              : null,
+                                                                        ),
+                                                                        child: selectedItems[index]["items"][i]["selected"]
+                                                                            ? Icon(
+                                                                                Icons.check_rounded,
+                                                                                color: Colors.white,
+                                                                                size: 20.sp,
+                                                                              )
+                                                                            : null,
+                                                                      ),
                                   
                                                                       SizedBox(
                                                                         width: 10.w,
@@ -424,62 +441,130 @@ class _BooksScreenState extends State<BooksScreen> {
                                                          ],
                                                       );
                                                     }),
-                                                        Row(
-                                                            children: [
-                                                              SizedBox(
-                                                                width: 108.w,
-                                                                child: TextFormField(
-                                                                  controller:
-                                                                      numberOfTestController,
-                                                                  keyboardType:
-                                                                      TextInputType
-                                                                          .number,
-                                                                  cursorColor:
-                                                                      AppConstant
-                                                                          .blackColor,
-                                                                  onChanged:
-                                                                      (value) =>
-                                                                          sts(
-                                                                            () {},
-                                                                          ),
-                                                                  decoration:
-                                                                      inputDecoration(
-                                                                        labelText: "",
-                                                                        hintText: '',
-                                                                        iconPath:
-                                                                            'assets/icons/magazine.svg',
-                                                                      ),
-                                                                  style: TextStyle(
-                                                                    color:
-                                                                        AppConstant
-                                                                            .blackColor,
-                                                                    fontSize: 16.sp,
+                                                          SizedBox(height: 24.h),
+                                                          Container(
+                                                            padding: EdgeInsets.all(20.w),
+                                                            decoration: BoxDecoration(
+                                                              color: Colors.white,
+                                                              borderRadius: BorderRadius.circular(16.r),
+                                                              border: Border.all(
+                                                                color: AppConstant.primaryColor.withOpacity(0.3),
+                                                                width: 2,
+                                                              ),
+                                                              boxShadow: [
+                                                                BoxShadow(
+                                                                  color: AppConstant.primaryColor.withOpacity(0.1),
+                                                                  blurRadius: 10,
+                                                                  offset: Offset(0, 4),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            child: Row(
+                                                              children: [
+                                                                Container(
+                                                                  padding: EdgeInsets.all(12.w),
+                                                                  decoration: BoxDecoration(
+                                                                    gradient: LinearGradient(
+                                                                      colors: [
+                                                                        AppConstant.primaryColor,
+                                                                        AppConstant.primaryColor.withOpacity(0.8),
+                                                                      ],
+                                                                    ),
+                                                                    borderRadius: BorderRadius.circular(12.r),
+                                                                  ),
+                                                                  child: Icon(
+                                                                    Icons.format_list_numbered_rounded,
+                                                                    color: Colors.white,
+                                                                    size: 24.sp,
                                                                   ),
                                                                 ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          SizedBox(height: 16.h),
-                                                          ElevatedButton(
-                                                            style: ElevatedButton.styleFrom(
-                                                              backgroundColor:
-                                                                  (checkTestBoshlash())
-                                                                      ? AppConstant
-                                                                          .primaryColor
-                                                                      : AppConstant
-                                                                          .greyColor,
-                                                              shape: RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      8.r,
-                                                                    ),
-                                                              ),
-                                                              padding:
-                                                                  EdgeInsets.symmetric(
-                                                                    vertical: 14.h,
+                                                                SizedBox(width: 16.w),
+                                                                Expanded(
+                                                                  child: Column(
+                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                    children: [
+                                                                      Text(
+                                                                        "Test soni",
+                                                                        style: TextStyle(
+                                                                          fontSize: 13.sp,
+                                                                          color: Colors.grey.shade600,
+                                                                          fontWeight: FontWeight.w600,
+                                                                        ),
+                                                                      ),
+                                                                      SizedBox(height: 8.h),
+                                                                      Container(
+                                                                        padding: EdgeInsets.symmetric(
+                                                                          horizontal: 12.w,
+                                                                          vertical: 8.h,
+                                                                        ),
+                                                                        decoration: BoxDecoration(
+                                                                          color: AppConstant.primaryColor.withOpacity(0.05),
+                                                                          borderRadius: BorderRadius.circular(10.r),
+                                                                          border: Border.all(
+                                                                            color: AppConstant.primaryColor.withOpacity(0.2),
+                                                                            width: 1,
+                                                                          ),
+                                                                        ),
+                                                                        child: TextFormField(
+                                                                          controller: numberOfTestController,
+                                                                          keyboardType: TextInputType.number,
+                                                                          cursorColor: AppConstant.primaryColor,
+                                                                          onChanged: (value) => sts(() {}),
+                                                                          style: TextStyle(
+                                                                            color: AppConstant.primaryColor,
+                                                                            fontSize: 20.sp,
+                                                                            fontWeight: FontWeight.w900,
+                                                                          ),
+                                                                          decoration: InputDecoration(
+                                                                            hintText: '20',
+                                                                            hintStyle: TextStyle(
+                                                                              color: AppConstant.primaryColor.withOpacity(0.3),
+                                                                              fontSize: 20.sp,
+                                                                              fontWeight: FontWeight.w900,
+                                                                            ),
+                                                                            border: InputBorder.none,
+                                                                            enabledBorder: InputBorder.none,
+                                                                            focusedBorder: InputBorder.none,
+                                                                            contentPadding: EdgeInsets.zero,
+                                                                            isDense: true,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ],
                                                                   ),
+                                                                ),
+                                                              ],
                                                             ),
-                                                            onPressed: () async {
+                                                          ),
+                                                          SizedBox(height: 24.h),
+                                                          Container(
+                                                            decoration: BoxDecoration(
+                                                              borderRadius: BorderRadius.circular(16.r),
+                                                              gradient: (checkTestBoshlash())
+                                                                  ? LinearGradient(
+                                                                      colors: [
+                                                                        AppConstant.primaryColor,
+                                                                        AppConstant.primaryColor.withOpacity(0.8),
+                                                                      ],
+                                                                    )
+                                                                  : null,
+                                                              color: (checkTestBoshlash())
+                                                                  ? null
+                                                                  : Colors.grey.shade300,
+                                                              boxShadow: (checkTestBoshlash())
+                                                                  ? [
+                                                                      BoxShadow(
+                                                                        color: AppConstant.primaryColor.withOpacity(0.4),
+                                                                        blurRadius: 12,
+                                                                        offset: Offset(0, 6),
+                                                                      ),
+                                                                    ]
+                                                                  : null,
+                                                            ),
+                                                            child: Material(
+                                                              color: Colors.transparent,
+                                                              child: InkWell(
+                                                                onTap: () async {
                                                               // var login = "+998${phoneController.text.replaceAll(" ", "")}";
                                                               // var password = passwordController.text;
                                                               // if (login.length == 13 && password.length >= 8) {
@@ -538,21 +623,43 @@ class _BooksScreenState extends State<BooksScreen> {
                                                                 //   );
                                                                 // }
                                                               }
-                                                            },
-                                                            child: Center(
-                                                              child: Text(
-                                                                "Testni boshlash",
-                                                                style: TextStyle(
-                                                                  color: Colors.white,
-                                                                  fontSize: 16.sp,
+                                                                },
+                                                                borderRadius: BorderRadius.circular(16.r),
+                                                                child: Padding(
+                                                                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                                                                  child: Row(
+                                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                                    children: [
+                                                                      Icon(
+                                                                        Icons.play_arrow_rounded,
+                                                                        color: (checkTestBoshlash())
+                                                                            ? Colors.white
+                                                                            : Colors.grey.shade500,
+                                                                        size: 24.sp,
+                                                                      ),
+                                                                      SizedBox(width: 8.w),
+                                                                      Text(
+                                                                        "Testni boshlash",
+                                                                        style: TextStyle(
+                                                                          color: (checkTestBoshlash())
+                                                                              ? Colors.white
+                                                                              : Colors.grey.shade500,
+                                                                          fontSize: 16.sp,
+                                                                          fontWeight: FontWeight.w600,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
                                                                 ),
                                                               ),
                                                             ),
                                                           ),
-                                                           SizedBox(height: 16.h),
-                                                     
-                                                  ],
-                                                ),
+                                                          SizedBox(height: 32.h),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             );
                                           },
@@ -591,41 +698,73 @@ class _BooksScreenState extends State<BooksScreen> {
         padding: EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              cursorColor: AppConstant.primaryColor,
-              onChanged: (e) => setState(() {}),
-              controller: seachController,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 10.w,
-                  vertical: 15.h,
-                ),
-                fillColor: Colors.grey.shade200,
-                filled: true,
-
-                hintText: "Kitob qidirish",
-                hintStyle: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w400,
-                ),
-                prefixIcon: Padding(
-                  padding: EdgeInsets.only(
-                    left: 17.w,
-                    right: 8.w,
-                    top: 10.w,
-                    bottom: 10.w,
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
                   ),
-
-                  child: SvgPicture.asset(
-                    "assets/icons/search.svg",
-                    width: 10.w,
-                    height: 10.h,
-                    color: Colors.grey.shade600,
-                  ),
+                ],
+              ),
+              child: TextField(
+                cursorColor: AppConstant.primaryColor,
+                onChanged: (e) => setState(() {}),
+                controller: seachController,
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w500,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15.r),
-                  borderSide: BorderSide.none,
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 20.w,
+                    vertical: 16.h,
+                  ),
+                  fillColor: Colors.white,
+                  filled: true,
+                  hintText: "Kitoblarni qidirish...",
+                  hintStyle: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 15.sp,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: AppConstant.primaryColor,
+                    size: 22.w,
+                  ),
+                  suffixIcon: seachController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.clear_rounded,
+                            color: Colors.grey.shade400,
+                            size: 20.w,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              seachController.clear();
+                            });
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(
+                      color: AppConstant.primaryColor,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -698,33 +837,86 @@ class _BooksScreenState extends State<BooksScreen> {
                   )
                   .toList();
           if (data.isEmpty) {
-            return SizedBox(
-              height: 300.h,
+            return Expanded(
               child: Center(
-                child: SizedBox(
-                  height: 80.h,
-                  child: Text(
-                    "Kitob mavjud emas",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w300,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.auto_stories_rounded,
+                      size: 80.w,
+                      color: Colors.grey.shade300,
                     ),
-                  ),
+                    SizedBox(height: 20.h),
+                    Text(
+                      "Kitoblar mavjud emas",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      "Bu fan uchun kitoblar qo'shilmagan",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
           }
           List filterdata = _filterBooks(data);
+          
+          if (filterdata.isEmpty) {
+            return Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off_rounded,
+                      size: 64.w,
+                      color: Colors.grey.shade300,
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      "Kitob topilmadi",
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      "Boshqa nom bilan qidiring",
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          
           return Expanded(
             child: GridView.builder(
               padding: EdgeInsets.symmetric(vertical: 10.h),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.9,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+                childAspectRatio: 0.85,
+                crossAxisSpacing: 12.w,
+                mainAxisSpacing: 12.h,
               ),
               itemCount: filterdata.length,
               itemBuilder: (context, index) {
@@ -737,8 +929,8 @@ class _BooksScreenState extends State<BooksScreen> {
                 );
                 return BookCard(
                   book: book,
-                  backgroundColor: Color(0xFFFFF0E5),
-                  borderColor: Color(0xFFFF9800),
+                  backgroundColor: AppConstant.primaryColor.withOpacity(0.05),
+                  borderColor: AppConstant.primaryColor,
                   onTap: () {
                     Navigator.push(
                       context,

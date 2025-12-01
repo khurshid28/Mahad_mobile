@@ -49,16 +49,25 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
           ),
         ),
         centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: SvgPicture.asset(
-            'assets/icons/close.svg',
-            width: 18.w,
-            colorFilter: const ColorFilter.mode(
-              AppConstant.blackColor,
-              BlendMode.srcIn,
+        leading: Center(
+          child: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Container(
+              width: 36.w,
+              height: 36.w,
+              decoration: BoxDecoration(
+                color: AppConstant.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 16.sp,
+                  color: AppConstant.primaryColor,
+                ),
+              ),
             ),
           ),
         ),
@@ -89,6 +98,7 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
 
   Widget bodySection() {
     List test_items = widget.answers;
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -96,110 +106,129 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
         var test = test_items[item_index];
 
         String? answer = widget.answers[item_index]["my_answer"];
-        return Padding(
-          padding:  EdgeInsets.all(16.0),
-          child: SizedBox(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 1.sw - 64,
-                  child: Text(
-                    "${test['number']}.${realText(test['question'].toString())}",
-                    textAlign: TextAlign.start,
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16.sp,
-                    ),
-                  ),
-                ),
-
-                ...List.generate(
-                  4,
-                  (index) => Container(
-                    width: 1.sw - 32.w,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      child: Row(
-                        children: [
-                          ((answer?.isNotEmpty ?? false) &&
-                                  ["A", "B", "C", "D"][index] == test["answer"])
-                              ? Container(
-                                width: 34.w,
-                                height: 34.w,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  color: AppConstant.primaryColor,
-                                ),
-                                child: SvgPicture.asset(
-                                  'assets/icons/check.svg',
-                                  width: 18.w,
-                                  colorFilter: const ColorFilter.mode(
-                                    AppConstant.whiteColor,
-                                    BlendMode.srcIn,
-                                  ),
-                                ),
-                              )
-                              : answer == ["A", "B", "C", "D"][index]
-                              ? Container(
-                                width: 34.w,
-                                height: 34.w,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  color: AppConstant.redColor,
-                                ),
-                                child: SvgPicture.asset(
-                                  'assets/icons/close.svg',
-                                  width: 18.w,
-                                  colorFilter: const ColorFilter.mode(
-                                    AppConstant.whiteColor,
-                                    BlendMode.srcIn,
-                                  ),
-                                ),
-                              )
-                              : Container(
-                                width: 34.w,
-                                height: 34.w,
-
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  border: Border.all(
-                                    color: Colors.grey.shade500,
-                                    width: 3.w,
-                                  ),
-                                ),
-                                child: Text(
-                                  ["A", "B", "C", "D"][index].toString(),
-                                  style: TextStyle(
-                                    color: Colors.grey.shade500,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ),
-
-                          SizedBox(width: 10.w),
-                          SizedBox(
-                            width: 305.w,
-                            child: Text(
-                              test["answer_${["A", "B", "C", "D"][index]}"]
-                                  .toString(),
-                              style: TextStyle(),
-                            ),
-                          ),
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+            borderRadius: BorderRadius.circular(20.r),
+            boxShadow: [
+              BoxShadow(
+                color: AppConstant.primaryColor.withOpacity(0.08),
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8.w),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppConstant.primaryColor.withOpacity(0.15),
+                          AppConstant.primaryColor.withOpacity(0.05),
                         ],
+                      ),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Text(
+                      "${test['number']}",
+                      style: TextStyle(
+                        color: AppConstant.primaryColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16.sp,
                       ),
                     ),
                   ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Text(
+                      realText(test['question'].toString()),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16.sp,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              ...List.generate(
+                4,
+                (index) => Container(
+                  margin: EdgeInsets.only(bottom: 10.h),
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: ((answer?.isNotEmpty ?? false) &&
+                            ["A", "B", "C", "D"][index] == test["answer"])
+                        ? AppConstant.primaryColor.withOpacity(0.1)
+                        : (answer == ["A", "B", "C", "D"][index])
+                            ? AppConstant.redColor.withOpacity(0.1)
+                            : (isDark ? const Color(0xFF1A1A1A) : Colors.grey.shade50),
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: ((answer?.isNotEmpty ?? false) &&
+                              ["A", "B", "C", "D"][index] == test["answer"])
+                          ? AppConstant.primaryColor
+                          : (answer == ["A", "B", "C", "D"][index])
+                              ? AppConstant.redColor
+                              : Colors.grey.shade300,
+                      width: 2,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36.w,
+                        height: 36.w,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.r),
+                          color: ((answer?.isNotEmpty ?? false) &&
+                                  ["A", "B", "C", "D"][index] == test["answer"])
+                              ? AppConstant.primaryColor
+                              : (answer == ["A", "B", "C", "D"][index])
+                                  ? AppConstant.redColor
+                                  : Colors.grey.shade400,
+                        ),
+                        child: ((answer?.isNotEmpty ?? false) &&
+                                ["A", "B", "C", "D"][index] == test["answer"])
+                            ? Icon(Icons.check, color: Colors.white, size: 20.sp)
+                            : (answer == ["A", "B", "C", "D"][index])
+                                ? Icon(Icons.close, color: Colors.white, size: 20.sp)
+                                : Text(
+                                    ["A", "B", "C", "D"][index],
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16.sp,
+                                    ),
+                                  ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          test["answer_${["A", "B", "C", "D"][index]}"]
+                              .toString(),
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black87,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-             
-            if(test_items.length - 1  > item_index)   customDivider()
-              ],
-            ),
+              ),
+            ],
           ),
         );
       }),

@@ -66,58 +66,60 @@ class _FinishTestScreenState extends State<FinishTestScreen> {
             ),
           ),
 
-          SizedBox(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Padding(
-                //   padding: const EdgeInsets.all(16.0),
-                //   child: ElevatedButton(
-                //     style: ElevatedButton.styleFrom(
-                //       backgroundColor:AppConstant.primaryColor,
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(8.r),
-                //       ),
-                //       padding: EdgeInsets.symmetric(vertical: 14.h),
-                //     ),
-                //     onPressed: () {},
-                //     child: Center(
-                //       child: Text(
-                //         "Davom qilish",
-                //         style: TextStyle(color: Colors.white, fontSize: 16.sp),
-                //       ),
-                //     ),
-                //   ),
-                // ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shadowColor: Colors.transparent,
-                      backgroundColor: Colors.grey.shade200,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 14.h),
+          Padding(
+            padding: EdgeInsets.all(24.w),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16.r),
+                gradient: LinearGradient(
+                  colors: [
+                    AppConstant.primaryColor,
+                    AppConstant.primaryColor.withOpacity(0.8),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppConstant.primaryColor.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 18.h),
+                ),
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MainScreen(),
                     ),
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MainScreen(),
-                        ),
-                      );
-                    },
-                    child: Center(
-                      child: Text(
+                  );
+                },
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.home, color: Colors.white, size: 24.w),
+                      SizedBox(width: 8.w),
+                      Text(
                         "Asosiy oynaga qaytish",
-                        style: TextStyle(color: Colors.black, fontSize: 16.sp),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 32.h),
-              ],
+              ),
             ),
           ),
         ],

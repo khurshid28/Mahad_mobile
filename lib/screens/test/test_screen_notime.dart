@@ -63,6 +63,32 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
 
   int item_index = 0;
 
+  // Load current question index from storage
+  void loadCurrentIndex() {
+    var test = StorageService().read(
+      "${StorageService.test}-${widget.section.test_id}",
+    );
+    if (test != null && test['current_index'] != null) {
+      setState(() {
+        item_index = test['current_index'];
+      });
+    }
+  }
+
+  // Save current question index to storage
+  void saveCurrentIndex() {
+    var test = StorageService().read(
+      "${StorageService.test}-${widget.section.test_id}",
+    );
+    if (test != null) {
+      test['current_index'] = item_index;
+      StorageService().write(
+        "${StorageService.test}-${widget.section.test_id}",
+        test,
+      );
+    }
+  }
+
   int rightAnswer(List items) {
     var res = getAnswers(items.length);
     int count = 0;
@@ -154,6 +180,10 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
   @override
   void initState() {
     super.initState();
+    
+    // Load current question index from storage
+    loadCurrentIndex();
+    
     TestController.getByid(
       context,
       id: int.tryParse(widget.section.test_id.toString()) ?? 0,
@@ -202,16 +232,25 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
           ),
         ),
         centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: SvgPicture.asset(
-            'assets/icons/close.svg',
-            width: 18.w,
-            colorFilter: const ColorFilter.mode(
-              AppConstant.blackColor,
-              BlendMode.srcIn,
+        leading: Center(
+          child: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Container(
+              width: 36.w,
+              height: 36.w,
+              decoration: BoxDecoration(
+                color: AppConstant.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 16.sp,
+                  color: AppConstant.primaryColor,
+                ),
+              ),
             ),
           ),
         ),
@@ -307,27 +346,56 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
 
                       ...List.generate(
                         4,
-                        (index) => GestureDetector(
-                          onTap: () async {
-                            print(test["answer"]);
-                            if ((answer?.isEmpty ?? true)) {
-                              await writeAnswer(
-                                count,
-                                index: item_index,
-                                result: ["A", "B", "C", "D"][index],
-                              );
-                              setState(() {
-                                answer = ["A", "B", "C", "D"][index];
-                              });
-                            }
-                          },
-                          child: Container(
-                            width: 1.sw - 32.w,
-
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16.h),
-                              child: Row(
-                                children: [
+                        (index) => Padding(
+                          padding: EdgeInsets.only(top: 12.h),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () async {
+                                print(test["answer"]);
+                                if ((answer?.isEmpty ?? true)) {
+                                  await writeAnswer(
+                                    count,
+                                    index: item_index,
+                                    result: ["A", "B", "C", "D"][index],
+                                  );
+                                  setState(() {
+                                    answer = ["A", "B", "C", "D"][index];
+                                  });
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(12.r),
+                              child: Container(
+                                width: 1.sw - 32.w,
+                                decoration: BoxDecoration(
+                                  color: (answer?.isNotEmpty ?? false) &&
+                                          ["A", "B", "C", "D"][index] == test["answer"]
+                                      ? AppConstant.primaryColor.withOpacity(0.1)
+                                      : answer == ["A", "B", "C", "D"][index]
+                                      ? AppConstant.redColor.withOpacity(0.1)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  border: Border.all(
+                                    color: (answer?.isNotEmpty ?? false) &&
+                                            ["A", "B", "C", "D"][index] == test["answer"]
+                                        ? AppConstant.primaryColor
+                                        : answer == ["A", "B", "C", "D"][index]
+                                        ? AppConstant.redColor
+                                        : Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.all(16.w),
+                                  child: Row(
+                                    children: [
                                   ((answer?.isNotEmpty ?? false) &&
                                           ["A", "B", "C", "D"][index] ==
                                               test["answer"])
@@ -398,13 +466,16 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
                                         ),
                                       ),
 
-                                  SizedBox(width: 10.w),
-                                  SizedBox(
-                                    width: 305.w,
+                                  SizedBox(width: 12.w),
+                                  Expanded(
                                     child: Text(
                                       test["answer_${["A", "B", "C", "D"][index]}"]
                                           .toString(),
-                                      style: TextStyle(),
+                                      style: TextStyle(
+                                        fontSize: 15.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -412,7 +483,7 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
                             ),
                           ),
                         ),
-                      ),
+                      ),),),
                     ],
                   ),
                 ),
@@ -455,64 +526,90 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppConstant.primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12.r),
+                          color: AppConstant.primaryColor,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppConstant.primaryColor.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        onPressed: () async {
-                          if (item_index == count - 1) {
-                            test_items
-                                .map(
-                                  (e) => {
-                                    ...(e as Map),
-                                    "my_answer":
-                                        results[e["number"].toString()],
-                                  },
-                                )
-                                .toList()
-                                .forEach((k) {
-                                  print(">>>>> number  : ${k['number']}");
-                                  print(k);
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () async {
+                              if (item_index == count - 1) {
+                                test_items
+                                    .map(
+                                      (e) => {
+                                        ...(e as Map),
+                                        "my_answer":
+                                            results[e["number"].toString()],
+                                      },
+                                    )
+                                    .toList()
+                                    .forEach((k) {
+                                      print(">>>>> number  : ${k['number']}");
+                                      print(k);
+                                    });
+                                await ResultController.post(
+                                  context,
+                                  solved: rightAnswer(test_items),
+                                  test_id:
+                                      int.tryParse(
+                                        widget.section.test_id.toString(),
+                                      ) ??
+                                      0,
+                                  answers:
+                                      test_items
+                                          .map(
+                                            (e) => {
+                                              ...(e as Map),
+                                              "my_answer":
+                                                  results[e["number"].toString()],
+                                            },
+                                          )
+                                          .toList(),
+                                );
+                              } else if (item_index < count - 1) {
+                                setState(() {
+                                  answer = "";
+                                  item_index++;
+                                  saveCurrentIndex();
                                 });
-                            await ResultController.post(
-                              context,
-                              solved: rightAnswer(test_items),
-                              test_id:
-                                  int.tryParse(
-                                    widget.section.test_id.toString(),
-                                  ) ??
-                                  0,
-                              answers:
-                                  test_items
-                                      .map(
-                                        (e) => {
-                                          ...(e as Map),
-                                          "my_answer":
-                                              results[e["number"].toString()],
-                                        },
-                                      )
-                                      .toList(),
-                            );
-                          } else if (item_index < count - 1) {
-                            setState(() {
-                              answer = "";
-                              item_index++;
-                            });
-                          }
-                        },
-                        child: Center(
-                          child: Text(
-                            item_index == count - 1
-                                ? "Tugatish"
-                                : "Davom qilish",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16.sp,
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(16.r),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16.h),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    item_index == count - 1
+                                        ? Icons.check_circle_outline
+                                        : Icons.arrow_forward,
+                                    color: Colors.white,
+                                    size: 24.sp,
+                                  ),
+                                  SizedBox(width: 8.w),
+                                  Text(
+                                    item_index == count - 1
+                                        ? "Tugatish"
+                                        : "Davom qilish",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -521,31 +618,50 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
 
                     if (item_index > 0)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            shadowColor: Colors.transparent,
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.r),
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: AppConstant.primaryColor,
+                              width: 1.5,
                             ),
-                            padding: EdgeInsets.symmetric(vertical: 14.h),
+                            color: Colors.white,
                           ),
-                          onPressed: () {
-                            if (item_index > 0) {
-                              setState(() {
-                                answer = "";
-                                item_index--;
-                              });
-                            }
-                            // Navigator.pop(context);
-                          },
-                          child: Center(
-                            child: Text(
-                              "Orqaga qaytish",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16.sp,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                if (item_index > 0) {
+                                  setState(() {
+                                    answer = "";
+                                    item_index--;
+                                    saveCurrentIndex();
+                                  });
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(16.r),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 16.h),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.arrow_back,
+                                      color: AppConstant.primaryColor,
+                                      size: 24.sp,
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      "Orqaga qaytish",
+                                      style: TextStyle(
+                                        color: AppConstant.primaryColor,
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

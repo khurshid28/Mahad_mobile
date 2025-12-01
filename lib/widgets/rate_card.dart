@@ -22,109 +22,213 @@ class RateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isMe = IsMe();
+    bool isTopThree = (rate.index + 1) <= 3;
+    
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        color:IsMe() ?  AppConstant.primaryColor.withOpacity(0.2) : null,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.h,horizontal: 16.w),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SizedBox(
-                    // color: Colors.red.shade300,
-                    width: 270.w,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                     (rate.index+1) <4 ?    SvgPicture.asset(
-                          "assets/icons/${rate.index+1}.svg",
-                          width: 40.w,
-                        ): Container(
-                          width: 40.w,
-                          height: 40.w,
-                          alignment: Alignment.center,
-                          child: Text((rate.index+1).toString(),style: TextStyle(
-                            fontSize: 14.sp,fontWeight: FontWeight.w700
-                          ),),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20.w),
-                            border: Border.all(
-                              width: 4.w,
-                              color: AppConstant.primaryColor
-                            )
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          gradient: isMe
+              ? LinearGradient(
+                  colors: [
+                    AppConstant.primaryColor.withOpacity(0.15),
+                    AppConstant.primaryColor.withOpacity(0.05),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                )
+              : null,
+          color: isMe ? null : Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: isMe
+              ? Border.all(
+                  color: AppConstant.primaryColor.withOpacity(0.3),
+                  width: 2,
+                )
+              : null,
+          boxShadow: [
+            BoxShadow(
+              color: isMe
+                  ? AppConstant.primaryColor.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.05),
+              blurRadius: isMe ? 12 : 8,
+              offset: Offset(0, isMe ? 6 : 3),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Row(
+            children: [
+              // Rank badge
+              Container(
+                width: 50.w,
+                height: 50.w,
+                decoration: BoxDecoration(
+                  gradient: isTopThree
+                      ? LinearGradient(
+                          colors: [
+                            _getRankColor(rate.index + 1),
+                            _getRankColor(rate.index + 1).withOpacity(0.7),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  color: isTopThree ? null : Colors.grey.shade100,
+                  shape: BoxShape.circle,
+                  border: !isTopThree
+                      ? Border.all(
+                          color: AppConstant.primaryColor.withOpacity(0.3),
+                          width: 2,
+                        )
+                      : null,
+                  boxShadow: isTopThree
+                      ? [
+                          BoxShadow(
+                            color: _getRankColor(rate.index + 1).withOpacity(0.4),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Center(
+                  child: isTopThree
+                      ? Icon(
+                          _getRankIcon(rate.index + 1),
+                          color: Colors.white,
+                          size: 24.sp,
+                        )
+                      : Text(
+                          (rate.index + 1).toString(),
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w900,
+                            color: AppConstant.primaryColor,
                           ),
                         ),
-                        
-
-                        SizedBox(width: 20.w),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              rate.name,
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                           Row(
+                ),
+              ),
+              
+              SizedBox(width: 16.w),
+              
+              // Name and tests
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      rate.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                          decoration: BoxDecoration(
+                            color: AppConstant.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                               SvgPicture.asset(
-                    "assets/icons/achieve.svg",
-                    height: 12.h,
-                  ),
-                              SizedBox(
-                                width: 2.w,
+                              Icon(
+                                Icons.assignment_turned_in,
+                                size: 14.sp,
+                                color: AppConstant.primaryColor,
                               ),
-                               Text(
-                             
-                              rate.try_count.toString(),
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                color: Colors.grey.shade800,
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w400,
+                              SizedBox(width: 4.w),
+                              Text(
+                                '${rate.try_count} ta',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppConstant.primaryColor,
+                                ),
                               ),
-                            ),
                             ],
-                           ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        rate.avg.toString()+"%",
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w700,
-                          color:
-                            AppConstant.blackColor,
-                        ),
-                      ),
-                     
+                  ],
+                ),
+              ),
+              
+              // Percentage
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      _getPercentColor(rate.avg),
+                      _getPercentColor(rate.avg).withOpacity(0.8),
                     ],
                   ),
-                ],
+                  borderRadius: BorderRadius.circular(12.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _getPercentColor(rate.avg).withOpacity(0.3),
+                      blurRadius: 6,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '${rate.avg}%',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-            ),
-
-            customDivider(),
-          ],
+            ],
+          ),
         ),
       ),
     );
+  }
+  
+  Color _getRankColor(int rank) {
+    switch (rank) {
+      case 1:
+        return Color(0xFFFFD700); // Gold
+      case 2:
+        return Color(0xFFC0C0C0); // Silver
+      case 3:
+        return Color(0xFFCD7F32); // Bronze
+      default:
+        return AppConstant.primaryColor;
+    }
+  }
+  
+  IconData _getRankIcon(int rank) {
+    switch (rank) {
+      case 1:
+        return Icons.workspace_premium;
+      case 2:
+        return Icons.military_tech;
+      case 3:
+        return Icons.stars;
+      default:
+        return Icons.emoji_events;
+    }
+  }
+  
+  Color _getPercentColor(num percent) {
+    if (percent >= 80) return Color(0xFF4CAF50); // Green
+    if (percent >= 60) return Color(0xFFFF9800); // Orange
+    return Color(0xFFF44336); // Red
   }
 }

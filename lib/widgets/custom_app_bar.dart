@@ -32,16 +32,25 @@ class CustomAppBar extends StatelessWidget {
             ),
       centerTitle: true,
       leading: isLeading
-          ? IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: SvgPicture.asset(
-                'assets/icons/chevronleft.svg',
-                width: 22.w,
-                colorFilter: const ColorFilter.mode(
-                  AppConstant.blackColor,
-                  BlendMode.srcIn,
+          ? Center(
+              child: IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: Container(
+                  width: 36.w,
+                  height: 36.w,
+                  decoration: BoxDecoration(
+                    color: AppConstant.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 16.sp,
+                      color: AppConstant.primaryColor,
+                    ),
+                  ),
                 ),
               ),
             )

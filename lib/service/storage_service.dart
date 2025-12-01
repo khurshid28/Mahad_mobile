@@ -24,15 +24,10 @@ class StorageService {
   static String sections = 'sections';
 
    static String test = 'test-v2';
+   static String specialTest = 'special-test';
 
 // static String random = 'random';
 
 static String login = 'login';
 static String password = 'password';
-
-
-
-
-
-
 }

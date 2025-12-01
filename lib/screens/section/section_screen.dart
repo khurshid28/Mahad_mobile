@@ -123,19 +123,35 @@ class _SectionScreenState extends State<SectionScreen> {
             children: [
               Container(
                 width: 1.sw,
-                height: 320.h,
+                padding: EdgeInsets.symmetric(vertical: 40.h),
                 alignment: Alignment.center,
-                child: SvgPicture.asset(
-                  "assets/icons/magazinefill.svg",
-                  width: 80.w,
-                  height: 80.h,
-                  color: Colors.black,
-                ),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
+                  color: Colors.white,
                   borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(20.r),
-                    bottomRight: Radius.circular(20.r),
+                    bottomLeft: Radius.circular(24.r),
+                    bottomRight: Radius.circular(24.r),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Container(
+                  width: 80.w,
+                  height: 80.w,
+                  decoration: BoxDecoration(
+                    color: AppConstant.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.menu_book_rounded,
+                      size: 48.sp,
+                      color: AppConstant.primaryColor,
+                    ),
                   ),
                 ),
               ),
@@ -173,23 +189,27 @@ class _SectionScreenState extends State<SectionScreen> {
                         await likeSection(state.data);
                         setState(() {});
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          child:
+                      child: Container(
+                        width: 40.w,
+                        height: 40.w,
+                        decoration: BoxDecoration(
+                          color:
                               storageSection != null
-                                  ? SvgPicture.asset(
-                                    "assets/icons/heartfill.svg",
-                                    width: 35.w,
-                                    height: 35.h,
-                                    color: AppConstant.redColor,
-                                  )
-                                  : SvgPicture.asset(
-                                    "assets/icons/heart.svg",
-                                    width: 35.w,
-                                    height: 35.h,
-                                    color: Colors.grey.shade400,
-                                  ),
+                                  ? AppConstant.redColor.withOpacity(0.1)
+                                  : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            storageSection != null
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color:
+                                storageSection != null
+                                    ? AppConstant.redColor
+                                    : Colors.grey.shade400,
+                            size: 22.sp,
+                          ),
                         ),
                       ),
                     ),
@@ -250,50 +270,87 @@ class _SectionScreenState extends State<SectionScreen> {
 
               if (widget.section.count > 0)
                 Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppConstant.primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 14.h),
-                    ),
-                    onPressed: () async {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) =>
-                                  hasTime()
-                                      ? TestScreen(
-                                        section: Section(
-                                          name: state.data["name"].toString(),
-                                          count: results.length,
-                                          test_id:
-                                              (state.data["test"]?["id"] ?? 0)
-                                                  .toString(),
-                                        ),
-                                      )
-                                      : TestScreenNotime(
-                                        section: Section(
-                                          name: state.data["name"].toString(),
-                                          count: results.length,
-                                          test_id:
-                                              (state.data["test"]?["id"] ?? 0)
-                                                  .toString(),
-                                        ),
-                                      ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12.r),
+                      color: AppConstant.primaryColor,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppConstant.primaryColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
                         ),
-                      );
-                      setState(() {
-                        answers = getAnswers();
-                      });
-                    },
-                    child: Center(
-                      child: Text(
-                        answers != null ? "Davom qilish" : "Testni boshlash",
-                        style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () async {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) =>
+                                      hasTime()
+                                          ? TestScreen(
+                                            section: Section(
+                                              name:
+                                                  state.data["name"].toString(),
+                                              count: widget.section.count,
+                                              test_id:
+                                                  (state.data["test"]?["id"] ??
+                                                          0)
+                                                      .toString(),
+                                            ),
+                                          )
+                                          : TestScreenNotime(
+                                            section: Section(
+                                              name:
+                                                  state.data["name"].toString(),
+                                              count: widget.section.count,
+                                              test_id:
+                                                  (state.data["test"]?["id"] ??
+                                                          0)
+                                                      .toString(),
+                                            ),
+                                          ),
+                            ),
+                          );
+                          setState(() {
+                            answers = getAnswers();
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(16.r),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                answers != null
+                                    ? Icons.play_arrow_rounded
+                                    : Icons.assignment_outlined,
+                                color: Colors.white,
+                                size: 24.sp,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                answers != null
+                                    ? "Davom qilish"
+                                    : "Testni boshlash",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -301,54 +358,84 @@ class _SectionScreenState extends State<SectionScreen> {
 
               if (answers != null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppConstant.greyColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: AppConstant.primaryColor,
+                        width: 1.5,
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                      color: Colors.white,
                     ),
-                    onPressed: () async {
-                      await clearAnswers();
-                      setState(() {
-                        answers = null;
-                      });
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) =>
-                                  hasTime()
-                                      ? TestScreen(
-                                        section: Section(
-                                          name: state.data["name"].toString(),
-                                          count: results.length,
-                                          test_id:
-                                              (state.data["test"]?["id"] ?? 0)
-                                                  .toString(),
-                                        ),
-                                      )
-                                      : TestScreenNotime(
-                                        section: Section(
-                                          name: state.data["name"].toString(),
-                                          count: results.length,
-                                          test_id:
-                                              (state.data["test"]?["id"] ?? 0)
-                                                  .toString(),
-                                        ),
-                                      ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () async {
+                          await clearAnswers();
+                          setState(() {
+                            answers = null;
+                          });
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) =>
+                                      hasTime()
+                                          ? TestScreen(
+                                            section: Section(
+                                              name:
+                                                  state.data["name"].toString(),
+                                              count: widget.section.count,
+                                              test_id:
+                                                  (state.data["test"]?["id"] ??
+                                                          0)
+                                                      .toString(),
+                                            ),
+                                          )
+                                          : TestScreenNotime(
+                                            section: Section(
+                                              name:
+                                                  state.data["name"].toString(),
+                                              count: widget.section.count,
+                                              test_id:
+                                                  (state.data["test"]?["id"] ??
+                                                          0)
+                                                      .toString(),
+                                            ),
+                                          ),
+                            ),
+                          );
+                          setState(() {
+                            answers = getAnswers();
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(16.r),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.refresh_rounded,
+                                color: AppConstant.primaryColor,
+                                size: 24.sp,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                "Yangidan boshlash",
+                                style: TextStyle(
+                                  color: AppConstant.primaryColor,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      );
-                      setState(() {
-                        answers = getAnswers();
-                      });
-                    },
-                    child: Center(
-                      child: Text(
-                        "Yangidan boshlash",
-                        style: TextStyle(color: Colors.white, fontSize: 16.sp),
                       ),
                     ),
                   ),
@@ -358,9 +445,7 @@ class _SectionScreenState extends State<SectionScreen> {
         } else if (state is SectionWaitingState) {
           return SizedBox(
             height: 300.h,
-            child: CommonLoading(
-              message: "Ma\'lumot yuklanmoqda...",
-            ),
+            child: CommonLoading(message: "Ma\'lumot yuklanmoqda..."),
           );
         } else {
           return SizedBox();

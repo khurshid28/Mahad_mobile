@@ -52,7 +52,8 @@ class SpecialTest {
         questionCount: json['question_count'] ?? 0,
         sectionIds: List<int>.from(json['section_ids'] ?? []),
         groupIds: List<int>.from(json['group_ids'] ?? []),
-        questions: (json['questions'] as List?)
+        questions:
+            (json['questions'] as List?)
                 ?.map((q) => SpecialTestQuestion.fromJson(q))
                 .toList() ??
             [],
@@ -60,7 +61,9 @@ class SpecialTest {
         updatedAt: json['updatedAt'],
         hasAttempted: json['has_attempted'],
       );
-      print('🟢 [Model] Successfully parsed: ${test.name} (${test.questions.length} questions)');
+      print(
+        '🟢 [Model] Successfully parsed: ${test.name} (${test.questions.length} questions)',
+      );
       return test;
     } catch (e, stack) {
       print('🔴 [Model] Parse error: $e');
@@ -78,8 +81,17 @@ class SpecialTest {
   }
 
   int? get timeInSeconds {
-    if (totalTime != null) return totalTime;
-    if (timePerQuestion != null) return timePerQuestion! * questionCount;
+    // If totalTime is set and > 0, use it (assume it's in seconds)
+    if (totalTime != null && totalTime! > 0) {
+      return totalTime;
+    }
+
+    // If timePerQuestion is set, calculate total time (time_per_question is already in seconds)
+    if (timePerQuestion != null && timePerQuestion! > 0) {
+      return timePerQuestion! * questionCount; // seconds * count
+    }
+
+    // No time limit
     return null;
   }
 }
@@ -130,10 +142,7 @@ class SpecialTestResult {
   final String message;
   final int resultId;
 
-  SpecialTestResult({
-    required this.message,
-    required this.resultId,
-  });
+  SpecialTestResult({required this.message, required this.resultId});
 
   factory SpecialTestResult.fromJson(Map<String, dynamic> json) {
     return SpecialTestResult(

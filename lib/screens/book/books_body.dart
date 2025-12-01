@@ -69,34 +69,80 @@ class _BooksBodyState extends State<BooksBody> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstant.whiteColor,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF1A1A1A)
+          : Colors.grey.shade50,
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           children: [
-            TextField(
-              cursorColor: AppConstant.primaryColor,
-             onChanged: (e) => setState(() {}),
-              controller: seachController,
-              
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(horizontal: 10.w,vertical: 15.h),
-                fillColor: Colors.grey.shade200,
-                filled: true,
-                
-                hintText: "Kitob qidirish",
-                hintStyle: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w400
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: TextField(
+                cursorColor: AppConstant.primaryColor,
+                onChanged: (e) => setState(() {}),
+                controller: seachController,
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w500,
                 ),
-                prefixIcon:  Padding(
-                  padding:  EdgeInsets.only(left: 17.w,right: 8.w,top: 10.w,bottom: 10.w),
-                  
-                  child: SvgPicture.asset("assets/icons/search.svg",width: 10.w,height: 10.h,color: Colors.grey.shade600,),
-                ) ,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15.r),
-                  borderSide: BorderSide.none
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                  fillColor: Colors.white,
+                  filled: true,
+                  hintText: "Kitoblarni qidirish...",
+                  hintStyle: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 15.sp,
+                  ),
+                  prefixIcon: Padding(
+                    padding: EdgeInsets.only(left: 16.w, right: 12.w),
+                    child: Icon(
+                      Icons.search_rounded,
+                      color: AppConstant.primaryColor,
+                      size: 22.w,
+                    ),
+                  ),
+                  suffixIcon: seachController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.clear_rounded,
+                            color: Colors.grey.shade400,
+                            size: 20.w,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              seachController.clear();
+                            });
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(
+                      color: AppConstant.primaryColor,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -155,64 +201,113 @@ class _BooksBodyState extends State<BooksBody> {
        
         if (state is BookAllSuccessState) {
           if (state.data.isEmpty) {
-            return SizedBox(
-              height: 300.h,
+            return Expanded(
               child: Center(
-                child: SizedBox(
-                  height: 80.h,
-                  child: Text(
-                    "Kitob mavjud emas",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w300,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.auto_stories_rounded,
+                      size: 80.w,
+                      color: Colors.grey.shade300,
                     ),
-                  ),
+                    SizedBox(height: 20.h),
+                    Text(
+                      "Kitoblar mavjud emas",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      "Hozircha hech qanday kitob qo'shilmagan",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
           }
           List filterdata = _filterBooks(state.data);
+          
+          if (filterdata.isEmpty) {
+            return Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off_rounded,
+                      size: 64.w,
+                      color: Colors.grey.shade300,
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      "Kitob topilmadi",
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      "Boshqa nom bilan qidiring",
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          
           return Expanded(
             child: GridView.builder(
               padding: EdgeInsets.symmetric(vertical: 10.h),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.9,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+                childAspectRatio: 0.85,
+                crossAxisSpacing: 12.w,
+                mainAxisSpacing: 12.h,
               ),
               itemCount: filterdata.length,
               itemBuilder: (context, index) {
                 print(Endpoints.domain + filterdata[index]["image"].toString());
                 Book book = Book(
-                id:  filterdata[index]["id"],
+                  id: filterdata[index]["id"],
                   name: filterdata[index]["name"].toString(),
                   imagePath:
                       Endpoints.domain + filterdata[index]["image"].toString(),
                 );
-                return     BookCard(
-                    book:book,
-                    backgroundColor:
-                        Color(0xFFFFF0E5),
-                    borderColor: Color(0xFFFF9800),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => BookScreen(
-                                book:
-                                    book,
-                                     fullBlock: filterdata[index]["fullBlock"],
-                                     stepBlock: filterdata[index]["stepBlock"],
-                              ),
+                return BookCard(
+                  book: book,
+                  backgroundColor: AppConstant.primaryColor.withOpacity(0.05),
+                  borderColor: AppConstant.primaryColor,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BookScreen(
+                          book: book,
+                          fullBlock: filterdata[index]["fullBlock"],
+                          stepBlock: filterdata[index]["stepBlock"],
                         ),
-                      );
-                    },
-                  );
-              
+                      ),
+                    );
+                  },
+                );
               },
             ),
           );

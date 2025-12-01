@@ -20,15 +20,34 @@ class ResultController {
         print("Controller track >>$track");
       }
 
-      BlocProvider.of<ResultAllBloc>(
-        context,
-      ).emit(ResultAllErrorState(message: err.message, title: err.message,statusCode: 500));
+      BlocProvider.of<ResultAllBloc>(context).emit(
+        ResultAllErrorState(
+          message: err.message,
+          title: err.message,
+          statusCode: 500,
+        ),
+      );
     }
   }
 
-  static Future<void> post(BuildContext context,{required int solved,  int? test_id,required List answers,String? type}) async {
+  static Future<void> post(
+    BuildContext context, {
+    required int solved,
+    int? test_id,
+    required List answers,
+    String? type,
+    String? startTime,
+    String? finishTime,
+  }) async {
     try {
-      await BlocProvider.of<ResultPostBloc>(context).post(solved: solved,test_id: test_id,answers: answers ,type : type);
+      await BlocProvider.of<ResultPostBloc>(context).post(
+        solved: solved,
+        test_id: test_id,
+        answers: answers,
+        type: type,
+        startTime: startTime,
+        finishTime: finishTime,
+      );
     } catch (e, track) {
       if (kDebugMode) {
         print("Controller Error >>$e");
@@ -36,10 +55,13 @@ class ResultController {
       }
       var err = e as DioExceptions;
 
-
-      BlocProvider.of<ResultPostBloc>(
-        context,
-      ).emit(ResultPostErrorState(message: err.message, title: err.message,statusCode: 500));
+      BlocProvider.of<ResultPostBloc>(context).emit(
+        ResultPostErrorState(
+          message: err.message,
+          title: err.message,
+          statusCode: 500,
+        ),
+      );
     }
   }
 }

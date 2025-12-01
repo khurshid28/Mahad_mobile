@@ -8,95 +8,151 @@ class SectionCard extends StatelessWidget {
   final Section section;
   // Har bir subject uchun alohida border rangi
   final VoidCallback onTap;
-   bool block;
-   bool isFailed;
-  SectionCard({required this.section, required this.onTap, this.block = false ,this.isFailed = false});
-  
-
-  
+  bool block;
+  bool isFailed;
+  SectionCard({
+    required this.section,
+    required this.onTap,
+    this.block = false,
+    this.isFailed = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap:!block  ?  onTap : null,
-      child: SizedBox(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 15.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SizedBox(
-                    // color: Colors.red.shade300,
-                    width: 250.w,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset(
-                          "assets/icons/magazinefill.svg",
-                          width: 35.w,
-                        ),
-                        SizedBox(width: 20.w),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              section.name ?? "",
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w400,
-                                color: Theme.of(context).textTheme.bodyLarge?.color,
-                              ),
-                            ),
-                            Text(
-                              "test soni: ${section.count} ta",
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.grey.shade400
-                                    : Colors.grey.shade600,
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.w200,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-              if(!block)    Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                    if(!isFailed)  Text(
-                        "${section.percent}%",
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w600,
-                          color:
-                              isFailed
-                                  ? (isFailed ?  AppConstant.redColor :Colors.grey.shade400 )
-                                  : AppConstant.primaryColor,
-                        ),
-                      ),
-                      SizedBox(width: 6.w),
-                      SvgPicture.asset(
-                        "assets/icons/chevronright.svg",
-                        width: 25.w,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: !block ? onTap : null,
+        borderRadius: BorderRadius.circular(12.r),
+        child: Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color:
+                Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade900
+                    : Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(
+              color:
+                  block
+                      ? Colors.grey.shade300
+                      : (isFailed
+                          ? AppConstant.redColor.withOpacity(0.3)
+                          : Theme.of(context).primaryColor.withOpacity(0.3)),
+              width: 1.5,
             ),
-
-            customDivider(),
-          ],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color:
+                      block
+                          ? Colors.grey.shade100
+                          : (isFailed
+                              ? AppConstant.redColor.withOpacity(0.1)
+                              : Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.1)),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: SvgPicture.asset(
+                  "assets/icons/magazinefill.svg",
+                  width: 24.w,
+                  color:
+                      block
+                          ? Colors.grey.shade400
+                          : (isFailed
+                              ? AppConstant.redColor
+                              : Theme.of(context).primaryColor),
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      section.name ?? "",
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        color:
+                            block
+                                ? Colors.grey.shade400
+                                : Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      "${section.count} ta test",
+                      style: TextStyle(
+                        color:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey.shade500
+                                : Colors.grey.shade600,
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!block) ...[
+                SizedBox(width: 12.w),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (!isFailed)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 6.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Text(
+                          "${section.percent}%",
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ),
+                    SizedBox(height: 8.h),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 18.w,
+                      color: Colors.grey.shade400,
+                    ),
+                  ],
+                ),
+              ],
+              if (block)
+                Icon(
+                  Icons.lock_rounded,
+                  size: 24.w,
+                  color: Colors.grey.shade400,
+                ),
+            ],
+          ),
         ),
       ),
     );

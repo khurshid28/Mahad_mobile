@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:test_app/blocs/special_test/special_test_bloc.dart';
+import 'package:test_app/core/const/const.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/models/special_test.dart';
 import 'package:test_app/screens/special_test/special_test_detail_screen.dart';
@@ -38,7 +39,26 @@ class _SpecialTestListScreenState extends State<SpecialTestListScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        leading: Center(
+          child: IconButton(
+            icon: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppConstant.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 16,
+                  color: AppConstant.primaryColor,
+                ),
+              ),
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
       ),
       body: BlocBuilder<SpecialTestBloc, SpecialTestState>(
         builder: (context, state) {
@@ -116,26 +136,42 @@ class _SpecialTestListScreenState extends State<SpecialTestListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.assignment_outlined,
-                      size: 80.sp,
-                      color: Colors.grey.shade300,
+                    Container(
+                      padding: EdgeInsets.all(32.w),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppConstant.primaryColor.withOpacity(0.1),
+                            AppConstant.primaryColor.withOpacity(0.05),
+                          ],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.assignment_outlined,
+                        size: 80.sp,
+                        color: AppConstant.primaryColor,
+                      ),
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 24.h),
                     Text(
                       'Maxsus testlar yo\'q',
                       style: TextStyle(
-                        fontSize: 18.sp,
+                        fontSize: 20.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black54,
+                        color: Colors.black87,
                       ),
                     ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'Hozircha sizga tayinlangan maxsus testlar yo\'q',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: Colors.grey.shade600,
+                    SizedBox(height: 12.h),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 48.w),
+                      child: Text(
+                        'Hozircha sizga tayinlangan maxsus testlar yo\'q',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                     ),
                   ],
@@ -179,13 +215,19 @@ class _SpecialTestCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            Colors.white,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: AppConstant.primaryColor.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+            spreadRadius: 2,
           ),
         ],
       ),
@@ -211,12 +253,22 @@ class _SpecialTestCard extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: EdgeInsets.all(12.w),
+                      padding: EdgeInsets.all(14.w),
                       decoration: BoxDecoration(
-                        color: isActive && test.hasAttempted != true
-                            ? const Color(0xFF4CAF50).withOpacity(0.1)
-                            : Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(12.r),
+                        gradient: isActive && test.hasAttempted != true
+                            ? LinearGradient(
+                              colors: [
+                                AppConstant.primaryColor.withOpacity(0.15),
+                                AppConstant.primaryColor.withOpacity(0.05),
+                              ],
+                            )
+                            : LinearGradient(
+                              colors: [
+                                Colors.grey.shade200,
+                                Colors.grey.shade100,
+                              ],
+                            ),
+                        borderRadius: BorderRadius.circular(14.r),
                       ),
                       child: Icon(
                         test.hasAttempted == true

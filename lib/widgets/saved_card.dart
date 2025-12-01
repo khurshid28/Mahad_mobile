@@ -16,70 +16,79 @@ class SavedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return GestureDetector(
       onTap: onTap,
-      child: SizedBox(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      child: Container(
+        margin: EdgeInsets.only(bottom: 12.h),
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16.r),
+          border: isDark
+              ? Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1,
+                )
+              : null,
+          boxShadow: isDark
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+        ),
+        child: Row(
           children: [
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 15.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Container(
+              width: 50.w,
+              height: 50.w,
+              decoration: BoxDecoration(
+                color: AppConstant.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Icon(
+                Icons.book,
+                color: AppConstant.primaryColor,
+                size: 26.w,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    // color: Colors.red.shade300,
-                    width: 270.w,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset(
-                          "assets/icons/magazinefill.svg",
-                          width: 35.w,
-                        ),
-                        SizedBox(width: 20.w),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              subject.name,
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                            Text(
-                                book.name,
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.w200,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  Text(
+                    subject.name,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
-
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                     
-                      SvgPicture.asset(
-                        "assets/icons/chevronright.svg",
-                        width: 25.w,
-                      ),
-                    ],
+                  SizedBox(height: 4.h),
+                  Text(
+                    book.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                 ],
               ),
             ),
-
-            customDivider(),
+            Icon(
+              Icons.chevron_right,
+              color: isDark ? Colors.white.withOpacity(0.5) : Colors.grey.shade400,
+              size: 24.w,
+            ),
           ],
         ),
       ),

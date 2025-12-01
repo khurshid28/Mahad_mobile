@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_app/blocs/section/section_all_bloc.dart';
 import 'package:test_app/blocs/section/section_all_state.dart';
 import 'package:test_app/controller/section_controller.dart';
-import 'package:test_app/core/const/const.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/book.dart';
@@ -51,21 +50,16 @@ class _BookScreenState extends State<BookScreen> {
   ToastService toastService = ToastService();
   @override
   Widget build(BuildContext context) {
-     
-  
-
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
-        child: CustomAppBar(titleText: widget.book.name, isLeading: true
-        
-        ),
-        
+        child: CustomAppBar(titleText: widget.book.name, isLeading: true),
       ),
-      
-      backgroundColor: AppConstant.whiteColor,
+      backgroundColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1A1A1A)
+              : Colors.grey.shade50,
       body: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           BlocListener<SectionAllBloc, SectionAllState>(
             child: SizedBox(),
@@ -80,74 +74,101 @@ class _BookScreenState extends State<BookScreen> {
             },
           ),
 
-          bodySection(),
+          Expanded(child: bodySection()),
         ],
       ),
     );
   }
 
   Widget bodySection() {
-    return Padding(
-      padding: EdgeInsets.all(16.0),
-      child: BlocBuilder<SectionAllBloc, SectionAllState>(
-        builder: (context, state) {
-          if (state is SectionAllSuccessState) {
-            final data =
-                state.data
-                    .where(
-                      (s) =>
-                          s["book_id"].toString() == widget.book.id.toString(),
-                    )
-                    .toList();
-            if (data.isEmpty) {
-              return SizedBox(
-                height: 300.h,
-                child: Center(
-                  child: SizedBox(
-                    height: 80.h,
+    return BlocBuilder<SectionAllBloc, SectionAllState>(
+      builder: (context, state) {
+        if (state is SectionAllSuccessState) {
+          final data =
+              state.data
+                  .where(
+                    (s) => s["book_id"].toString() == widget.book.id.toString(),
+                  )
+                  .toList()
+                  .reversed
+                  .toList();
+          if (data.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(20.w),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.layers_outlined,
+                      size: 64.w,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  Text(
+                    "Bo'limlar mavjud emas",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 40.w),
                     child: Text(
-                      "Natija mavjud emas",
+                      "Bu kitob uchun bo'limlar qo'shilmagan",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w300,
+                        color: Colors.grey.shade400,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ),
-                ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: EdgeInsets.all(16.w),
+            itemCount: data.length,
+            itemBuilder: (context, index) {
+              Section section = Section(
+                name: data[index]["name"],
+                id: data[index]["id"],
+                count: data[index]["test"]?["_count"]?["test_items"] ?? 0,
+                percent: getPercent(data[index]),
+                test_id: data[index]["test"]?["id"].toString(),
               );
-            }
 
-            return Column(
-              children: List.generate(data.length, (index) {
-                Section section = Section(
-                  name: data[index]["name"],
-                  id: data[index]["id"],
-                  count: data[index]["test"]?["_count"]?["test_items"] ?? 0,
-                  percent: getPercent(data[index]),
-                  test_id: data[index]["test"]?["id"].toString(),
+              Section? prev;
+              if (index != 0) {
+                prev = Section(
+                  name: data[index - 1]["name"],
+                  id: data[index - 1]["id"],
+                  count: data[index - 1]["test"]?["_count"]?["test_items"] ?? 0,
+                  percent: getPercent(data[index - 1]),
+                  test_id: data[index - 1]["test"]?["id"].toString(),
                 );
+              }
 
-                Section? prev;
-                if (index != 0) {
-                  prev = Section(
-                    name: data[index - 1]["name"],
-                    id: data[index - 1]["id"],
-                    count:
-                        data[index - 1]["test"]?["_count"]?["test_items"] ?? 0,
-                    percent: getPercent(data[index - 1]),
-                    test_id: data[index - 1]["test"]?["id"].toString(),
-                  );
-                }
+              bool isBlocked =
+                  widget.fullBlock ||
+                  (widget.stepBlock && index != 0 && (prev?.percent ?? 0) < 60);
 
-                return SectionCard(
+              return Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: SectionCard(
                   section: section,
-                  block:
-                      widget.fullBlock ||
-                      (widget.stepBlock &&
-                          index != 0 &&
-                          (prev?.percent ?? 0) < 60),
+                  block: isBlocked,
                   isFailed: 60 > section.percent,
                   onTap: () {
                     Navigator.push(
@@ -157,49 +178,45 @@ class _BookScreenState extends State<BookScreen> {
                       ),
                     );
                   },
-                );
+                ),
+              );
+            },
+          );
+          // return Expanded(
+          //   child: GridView.builder(
+          //     padding: EdgeInsets.symmetric(vertical: 10.h),
+          //     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          //       crossAxisCount: 2,
+          //       childAspectRatio: 0.9,
+          //       crossAxisSpacing: 10,
+          //       mainAxisSpacing: 10,
+          //     ),
+          //     itemCount: state.data.length,
+          //     itemBuilder: (context, index) {
+          //       Result res = Result(
+          //         solved: state.data[index]["solved"],
+          //         date: DateTime.parse(state.data[index]["updatedAt"].toString()),
+          //       );
+          //       return   MyResultCard(section: sections[index],result: results[index], onTap: () {
+          //        Navigator.push(
+          //                 context,
+          //                 MaterialPageRoute(
+          //                   builder: (context) => SectionScreen(section: sections[index],),
+          //                 ),
+          //               );
+          //     },
+          //   );
 
-              }),
-            );
-            // return Expanded(
-            //   child: GridView.builder(
-            //     padding: EdgeInsets.symmetric(vertical: 10.h),
-            //     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            //       crossAxisCount: 2,
-            //       childAspectRatio: 0.9,
-            //       crossAxisSpacing: 10,
-            //       mainAxisSpacing: 10,
-            //     ),
-            //     itemCount: state.data.length,
-            //     itemBuilder: (context, index) {
-            //       Result res = Result(
-            //         solved: state.data[index]["solved"],
-            //         date: DateTime.parse(state.data[index]["updatedAt"].toString()),
-            //       );
-            //       return   MyResultCard(section: sections[index],result: results[index], onTap: () {
-            //        Navigator.push(
-            //                 context,
-            //                 MaterialPageRoute(
-            //                   builder: (context) => SectionScreen(section: sections[index],),
-            //                 ),
-            //               );
-            //     },
-            //   );
-
-            //     })
-            // );
-          } else if (state is SectionAllWaitingState) {
-            return SizedBox(
-              height: 300.h,
-              child: CommonLoading(
-                message: "Ma\'lumot yuklanmoqda...",
-              ),
-            );
-          } else {
-            return SizedBox();
-          }
-        },
-      ),
+          //     })
+          // );
+        } else if (state is SectionAllWaitingState) {
+          return Center(
+            child: CommonLoading(message: "Ma\'lumot yuklanmoqda..."),
+          );
+        } else {
+          return SizedBox();
+        }
+      },
     );
   }
 }

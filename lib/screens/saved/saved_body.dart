@@ -44,8 +44,49 @@ class _SavedBodyState extends State<SavedBody> {
   @override
   Widget build(BuildContext context) {
     List sections = getSections();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    if (sections.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(24.w),
+              decoration: BoxDecoration(
+                color: AppConstant.primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.bookmark_border,
+                size: 60.sp,
+                color: AppConstant.primaryColor,
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              'Saqlanganlar bo\'sh',
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Kitoblarni saqlang va bu yerda ko\'ring',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
     return Scaffold(
-      backgroundColor: AppConstant.whiteColor,
+      backgroundColor: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F7FA),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
