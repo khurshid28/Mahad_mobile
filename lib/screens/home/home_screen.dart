@@ -145,7 +145,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   num getPercent(List results) {
     double score = 0;
+    int totalTests = 0;
+
     if (results.isEmpty) return 0;
+
     for (var r in results) {
       try {
         if (r["type"] == "RANDOM") {
@@ -153,23 +156,38 @@ class _HomeScreenState extends State<HomeScreen> {
           int totalItems = ((r["answers"] ?? []) as List).length;
           if (totalItems > 0) {
             score += solved / totalItems;
+            totalTests++;
+          }
+        } else if (r["type"] == "SPECIAL") {
+          // Maxsus testlar
+          int solved = (r["solved"] ?? 0) as int;
+          int totalItems = ((r["answers"] ?? []) as List).length;
+          if (totalItems > 0) {
+            score += solved / totalItems;
+            totalTests++;
           }
         } else {
+          // Oddiy testlar
           int solved = (r["solved"] ?? 0) as int;
           int totalItems = r["test"]?["_count"]?["test_items"] ?? 1;
           if (totalItems > 0) {
             score += solved / totalItems;
+            totalTests++;
           }
         }
       } catch (e) {
         print("Error: $e");
       }
     }
-    return (score * 1000 / (results.length)).floor() / 10;
+
+    if (totalTests == 0) return 0;
+    return (score * 1000 / totalTests).floor() / 10;
   }
 
   List sortRates(List data) {
-    data.sort((a, b) => getPercent(b["results"]).compareTo(getPercent(a["results"])));
+    data.sort(
+      (a, b) => getPercent(b["results"]).compareTo(getPercent(a["results"])),
+    );
     return data;
   }
 
@@ -221,276 +239,307 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppConstant.primaryColor.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      cursorColor: AppConstant.primaryColor,
-                      onChanged: (value) => setState(() {}),
-                      controller: seachController,
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 20.w,
-                          vertical: 16.h,
-                        ),
-                        fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                        filled: true,
-                        hintText: "Fan qidirish",
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 15.sp,
-                        ),
-                        prefixIcon: Padding(
-                          padding: EdgeInsets.only(left: 17.w, right: 12.w),
-                          child: Icon(
-                            Icons.search,
-                            color: AppConstant.primaryColor,
-                            size: 24.w,
-                          ),
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15.r),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15.r),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15.r),
-                          borderSide: BorderSide(
-                            color: AppConstant.primaryColor,
-                            width: 2,
-                          ),
-                        ),
-                      ),
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppConstant.primaryColor.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: TextField(
+                cursorColor: AppConstant.primaryColor,
+                onChanged: (value) => setState(() {}),
+                controller: seachController,
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 20.w,
+                    vertical: 16.h,
+                  ),
+                  fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                  filled: true,
+                  hintText: "Fan qidirish",
+                  hintStyle: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 15.sp,
+                  ),
+                  prefixIcon: Padding(
+                    padding: EdgeInsets.only(left: 17.w, right: 12.w),
+                    child: Icon(
+                      Icons.search,
+                      color: AppConstant.primaryColor,
+                      size: 24.w,
                     ),
                   ),
-                  SizedBox(height: 20.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: BlocBuilder<RateBloc, RateState>(
-                          builder: (context, state) {
-                            int myRate = 0;
-                            if (state is RateSuccessState && state.data.isNotEmpty) {
-                              final data = sortRates(state.data);
-                              Map? user = StorageService().read(StorageService.user);
-                              int myIndex = data.indexWhere((element) => element["id"].toString() == "${user?["id"]}");
-                              myRate = myIndex == -1 ? 0 : myIndex + 1;
-                            }
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15.r),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15.r),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15.r),
+                    borderSide: BorderSide(
+                      color: AppConstant.primaryColor,
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            Row(
+              children: [
+                Expanded(
+                  child: BlocBuilder<RateBloc, RateState>(
+                    builder: (context, state) {
+                      int myRate = 0;
+                      if (state is RateSuccessState && state.data.isNotEmpty) {
+                        final data = sortRates(state.data);
+                        Map? user = StorageService().read(StorageService.user);
+                        int myIndex = data.indexWhere(
+                          (element) =>
+                              element["id"].toString() == "${user?["id"]}",
+                        );
+                        myRate = myIndex == -1 ? 0 : myIndex + 1;
+                      }
 
-                            return Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppConstant.accentOrange,
-                                    AppConstant.accentOrange.withOpacity(0.8),
-                                  ],
+                      return Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppConstant.accentOrange,
+                              AppConstant.accentOrange.withOpacity(0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppConstant.accentOrange.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RateScreen(),
                                 ),
-                                borderRadius: BorderRadius.circular(12.r),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppConstant.accentOrange.withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(12.r),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 14.h,
+                                horizontal: 16.w,
                               ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => RateScreen(),
-                                      ),
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.emoji_events, color: Colors.white, size: 20.sp),
-                                        SizedBox(width: 8.w),
-                                        Text(
-                                          'Liderlar',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14.sp,
-                                          ),
-                                        ),
-                                        if (myRate > 0) ...[
-                                          SizedBox(width: 8.w),
-                                          Container(
-                                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(12.r),
-                                            ),
-                                            child: Text(
-                                              myRate.toString(),
-                                              style: TextStyle(
-                                                color: AppConstant.accentOrange,
-                                                fontWeight: FontWeight.w900,
-                                                fontSize: 14.sp,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ],
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.emoji_events,
+                                    color: Colors.white,
+                                    size: 20.sp,
+                                  ),
+                                  SizedBox(width: 8.w),
+                                  Text(
+                                    'Liderlar',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14.sp,
                                     ),
                                   ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: BlocBuilder<SpecialTestBloc, SpecialTestState>(
-                          builder: (context, state) {
-                            int testCount = 0;
-                            if (state is SpecialTestsLoaded) {
-                              testCount = state.tests
-                                  .where((test) => test.isActive && test.hasAttempted != true)
-                                  .length;
-                            }
-
-                            return Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppConstant.primaryColor,
-                                    AppConstant.primaryColor.withOpacity(0.8),
+                                  if (myRate > 0) ...[
+                                    SizedBox(width: 8.w),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 8.w,
+                                        vertical: 4.h,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(
+                                          12.r,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        myRate.toString(),
+                                        style: TextStyle(
+                                          color: AppConstant.accentOrange,
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 14.sp,
+                                        ),
+                                      ),
+                                    ),
                                   ],
-                                ),
-                                borderRadius: BorderRadius.circular(12.r),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppConstant.primaryColor.withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
                                 ],
                               ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const SpecialTestListScreen(),
-                                      ),
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  child: Stack(
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: BlocBuilder<SpecialTestBloc, SpecialTestState>(
+                    builder: (context, state) {
+                      int testCount = 0;
+                      if (state is SpecialTestsLoaded) {
+                        testCount =
+                            state.tests
+                                .where(
+                                  (test) =>
+                                      test.isActive &&
+                                      test.hasAttempted != true,
+                                )
+                                .length;
+                      }
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppConstant.primaryColor,
+                              AppConstant.primaryColor.withOpacity(0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppConstant.primaryColor.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) =>
+                                          const SpecialTestListScreen(),
+                                ),
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(12.r),
+                            child: Stack(
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 14.h,
+                                    horizontal: 16.w,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.star, color: Colors.white, size: 20.sp),
-                                            SizedBox(width: 8.w),
-                                            Text(
-                                              'Maxsus',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14.sp,
-                                              ),
-                                            ),
-                                          ],
+                                      Icon(
+                                        Icons.star,
+                                        color: Colors.white,
+                                        size: 20.sp,
+                                      ),
+                                      SizedBox(width: 8.w),
+                                      Text(
+                                        'Maxsus',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14.sp,
                                         ),
                                       ),
-                                      if (testCount > 0)
-                                        Positioned(
-                                          right: 6.w,
-                                          top: 6.h,
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: testCount > 9 ? 6.w : 7.w,
-                                              vertical: 3.h,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.red,
-                                              borderRadius: BorderRadius.circular(10.r),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.red.withOpacity(0.4),
-                                                  blurRadius: 4,
-                                                  offset: const Offset(0, 2),
-                                                ),
-                                              ],
-                                            ),
-                                            child: Text(
-                                              testCount > 9 ? '9+' : testCount.toString(),
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 10.sp,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
                                     ],
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                                if (testCount > 0)
+                                  Positioned(
+                                    right: 6.w,
+                                    top: 6.h,
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: testCount > 9 ? 6.w : 7.w,
+                                        vertical: 3.h,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(
+                                          10.r,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.red.withOpacity(0.4),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Text(
+                                        testCount > 9
+                                            ? '9+'
+                                            : testCount.toString(),
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20.h),
-                  BlocListener<SpecialTestBloc, SpecialTestState>(
-                    listener: (context, state) {
-                      if (state is SpecialTestError) {
-                        // Silently handle error - don't show to user
-                        // Special tests are optional feature
-                      }
-                    },
-                    child: const SizedBox(),
-                  ),
-                  BlocListener<SubjectAllBloc, SubjectAllState>(
-                    child: SizedBox(),
-                    listener: (context, state) async {
-                      if (state is SubjectAllErrorState) {
-                        if (state.statusCode == 401) {
-                          Logout(context);
-                        } else {
-                          toastService.error(
-                            message: state.message ?? "Xatolik Bor",
-                          );
-                        }
-                      } else if (state is SubjectAllSuccessState) {}
+                      );
                     },
                   ),
-                  bodySection(),
-                ],
-              ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+            BlocListener<SpecialTestBloc, SpecialTestState>(
+              listener: (context, state) {
+                if (state is SpecialTestError) {
+                  // Silently handle error - don't show to user
+                  // Special tests are optional feature
+                }
+              },
+              child: const SizedBox(),
+            ),
+            BlocListener<SubjectAllBloc, SubjectAllState>(
+              child: SizedBox(),
+              listener: (context, state) async {
+                if (state is SubjectAllErrorState) {
+                  if (state.statusCode == 401) {
+                    Logout(context);
+                  } else {
+                    toastService.error(message: state.message ?? "Xatolik Bor");
+                  }
+                } else if (state is SubjectAllSuccessState) {}
+              },
+            ),
+            bodySection(),
+          ],
+        ),
       ),
     );
   }

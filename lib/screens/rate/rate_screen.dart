@@ -27,13 +27,14 @@ class _RateScreenState extends State<RateScreen> {
 
   // ];
 
-  
-
   num getPercent(List results) {
     double score = 0;
+    int totalTests = 0;
+
     if (results.isEmpty) {
       return 0;
     }
+
     for (var r in results) {
       try {
         if (r["type"] == "RANDOM") {
@@ -41,12 +42,23 @@ class _RateScreenState extends State<RateScreen> {
           int totalItems = ((r["answers"] ?? []) as List).length;
           if (totalItems > 0) {
             score += solved / totalItems;
+            totalTests++;
+          }
+        } else if (r["type"] == "SPECIAL") {
+          // Maxsus testlar
+          int solved = (r["solved"] ?? 0) as int;
+          int totalItems = ((r["answers"] ?? []) as List).length;
+          if (totalItems > 0) {
+            score += solved / totalItems;
+            totalTests++;
           }
         } else {
+          // Oddiy testlar
           int solved = (r["solved"] ?? 0) as int;
           int totalItems = r["test"]?["_count"]?["test_items"] ?? 1;
           if (totalItems > 0) {
             score += solved / totalItems;
+            totalTests++;
           }
         }
       } catch (e) {
@@ -54,7 +66,8 @@ class _RateScreenState extends State<RateScreen> {
       }
     }
 
-    return (score * 1000 / (results.length)).floor() / 10;
+    if (totalTests == 0) return 0;
+    return (score * 1000 / totalTests).floor() / 10;
   }
 
   List sortRates(List data) {
@@ -74,9 +87,10 @@ class _RateScreenState extends State<RateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF1A1A1A)
-          : const Color(0xFFF5F7FA),
+      backgroundColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1A1A1A)
+              : const Color(0xFFF5F7FA),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -160,7 +174,9 @@ class _RateScreenState extends State<RateScreen> {
                       if (state.statusCode == 401) {
                         Logout(context);
                       } else {
-                        toastService.error(message: state.message ?? "Xatolik Bor");
+                        toastService.error(
+                          message: state.message ?? "Xatolik Bor",
+                        );
                       }
                     } else if (state is RateSuccessState) {
                       sortRates(state.data);
@@ -241,7 +257,7 @@ class _RateScreenState extends State<RateScreen> {
           }
 
           final data = sortRates(state.data);
-          
+
           return Column(
             children: [
               // Liderlar ro'yxati
