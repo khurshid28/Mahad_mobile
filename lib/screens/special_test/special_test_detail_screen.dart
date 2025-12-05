@@ -473,7 +473,11 @@ class _StartTestCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {
                 // Find the parent state and start test
-                final parentState = context.findAncestorStateOfType<_SpecialTestDetailScreenState>();
+                final parentState =
+                    context
+                        .findAncestorStateOfType<
+                          _SpecialTestDetailScreenState
+                        >();
                 if (parentState != null) {
                   parentState._startTest(test);
                 }
@@ -626,7 +630,8 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
       if (!autoSubmit) {
         final shouldSubmit = await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
+          builder:
+              (context) => AlertDialog(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20.r),
                 ),
@@ -752,7 +757,8 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
       onWillPop: () async {
         final shouldExit = await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
+          builder:
+              (context) => AlertDialog(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20.r),
                 ),
@@ -918,13 +924,10 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
               ),
           ],
         ),
-        body: BlocListener<SpecialTestBloc, SpecialTestState>(
+        body: BlocConsumer<SpecialTestBloc, SpecialTestState>(
           listener: (context, state) {
             if (state is SpecialTestSubmitted) {
               _timer?.cancel();
-              // Refresh tests list to update hasAttempted flag
-              context.read<SpecialTestBloc>().add(LoadSpecialTests());
-              
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (_) => SpecialTestResultScreen(result: state.result),
@@ -937,183 +940,187 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
               ToastService().error(message: state.message);
             }
           },
-          child: Column(
-            children: [
-              LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.grey.shade200,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  Color(0xFF4CAF50),
+          builder: (context, state) {
+            return Column(
+              children: [
+                LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    Color(0xFF4CAF50),
+                  ),
+                  minHeight: 4.h,
                 ),
-                minHeight: 4.h,
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.all(16.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(20.w),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(8.w),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF4CAF50,
-                                    ).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8.r),
-                                  ),
-                                  child: Text(
-                                    '${question.number}',
-                                    style: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF4CAF50),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 12.w),
-                                Expanded(
-                                  child: Text(
-                                    'Savol',
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 16.h),
-                            Text(
-                              question.question,
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black87,
-                                height: 1.5,
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(20.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(8.w),
+                                    decoration: BoxDecoration(
+                                      color: const Color(
+                                        0xFF4CAF50,
+                                      ).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                    child: Text(
+                                      '${question.number}',
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFF4CAF50),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  Expanded(
+                                    child: Text(
+                                      'Savol',
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 16.h),
+                              Text(
+                                question.question,
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black87,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 20.h),
-                      ..._buildOptions(question),
-                    ],
+                        SizedBox(height: 20.h),
+                        ..._buildOptions(question),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -4),
-                    ),
-                  ],
-                ),
-                child: SafeArea(
-                  child: Row(
-                    children: [
-                      if (_currentQuestionIndex > 0)
+                Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    child: Row(
+                      children: [
+                        if (_currentQuestionIndex > 0)
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed:
+                                  _isSubmitting
+                                      ? null
+                                      : () {
+                                        setState(() {
+                                          _currentQuestionIndex--;
+                                        });
+                                      },
+                              style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(vertical: 14.h),
+                                side: const BorderSide(
+                                  color: Color(0xFF4CAF50),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                              ),
+                              child: Text(
+                                'Orqaga',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF4CAF50),
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (_currentQuestionIndex > 0) SizedBox(width: 12.w),
                         Expanded(
-                          child: OutlinedButton(
+                          child: ElevatedButton(
                             onPressed:
                                 _isSubmitting
                                     ? null
                                     : () {
-                                      setState(() {
-                                        _currentQuestionIndex--;
-                                      });
+                                      if (_currentQuestionIndex <
+                                          widget.test.questions.length - 1) {
+                                        setState(() {
+                                          _currentQuestionIndex++;
+                                        });
+                                      } else {
+                                        _submitTest();
+                                      }
                                     },
-                            style: OutlinedButton.styleFrom(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4CAF50),
                               padding: EdgeInsets.symmetric(vertical: 14.h),
-                              side: const BorderSide(color: Color(0xFF4CAF50)),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
+                              elevation: 0,
                             ),
-                            child: Text(
-                              'Orqaga',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF4CAF50),
-                              ),
-                            ),
+                            child:
+                                _isSubmitting
+                                    ? SizedBox(
+                                      height: 20.h,
+                                      width: 20.h,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                    : Text(
+                                      _currentQuestionIndex <
+                                              widget.test.questions.length - 1
+                                          ? 'Keyingi'
+                                          : 'Topshirish',
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                           ),
                         ),
-                      if (_currentQuestionIndex > 0) SizedBox(width: 12.w),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed:
-                              _isSubmitting
-                                  ? null
-                                  : () {
-                                    if (_currentQuestionIndex <
-                                        widget.test.questions.length - 1) {
-                                      setState(() {
-                                        _currentQuestionIndex++;
-                                      });
-                                    } else {
-                                      _submitTest();
-                                    }
-                                  },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4CAF50),
-                            padding: EdgeInsets.symmetric(vertical: 14.h),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            elevation: 0,
-                          ),
-                          child:
-                              _isSubmitting
-                                  ? SizedBox(
-                                    height: 20.h,
-                                    width: 20.h,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                  : Text(
-                                    _currentQuestionIndex <
-                                            widget.test.questions.length - 1
-                                        ? 'Keyingi'
-                                        : 'Topshirish',
-                                    style: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -1239,7 +1246,7 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
     final secs = seconds % 60;
 
     if (hours > 0) {
-      return '${hours}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
     }
     return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }

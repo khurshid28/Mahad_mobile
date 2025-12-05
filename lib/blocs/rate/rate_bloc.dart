@@ -20,7 +20,7 @@ class RateBloc extends Cubit<RateState> {
       print("🟡 [RateBloc] Endpoint: ${Endpoints.rate}");
       
       dio.Response response = await dioClient.get(
-        "${Endpoints.rate}",
+        Endpoints.rate,
         options: dio.Options(
           headers: {"Authorization": "Bearer $token"},
         ),

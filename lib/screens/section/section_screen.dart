@@ -1,12 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_app/blocs/section/section_bloc.dart';
 import 'package:test_app/blocs/section/section_state.dart';
 import 'package:test_app/controller/section_controller.dart';
-import 'package:test_app/core/const/const.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/export_files.dart';
-import 'package:test_app/models/book.dart';
 import 'package:test_app/models/result.dart';
 import 'package:test_app/models/section.dart';
 import 'package:test_app/screens/test/finished_test_screen.dart';
@@ -16,11 +13,10 @@ import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
 import 'package:test_app/widgets/result_card.dart';
-import 'package:test_app/widgets/section_card.dart';
 
 class SectionScreen extends StatefulWidget {
   final Section section;
-  SectionScreen({required this.section});
+  const SectionScreen({super.key, required this.section});
   @override
   _SectionScreenState createState() => _SectionScreenState();
 }
@@ -45,7 +41,7 @@ class _SectionScreenState extends State<SectionScreen> {
     return section;
   }
 
-  Future likeSection(Map section_data) async {
+  Future likeSection(Map sectionData) async {
     String key = "${widget.section.id}";
     Map sections = StorageService().read(StorageService.sections) ?? {};
 
@@ -53,7 +49,7 @@ class _SectionScreenState extends State<SectionScreen> {
     if (section != null) {
       sections.remove(key);
     } else {
-      sections[key] = section_data;
+      sections[key] = sectionData;
     }
     await StorageService().write(StorageService.sections, sections);
   }
@@ -445,7 +441,7 @@ class _SectionScreenState extends State<SectionScreen> {
         } else if (state is SectionWaitingState) {
           return SizedBox(
             height: 300.h,
-            child: CommonLoading(message: "Ma\'lumot yuklanmoqda..."),
+            child: CommonLoading(message: "Ma'lumot yuklanmoqda..."),
           );
         } else {
           return SizedBox();

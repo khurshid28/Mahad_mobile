@@ -148,7 +148,7 @@ class SettingsScreen extends StatelessWidget {
             child: Switch(
               value: isDarkMode,
               onChanged: (value) => _toggleTheme(context, value),
-              activeColor: AppConstant.primaryColor,
+              activeThumbColor: AppConstant.primaryColor,
               activeTrackColor: AppConstant.primaryColor.withOpacity(0.5),
             ),
           ),

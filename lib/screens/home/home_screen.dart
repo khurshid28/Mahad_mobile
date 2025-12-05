@@ -90,7 +90,6 @@
 //   }
 // }
 
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:test_app/blocs/rate/rate_bloc.dart';
@@ -100,7 +99,6 @@ import 'package:test_app/blocs/subject/subject_all_bloc.dart';
 import 'package:test_app/blocs/subject/subject_all_state.dart';
 import 'package:test_app/controller/rate_controller.dart';
 import 'package:test_app/controller/subject_controller.dart';
-import 'package:test_app/core/const/const.dart';
 import 'package:test_app/core/endpoints/endpoints.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/export_files.dart';
@@ -114,6 +112,8 @@ import 'package:test_app/service/toast_service.dart';
 import 'package:test_app/widgets/subject_card.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }

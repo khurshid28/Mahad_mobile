@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:test_app/models/book.dart';
-import '../models/subject.dart';
 
 class BookCard extends StatelessWidget {
   final Book book;

@@ -1,10 +1,8 @@
 // ignore_for_file: prefer_const_constructors_in_immutables, use_key_in_widget_constructors
 
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/result.dart';
-import 'package:test_app/models/section.dart';
 
 class MyResultCard extends StatelessWidget {
    final Result result;

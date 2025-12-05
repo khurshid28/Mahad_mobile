@@ -40,25 +40,19 @@ class DioClient {
         onReceiveProgress: onReceiveProgress,
       );
       return response;
-    } on dio.DioError catch (e) {
-      DioExceptions.fromDioError(e).message;
-      if (e.error is SocketException || e.type == DioErrorType.unknown) {
-        await Future.delayed(
-          const Duration(seconds: 5),
-        );
-        return await get(
-          url,
-          queryParameters: queryParameters,
-          options: options,
-          cancelToken: cancelToken,
-          onReceiveProgress: onReceiveProgress,
-        );
+    } on dio.DioException catch (e) {
+      print('🔴 [DioClient] DioException: ${e.message}');
+      print('🔴 [DioClient] Error type: ${e.type}');
+      print('🔴 [DioClient] Response: ${e.response}');
+      
+      if (e.response != null) {
+        return e.response!;
       }
-
-      return e.response!;
+      
+      // Network error - throw meaningful exception
+      throw Exception('Tarmoq xatosi: ${e.message}');
     } catch (e) {
-      // ignore: avoid_print
-      print(e);
+      print('🔴 [DioClient] Unknown error: $e');
       rethrow;
     }
   }
@@ -85,23 +79,19 @@ class DioClient {
       );
 
       return response;
-    } on dio.DioError catch (e) {
-    //  throw DioExceptions.fromDioError(e);
-      if (e.error is SocketException || e.type == DioErrorType.unknown) {
-        await Future.delayed(
-          const Duration(seconds: 5),
-        );
-        return await post(
-          url,
-          data: data,
-          queryParameters: queryParameters,
-          options: options,
-          cancelToken: cancelToken,
-          onReceiveProgress: onReceiveProgress,
-        );
+    } on dio.DioException catch (e) {
+      print('🔴 [DioClient] POST DioException: ${e.message}');
+      print('🔴 [DioClient] Error type: ${e.type}');
+      print('🔴 [DioClient] Response: ${e.response}');
+      
+      if (e.response != null) {
+        return e.response!;
       }
-      return e.response!;
+      
+      // Network error - throw meaningful exception
+      throw Exception('Tarmoq xatosi: ${e.message}');
     } catch (e) {
+      print('🔴 [DioClient] POST Unknown error: $e');
       rethrow;
     }
   }
@@ -126,10 +116,10 @@ class DioClient {
         onReceiveProgress: onReceiveProgress,
       );
       return response;
-    } on dio.DioError catch (e) {
+    } on dio.DioException catch (e) {
       // throw DioExceptions.fromDioError(e);
 
-      if (e.error is SocketException || e.type == DioErrorType.unknown) {
+      if (e.error is SocketException || e.type == DioExceptionType.unknown) {
         await Future.delayed(
           const Duration(seconds: 5),
         );
@@ -166,9 +156,9 @@ class DioClient {
         onReceiveProgress: onReceiveProgress,
       );
       return response;
-    } on dio.DioError catch (e) {
+    } on dio.DioException catch (e) {
       // throw DioExceptions.fromDioError(e);
-      if (e.error is SocketException || e.type == DioErrorType.unknown) {
+      if (e.error is SocketException || e.type == DioExceptionType.unknown) {
         await Future.delayed(
           const Duration(seconds: 5),
         );
@@ -208,9 +198,9 @@ class DioClient {
         cancelToken: cancelToken,
       );
       return response.data;
-    } on dio.DioError catch (e) {
+    } on dio.DioException catch (e) {
       // throw DioExceptions.fromDioError(e);
-      if (e.error is SocketException || e.type == DioErrorType.unknown) {
+      if (e.error is SocketException || e.type == DioExceptionType.unknown) {
         await Future.delayed(
           const Duration(seconds: 5),
         );

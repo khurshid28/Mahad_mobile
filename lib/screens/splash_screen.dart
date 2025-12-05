@@ -6,6 +6,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:test_app/core/const/const.dart';
 import 'package:test_app/screens/main_screen.dart';
 import 'package:test_app/service/storage_service.dart';
+import 'package:test_app/service/version_service.dart';
+import 'package:test_app/widgets/update_required_dialog.dart';
 import '../screens/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -16,13 +18,38 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final VersionService _versionService = VersionService();
+
   @override
   void initState() {
     super.initState();
-    _navigateToLogin();
+    _checkVersionAndNavigate();
   }
 
-  void _navigateToLogin() {
+  void _checkVersionAndNavigate() async {
+    try {
+      // Check version
+      final currentVersion = await _versionService.getCurrentAppVersion();
+      final serverVersion = await _versionService.getServerVersion();
+      
+      print('🟡 Current version: $currentVersion');
+      print('🟡 Server version: ${serverVersion.version}');
+      
+      // Check if update is required
+      if (_versionService.isUpdateRequired(currentVersion, serverVersion.version)) {
+        // Show update dialog
+        if (mounted) {
+          await Future.delayed(const Duration(seconds: 2));
+          _showUpdateDialog(currentVersion, serverVersion.version);
+        }
+        return;
+      }
+    } catch (e) {
+      print('🔴 Version check error: $e');
+      // Continue even if version check fails
+    }
+    
+    // Navigate to next screen after delay
     Future.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
         if ((StorageService().read(StorageService.access_token)) != null) {
@@ -38,6 +65,17 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
     });
+  }
+
+  void _showUpdateDialog(String currentVersion, String latestVersion) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => UpdateRequiredDialog(
+        currentVersion: currentVersion,
+        latestVersion: latestVersion,
+      ),
+    );
   }
 
   @override

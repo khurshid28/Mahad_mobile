@@ -32,7 +32,7 @@ class _CheckNetworkWidgetState extends State<CheckNetworkWidget> {
                setState(() => {});
 
 
-               print(">>Result : " + result.toString());
+               print(">>Result : $result");
     });
   }
 

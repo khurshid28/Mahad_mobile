@@ -3,8 +3,6 @@ import 'package:test_app/blocs/result/result_post_bloc.dart';
 import 'package:test_app/blocs/result/result_post_state.dart';
 import 'package:test_app/blocs/test/random_test_bloc.dart';
 import 'package:test_app/blocs/test/random_test_state.dart';
-import 'package:test_app/blocs/test/test_bloc.dart';
-import 'package:test_app/blocs/test/test_state.dart';
 import 'package:test_app/controller/result_controller.dart';
 import 'package:test_app/controller/test_controller.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
@@ -22,7 +20,7 @@ class RandomTestScreenNotime extends StatefulWidget {
   final Section section;
   List<int> sections;
   int count;
-  RandomTestScreenNotime({
+  RandomTestScreenNotime({super.key, 
     required this.section,
     required this.sections,
     required this.count,
@@ -33,16 +31,16 @@ class RandomTestScreenNotime extends StatefulWidget {
 
 class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
   Map getAnswers(int count) {
-    String res_key = "${StorageService.result}-${test_random_id}";
+    String resKey = "${StorageService.result}-$test_random_id";
     var res = StorageService().read(
-      "${StorageService.result}-${test_random_id}",
+      "${StorageService.result}-$test_random_id",
     );
     if (res == null) {
-      var new_res = {};
-      List.generate(count, (index) => index + 1).forEach((e) {
-        new_res[e.toString()] = "";
-      });
-      return new_res;
+      var newRes = {};
+      for (var e in List.generate(count, (index) => index + 1)) {
+        newRes[e.toString()] = "";
+      }
+      return newRes;
     }
     return res;
   }
@@ -58,11 +56,11 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
     required int index,
     required String result,
   }) async {
-    String res_key = "${StorageService.result}-${test_random_id}";
+    String resKey = "${StorageService.result}-$test_random_id";
     var res = getAnswers(count);
     res["${index + 1}"] = result;
 
-    await StorageService().write(res_key, res);
+    await StorageService().write(resKey, res);
   }
 
   int item_index = 0;
@@ -71,7 +69,7 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
   // Load current question index from storage
   void loadCurrentIndex() {
     var test = StorageService().read(
-      "${StorageService.test}-${test_random_id}",
+      "${StorageService.test}-$test_random_id",
     );
     if (test != null && test['current_index'] != null) {
       setState(() {
@@ -83,12 +81,12 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
   // Save current question index to storage
   void saveCurrentIndex() {
     var test = StorageService().read(
-      "${StorageService.test}-${test_random_id}",
+      "${StorageService.test}-$test_random_id",
     );
     if (test != null) {
       test['current_index'] = item_index;
       StorageService().write(
-        "${StorageService.test}-${test_random_id}",
+        "${StorageService.test}-$test_random_id",
         test,
       );
     }
@@ -106,11 +104,11 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
   }
 
   Map? getTestsFromStorage(List items) {
-    String test_key = "${StorageService.test}-${test_random_id}";
-    var test = StorageService().read(test_key);
-    print(test_key);
+    String testKey = "${StorageService.test}-$test_random_id";
+    var test = StorageService().read(testKey);
+    print(testKey);
     if (test == null) {
-      var res_items = [];
+      var resItems = [];
       math.Random random = math.Random();
 
       items.shuffle(random);
@@ -129,11 +127,11 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
         var ans = item["answer"] ?? "";
         var ansText = item["answer_" + ans];
         var extraItem = {};
-        extraItem["answer_" + rightAnswer] = ansText;
+        extraItem["answer_$rightAnswer"] = ansText;
         //change value
         var extra = item["answer_" + ans];
-        item["answer_" + ans] = item["answer_" + rightAnswer];
-        item["answer_" + rightAnswer] = extra;
+        item["answer_" + ans] = item["answer_$rightAnswer"];
+        item["answer_$rightAnswer"] = extra;
 
         answersRandom.shuffle(random);
         // print("shuffle");
@@ -145,11 +143,11 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
 
         for (var j = 0; j < answers.length; j++) {
           //  print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
-          extraItem["answer_" + answersRandom[j]] =
-              item["answer_" + answers[j]];
+          extraItem["answer_${answersRandom[j]}"] =
+              item["answer_${answers[j]}"];
         }
 
-        res_items.add({
+        resItems.add({
           "number": i + 1,
 
           "question": item["question"] ?? "",
@@ -169,11 +167,11 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
 
       Map? data = {
         
-        "data": res_items,
+        "data": resItems,
         "current_index": 0,
       };
 
-      StorageService().write(test_key, data);
+      StorageService().write(testKey, data);
       return data;
     }
     return test;
@@ -282,11 +280,11 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
     return BlocBuilder<RandomTestBloc, RandomTestState>(
       builder: (context, state) {
         if (state is RandomTestSuccessState) {
-          Map? storage_data = getTestsFromStorage(state.data ?? []);
-          test_items = storage_data?["data"] ?? [];
+          Map? storageData = getTestsFromStorage(state.data ?? []);
+          test_items = storageData?["data"] ?? [];
           var test = test_items[item_index];
           var count = test_items.length;
-          test_items = storage_data?["data"] ?? [];
+          test_items = storageData?["data"] ?? [];
           
 
           var results = getAnswers(count);
@@ -308,7 +306,7 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
                           children: [
                            
                             Text(
-                              "[${item_index+1}/${count}]",
+                              "[${item_index+1}/$count]",
                               style: TextStyle(
                                 color:
                                     AppConstant.primaryColor
@@ -663,7 +661,7 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
           return SizedBox(
             height: 300.h,
             child: CommonLoading(
-              message: "Ma\'lumot yuklanmoqda...",
+              message: "Ma'lumot yuklanmoqda...",
             ),
           );
         } else {

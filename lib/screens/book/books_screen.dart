@@ -1,13 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_app/blocs/book/book_all_bloc.dart';
 import 'package:test_app/blocs/book/book_all_state.dart';
 import 'package:test_app/blocs/section/section_all_bloc.dart';
 import 'package:test_app/blocs/section/section_all_state.dart';
-import 'package:test_app/blocs/subject/subject_all_bloc.dart';
-import 'package:test_app/blocs/subject/subject_all_state.dart';
 import 'package:test_app/controller/book_controller.dart';
-import 'package:test_app/core/const/const.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/core/endpoints/endpoints.dart';
 import 'package:test_app/export_files.dart';
@@ -26,7 +22,7 @@ import '../../models/section.dart';
 
 class BooksScreen extends StatefulWidget {
   final Subject subject;
-  BooksScreen({required this.subject});
+  const BooksScreen({super.key, required this.subject});
   @override
   _BooksScreenState createState() => _BooksScreenState();
 }
@@ -118,25 +114,25 @@ class _BooksScreenState extends State<BooksScreen> {
 
   int countAll() {
     int count = 0;
-    selectedItems.forEach((e) {
+    for (var e in selectedItems) {
       e["items"].forEach((item) {
         if (item["selected"]) {
           count += ((item["answers"] ?? []) as List).length;
         }
       });
-    });
+    }
     return count;
   }
 
   List<int> selecteds() {
     List<int> res = [];
-    selectedItems.forEach((e) {
+    for (var e in selectedItems) {
       e["items"].forEach((item) {
         if (item["selected"]) {
           res.add(item["id"]);
         }
       });
-    });
+    }
     return res;
   }
 
@@ -952,7 +948,7 @@ class _BooksScreenState extends State<BooksScreen> {
           return SizedBox(
             height: 300.h,
             child: CommonLoading(
-              message: "Ma\'lumot yuklanmoqda...",
+              message: "Ma'lumot yuklanmoqda...",
             ),
           );
         } else {

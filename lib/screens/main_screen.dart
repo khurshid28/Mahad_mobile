@@ -1,6 +1,5 @@
 // ignore_for_file: deprecated_member_use
 
-import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_app/blocs/rate/rate_state.dart';
 import 'package:test_app/blocs/rate/rate_bloc.dart';
@@ -188,11 +187,11 @@ class _MainScreenState extends State<MainScreen> {
     final seconds = remaining.inSeconds % 60;
     
     if (hours > 0) {
-      return 'Qolgan vaqt: ${hours}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+      return 'Qolgan vaqt: $hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     } else if (minutes > 0) {
-      return 'Qolgan vaqt: ${minutes}:${seconds.toString().padLeft(2, '0')}';
+      return 'Qolgan vaqt: $minutes:${seconds.toString().padLeft(2, '0')}';
     }
-    return 'Qolgan vaqt: ${seconds} soniya';
+    return 'Qolgan vaqt: $seconds soniya';
   }
 
   void _continueTest(

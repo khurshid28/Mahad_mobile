@@ -4,7 +4,7 @@ import 'package:test_app/screens/main_screen.dart';
 class FinishTestScreen extends StatefulWidget {
   int right;
   int count;
-  FinishTestScreen({required this.count, required this.right});
+  FinishTestScreen({super.key, required this.count, required this.right});
 
   @override
   _FinishTestScreenState createState() => _FinishTestScreenState();

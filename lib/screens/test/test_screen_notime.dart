@@ -18,7 +18,7 @@ import 'dart:math' as math;
 
 class TestScreenNotime extends StatefulWidget {
   final Section section;
-  TestScreenNotime({required this.section});
+  const TestScreenNotime({super.key, required this.section});
   @override
   _TestScreenNotimeState createState() => _TestScreenNotimeState();
 }
@@ -29,11 +29,11 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
       "${StorageService.result}-${widget.section.test_id}",
     );
     if (res == null) {
-      var new_res = {};
-      List.generate(count, (index) => index + 1).forEach((e) {
-        new_res[e.toString()] = "";
-      });
-      return new_res;
+      var newRes = {};
+      for (var e in List.generate(count, (index) => index + 1)) {
+        newRes[e.toString()] = "";
+      }
+      return newRes;
     }
     return res;
   }
@@ -106,7 +106,7 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
     );
 
     if (test == null) {
-      var res_items = [];
+      var resItems = [];
       math.Random random = math.Random();
 
       items.shuffle(random);
@@ -125,11 +125,11 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
         var ans = item["answer"] ?? "";
         var ansText = item["answer_" + ans];
         var extraItem = {};
-        extraItem["answer_" + rightAnswer] = ansText;
+        extraItem["answer_$rightAnswer"] = ansText;
         //change value
         var extra = item["answer_" + ans];
-        item["answer_" + ans] = item["answer_" + rightAnswer];
-        item["answer_" + rightAnswer] = extra;
+        item["answer_" + ans] = item["answer_$rightAnswer"];
+        item["answer_$rightAnswer"] = extra;
 
         answersRandom.shuffle(random);
         // print("shuffle");
@@ -141,11 +141,11 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
 
         for (var j = 0; j < answers.length; j++) {
           //  print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
-          extraItem["answer_" + answersRandom[j]] =
-              item["answer_" + answers[j]];
+          extraItem["answer_${answersRandom[j]}"] =
+              item["answer_${answers[j]}"];
         }
 
-        res_items.add({
+        resItems.add({
           "number": i + 1,
 
           "question": item["question"] ?? "",
@@ -165,7 +165,7 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
 
       Map? data = {
         
-        "data": res_items,
+        "data": resItems,
       };
 
       StorageService().write(
@@ -281,11 +281,11 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
     return BlocBuilder<TestBloc, TestState>(
       builder: (context, state) {
         if (state is TestSuccessState) {
-          Map? storage_data = getTestsFromStorage(
+          Map? storageData = getTestsFromStorage(
             state.data["test_items"] ?? [],
           );
 
-          test_items = storage_data?["data"] ?? [];
+          test_items = storageData?["data"] ?? [];
        
           // print(">>>>" + remainingTime.toString());
           // print(storage_data?["finish_time"] ?? "");
@@ -318,7 +318,7 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
                            
 
                              Text(
-                              "[${item_index+1}/${count}]",
+                              "[${item_index+1}/$count]",
                               style: TextStyle(
                                 color:
                                     AppConstant.primaryColor
@@ -677,7 +677,7 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
           return SizedBox(
             height: 300.h,
             child: CommonLoading(
-              message: "Ma\'lumot yuklanmoqda...",
+              message: "Ma'lumot yuklanmoqda...",
             ),
           );
         } else {

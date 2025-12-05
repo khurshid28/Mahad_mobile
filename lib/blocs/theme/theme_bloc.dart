@@ -23,7 +23,7 @@ class ThemeInitial extends ThemeState {
 }
 
 class ThemeLoaded extends ThemeState {
-  ThemeLoaded(ThemeMode themeMode) : super(themeMode);
+  ThemeLoaded(super.themeMode);
 }
 
 // BLoC

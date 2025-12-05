@@ -1,23 +1,14 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:test_app/blocs/result/result_post_bloc.dart';
-import 'package:test_app/blocs/result/result_post_state.dart';
-import 'package:test_app/blocs/test/test_bloc.dart';
-import 'package:test_app/blocs/test/test_state.dart';
-import 'package:test_app/controller/result_controller.dart';
 import 'package:test_app/controller/test_controller.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/section.dart';
 import 'package:test_app/service/loading_service.dart';
-import 'package:test_app/service/logout.dart';
-import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
 
-import 'dart:math' as math;
 
 class FinishedTestScreen extends StatefulWidget {
   final Section section;
   final List answers;
-  FinishedTestScreen({required this.section, required this.answers});
+  const FinishedTestScreen({super.key, required this.section, required this.answers});
   @override
   _FinishedTestScreenState createState() => _FinishedTestScreenState();
 }
@@ -97,15 +88,15 @@ class _FinishedTestScreenState extends State<FinishedTestScreen> {
   }
 
   Widget bodySection() {
-    List test_items = widget.answers;
+    List testItems = widget.answers;
     bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: List.generate(test_items.length, (item_index) {
-        var test = test_items[item_index];
+      children: List.generate(testItems.length, (itemIndex) {
+        var test = testItems[itemIndex];
 
-        String? answer = widget.answers[item_index]["my_answer"];
+        String? answer = widget.answers[itemIndex]["my_answer"];
         return Container(
           margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           padding: EdgeInsets.all(20.w),

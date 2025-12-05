@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/result.dart';
 import 'package:intl/intl.dart';
@@ -12,13 +10,13 @@ class ResultDetailScreen extends StatelessWidget {
   final String? bookName;
 
   const ResultDetailScreen({
-    Key? key,
+    super.key,
     required this.result,
     required this.totalQuestions,
     required this.testName,
     this.subjectName,
     this.bookName,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

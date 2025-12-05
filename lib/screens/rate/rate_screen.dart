@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_app/blocs/rate/rate_bloc.dart';
 import 'package:test_app/blocs/rate/rate_state.dart';
 import 'package:test_app/controller/rate_controller.dart';
-import 'package:test_app/core/const/const.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/rate.dart';
@@ -12,6 +10,8 @@ import 'package:test_app/service/toast_service.dart';
 import 'package:test_app/widgets/rate_card.dart';
 
 class RateScreen extends StatefulWidget {
+  const RateScreen({super.key});
+
   @override
   _RateScreenState createState() => _RateScreenState();
 }

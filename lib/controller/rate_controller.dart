@@ -13,7 +13,7 @@ class RateController {
       await BlocProvider.of<RateBloc>(context).get();
     } catch (e, track) {
      if (e is DioExceptions) {
-        var err = e as DioExceptions;
+        var err = e;
       if (kDebugMode) {
         print("Controller Error >>$e");
         print("Controller track >>$track");

@@ -5,7 +5,8 @@ import 'package:test_app/blocs/special_test/special_test_bloc.dart';
 import 'package:test_app/core/const/const.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/models/special_test.dart';
-import 'package:test_app/screens/special_test/special_test_detail_screen.dart' as detail;
+import 'package:test_app/screens/special_test/special_test_detail_screen.dart'
+    as detail;
 
 class SpecialTestListScreen extends StatefulWidget {
   const SpecialTestListScreen({super.key});
@@ -15,10 +16,17 @@ class SpecialTestListScreen extends StatefulWidget {
 }
 
 class _SpecialTestListScreenState extends State<SpecialTestListScreen> {
+  List<SpecialTest>? _cachedTests;
+
   @override
   void initState() {
     super.initState();
     print('🟡 [ListScreen] initState - triggering LoadSpecialTests');
+    _loadTests();
+  }
+
+  void _loadTests() {
+    print('🟡 [ListScreen] _loadTests called');
     context.read<SpecialTestBloc>().add(LoadSpecialTests());
   }
 
@@ -62,6 +70,50 @@ class _SpecialTestListScreenState extends State<SpecialTestListScreen> {
         builder: (context, state) {
           print('🟡 [ListScreen] BlocBuilder state: ${state.runtimeType}');
 
+          // Cache the loaded tests
+          if (state is SpecialTestsLoaded) {
+            _cachedTests = state.tests;
+          }
+
+          // Show cached data while loading if available
+          if (state is SpecialTestLoading && _cachedTests != null) {
+            print('🟡 [ListScreen] Loading with cached data...');
+            final tests = _cachedTests!;
+            return RefreshIndicator(
+              color: const Color(0xFF4CAF50),
+              onRefresh: () async {
+                context.read<SpecialTestBloc>().add(LoadSpecialTests());
+              },
+              child: Stack(
+                children: [
+                  ListView.builder(
+                    padding: EdgeInsets.all(16.w),
+                    itemCount: tests.length,
+                    itemBuilder: (context, index) {
+                      final test = tests[index];
+                      return _SpecialTestCard(test: test, onReturn: _loadTests);
+                    },
+                  ),
+                  // Show subtle loading indicator
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 3,
+                      child: LinearProgressIndicator(
+                        backgroundColor: Colors.transparent,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppConstant.primaryColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
           if (state is SpecialTestLoading) {
             print('🟡 [ListScreen] Showing loading...');
             return CommonLoading(message: "Testlar yuklanmoqda...");
@@ -69,6 +121,73 @@ class _SpecialTestListScreenState extends State<SpecialTestListScreen> {
 
           if (state is SpecialTestError) {
             print('🔴 [ListScreen] Showing error: ${state.message}');
+
+            // If we have cached data, show it with error banner
+            if (_cachedTests != null && _cachedTests!.isNotEmpty) {
+              final tests = _cachedTests!;
+              return Column(
+                children: [
+                  // Error banner
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(12.w),
+                    color: Colors.red.shade50,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber,
+                          color: Colors.red.shade700,
+                          size: 20.sp,
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            'Yangilashda xatolik: ${state.message}',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.red.shade700,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            context.read<SpecialTestBloc>().add(
+                              LoadSpecialTests(),
+                            );
+                          },
+                          child: Text(
+                            'Qayta',
+                            style: TextStyle(fontSize: 12.sp),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Show cached tests
+                  Expanded(
+                    child: RefreshIndicator(
+                      color: const Color(0xFF4CAF50),
+                      onRefresh: () async {
+                        context.read<SpecialTestBloc>().add(LoadSpecialTests());
+                      },
+                      child: ListView.builder(
+                        padding: EdgeInsets.all(16.w),
+                        itemCount: tests.length,
+                        itemBuilder: (context, index) {
+                          final test = tests[index];
+                          return _SpecialTestCard(
+                            test: test,
+                            onReturn: _loadTests,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            // No cached data - show full error screen
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -187,7 +306,7 @@ class _SpecialTestListScreenState extends State<SpecialTestListScreen> {
                 itemCount: tests.length,
                 itemBuilder: (context, index) {
                   final test = tests[index];
-                  return _SpecialTestCard(test: test);
+                  return _SpecialTestCard(test: test, onReturn: _loadTests);
                 },
               ),
             );
@@ -202,8 +321,9 @@ class _SpecialTestListScreenState extends State<SpecialTestListScreen> {
 
 class _SpecialTestCard extends StatelessWidget {
   final SpecialTest test;
+  final VoidCallback? onReturn;
 
-  const _SpecialTestCard({required this.test});
+  const _SpecialTestCard({required this.test, this.onReturn});
 
   @override
   Widget build(BuildContext context) {
@@ -227,20 +347,29 @@ class _SpecialTestCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isActive && test.hasAttempted != true
-              ? () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => detail.SpecialTestDetailScreen(testId: test.id),
-                    ),
-                  );
-                  // Refresh tests list when returning from detail screen
-                  if (context.mounted) {
-                    context.read<SpecialTestBloc>().add(LoadSpecialTests());
+          onTap:
+              isActive && test.hasAttempted != true
+                  ? () async {
+                    print(
+                      '🟡 [ListScreen] Navigating to detail for test ${test.id}',
+                    );
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (_) =>
+                                detail.SpecialTestDetailScreen(testId: test.id),
+                      ),
+                    );
+                    // Refresh when returning from detail screen
+                    print(
+                      '🟡 [ListScreen] Returned from detail, refreshing...',
+                    );
+                    if (context.mounted) {
+                      onReturn?.call();
+                    }
                   }
-                }
-              : null,
+                  : null,
           borderRadius: BorderRadius.circular(16.r),
           child: Padding(
             padding: EdgeInsets.all(16.w),

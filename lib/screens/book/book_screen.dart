@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_app/blocs/section/section_all_bloc.dart';
 import 'package:test_app/blocs/section/section_all_state.dart';
@@ -16,7 +15,7 @@ class BookScreen extends StatefulWidget {
   final Book book;
   final bool stepBlock;
   final bool fullBlock;
-  BookScreen({
+  const BookScreen({super.key, 
     required this.book,
     this.fullBlock = false,
     this.stepBlock = true,
@@ -211,7 +210,7 @@ class _BookScreenState extends State<BookScreen> {
           // );
         } else if (state is SectionAllWaitingState) {
           return Center(
-            child: CommonLoading(message: "Ma\'lumot yuklanmoqda..."),
+            child: CommonLoading(message: "Ma'lumot yuklanmoqda..."),
           );
         } else {
           return SizedBox();

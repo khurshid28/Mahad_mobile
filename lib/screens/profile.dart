@@ -1,7 +1,6 @@
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:test_app/core/endpoints/endpoints.dart';
 import 'package:test_app/export_files.dart';
-import 'package:test_app/screens/login_screen.dart';
 import 'package:test_app/screens/my_result/my_result_screen.dart';
 import 'package:test_app/screens/settings/settings_screen.dart';
 import 'package:test_app/service/logout.dart';

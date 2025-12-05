@@ -18,7 +18,7 @@ import 'dart:math' as math;
 
 class TestScreen extends StatefulWidget {
   final Section section;
-  TestScreen({required this.section});
+  const TestScreen({super.key, required this.section});
   @override
   _TestScreenState createState() => _TestScreenState();
 }
@@ -29,11 +29,11 @@ class _TestScreenState extends State<TestScreen> {
       "${StorageService.result}-${widget.section.test_id}",
     );
     if (res == null) {
-      var new_res = {};
-      List.generate(count, (index) => index + 1).forEach((e) {
-        new_res[e.toString()] = "";
-      });
-      return new_res;
+      var newRes = {};
+      for (var e in List.generate(count, (index) => index + 1)) {
+        newRes[e.toString()] = "";
+      }
+      return newRes;
     }
     return res;
   }
@@ -106,7 +106,7 @@ class _TestScreenState extends State<TestScreen> {
     );
 
     if (test == null) {
-      var res_items = [];
+      var resItems = [];
       math.Random random = math.Random();
 
       items.shuffle(random);
@@ -125,11 +125,11 @@ class _TestScreenState extends State<TestScreen> {
         var ans = item["answer"] ?? "";
         var ansText = item["answer_" + ans];
         var extraItem = {};
-        extraItem["answer_" + rightAnswer] = ansText;
+        extraItem["answer_$rightAnswer"] = ansText;
         //change value
         var extra = item["answer_" + ans];
-        item["answer_" + ans] = item["answer_" + rightAnswer];
-        item["answer_" + rightAnswer] = extra;
+        item["answer_" + ans] = item["answer_$rightAnswer"];
+        item["answer_$rightAnswer"] = extra;
 
         answersRandom.shuffle(random);
         // print("shuffle");
@@ -141,11 +141,11 @@ class _TestScreenState extends State<TestScreen> {
 
         for (var j = 0; j < answers.length; j++) {
           //  print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
-          extraItem["answer_" + answersRandom[j]] =
-              item["answer_" + answers[j]];
+          extraItem["answer_${answersRandom[j]}"] =
+              item["answer_${answers[j]}"];
         }
 
-        res_items.add({
+        resItems.add({
           "number": i + 1,
 
           "question": item["question"] ?? "",
@@ -163,12 +163,12 @@ class _TestScreenState extends State<TestScreen> {
       }
 
       var now = DateTime.now();
-      int finish_time = getFinishTime(res_items.length); // in minutes
+      int finishTime = getFinishTime(resItems.length); // in minutes
 
       Map? data = {
         "time": now.toString(),
-        "finish_time": now.add(Duration(seconds: finish_time)).toString(),
-        "data": res_items,
+        "finish_time": now.add(Duration(seconds: finishTime)).toString(),
+        "data": resItems,
       };
 
       StorageService().write(
@@ -257,11 +257,11 @@ class _TestScreenState extends State<TestScreen> {
   Future<void> _finishTest() async {
     var count = test_items.length;
     var results = getAnswers(count);
-    var storage_data = StorageService().read(
+    var storageData = StorageService().read(
       "${StorageService.test}-${widget.section.test_id}",
     );
-    String? startTime = storage_data?["time"];
-    String? finishTime = storage_data?["finish_time"];
+    String? startTime = storageData?["time"];
+    String? finishTime = storageData?["finish_time"];
 
     await ResultController.post(
       context,
@@ -378,14 +378,14 @@ class _TestScreenState extends State<TestScreen> {
     return BlocBuilder<TestBloc, TestState>(
       builder: (context, state) {
         if (state is TestSuccessState) {
-          Map? storage_data = getTestsFromStorage(
+          Map? storageData = getTestsFromStorage(
             state.data["test_items"] ?? [],
           );
 
-          test_items = storage_data?["data"] ?? [];
+          test_items = storageData?["data"] ?? [];
           remainingTime =
               (DateTime.tryParse(
-                        (storage_data?["finish_time"] ?? "").toString(),
+                        (storageData?["finish_time"] ?? "").toString(),
                       ) ??
                       DateTime.now())
                   .difference(DateTime.now())
@@ -438,7 +438,7 @@ class _TestScreenState extends State<TestScreen> {
                             ),
                             SizedBox(width: 16.w),
                             Text(
-                              "[${item_index + 1}/${count}]",
+                              "[${item_index + 1}/$count]",
                               style: TextStyle(
                                 color: AppConstant.primaryColor,
                                 fontWeight: FontWeight.w900,

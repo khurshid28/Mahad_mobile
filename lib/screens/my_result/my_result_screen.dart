@@ -13,6 +13,8 @@ import 'package:test_app/widgets/my_result_random_card.dart';
 import 'package:test_app/widgets/my_result_special_test_card.dart';
 
 class MyResultScreen extends StatefulWidget {
+  const MyResultScreen({super.key});
+
   @override
   _MyResultScreenState createState() => _MyResultScreenState();
 }
@@ -222,7 +224,7 @@ ToastService toastService = ToastService();
             return SizedBox(
               height: 300.h,
               child: CommonLoading(
-                message: "Ma\'lumot yuklanmoqda...",
+                message: "Ma'lumot yuklanmoqda...",
               ),
             );
           } else {
