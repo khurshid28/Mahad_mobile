@@ -141,13 +141,22 @@ class SpecialTestQuestion {
 class SpecialTestResult {
   final String message;
   final int resultId;
+  final int? solved;
+  final int? total;
 
-  SpecialTestResult({required this.message, required this.resultId});
+  SpecialTestResult({
+    required this.message,
+    required this.resultId,
+    this.solved,
+    this.total,
+  });
 
   factory SpecialTestResult.fromJson(Map<String, dynamic> json) {
     return SpecialTestResult(
       message: json['message'] ?? '',
       resultId: json['result_id'] ?? 0,
+      solved: json['solved'],
+      total: json['total'],
     );
   }
 }

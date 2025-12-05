@@ -72,6 +72,76 @@ class SpecialTestResultScreen extends StatelessWidget {
                     height: 1.5,
                   ),
                 ),
+                
+                // Show score if available
+                if (result.solved != null && result.total != null) ..[
+                  SizedBox(height: 32.h),
+                  Container(
+                    padding: EdgeInsets.all(24.w),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF4CAF50).withOpacity(0.1),
+                          const Color(0xFF66BB6A).withOpacity(0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(
+                        color: const Color(0xFF4CAF50).withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Sizning natijangiz',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${result.solved}',
+                              style: TextStyle(
+                                fontSize: 48.sp,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF4CAF50),
+                                height: 1,
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(bottom: 8.h),
+                              child: Text(
+                                ' / ${result.total}',
+                                style: TextStyle(
+                                  fontSize: 28.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          '${((result.solved! * 100) / result.total!).toStringAsFixed(1)}%',
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF4CAF50),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                
                 SizedBox(height: 48.h),
                 Container(
                   padding: EdgeInsets.all(20.w),
