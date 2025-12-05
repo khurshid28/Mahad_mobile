@@ -30,17 +30,17 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       // Check version
       final currentVersion = await _versionService.getCurrentAppVersion();
-      final serverVersion = await _versionService.getServerVersion();
+      final serverVersionModel = await _versionService.getServerVersion();
       
       print('🟡 Current version: $currentVersion');
-      print('🟡 Server version: ${serverVersion.version}');
+      print('🟡 Server version: ${serverVersionModel.version}');
       
       // Check if update is required
-      if (_versionService.isUpdateRequired(currentVersion, serverVersion.version)) {
+      if (_versionService.isUpdateRequired(currentVersion, serverVersionModel.version)) {
         // Show update dialog
         if (mounted) {
           await Future.delayed(const Duration(seconds: 2));
-          _showUpdateDialog(currentVersion, serverVersion.version);
+          _showUpdateDialog(currentVersion, serverVersionModel.version);
         }
         return;
       }

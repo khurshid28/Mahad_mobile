@@ -106,6 +106,8 @@ import 'package:test_app/models/subject.dart';
 import 'package:test_app/screens/book/books_screen.dart';
 import 'package:test_app/screens/rate/rate_screen.dart';
 import 'package:test_app/screens/special_test/special_test_list_screen.dart';
+import 'package:test_app/screens/special_test/special_test_detail_screen.dart'
+    as detail;
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
@@ -434,6 +436,27 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
+                              if (state is SpecialTestsLoaded) {
+                                final activeTests = state.tests.where(
+                                  (test) => test.isActive && test.hasAttempted != true,
+                                ).toList();
+                                
+                                if (activeTests.isNotEmpty) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) =>
+                                              detail.SpecialTestDetailScreen(
+                                                testId: activeTests.first.id,
+                                                startImmediately: true,
+                                              ),
+                                    ),
+                                  );
+                                  return;
+                                }
+                              }
+                              
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(

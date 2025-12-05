@@ -351,19 +351,22 @@ class _SpecialTestCard extends StatelessWidget {
               isActive && test.hasAttempted != true
                   ? () async {
                     print(
-                      '🟡 [ListScreen] Navigating to detail for test ${test.id}',
+                      '🟡 [ListScreen] Starting test immediately for test ${test.id}',
                     );
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder:
                             (_) =>
-                                detail.SpecialTestDetailScreen(testId: test.id),
+                                detail.SpecialTestDetailScreen(
+                                  testId: test.id,
+                                  startImmediately: true,
+                                ),
                       ),
                     );
-                    // Refresh when returning from detail screen
+                    // Refresh when returning from test
                     print(
-                      '🟡 [ListScreen] Returned from detail, refreshing...',
+                      '🟡 [ListScreen] Returned from test, refreshing...',
                     );
                     if (context.mounted) {
                       onReturn?.call();

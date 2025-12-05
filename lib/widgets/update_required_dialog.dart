@@ -1,6 +1,6 @@
+import 'dart:io' show Platform, exit;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'dart:io' show exit;
 
 class UpdateRequiredDialog extends StatelessWidget {
   final String currentVersion;

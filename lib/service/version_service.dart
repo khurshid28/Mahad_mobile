@@ -1,19 +1,26 @@
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:test_app/core/endpoints/endpoints.dart';
 import 'package:test_app/core/network/dio_client.dart';
-import 'package:test_app/models/app_version.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+
+class AppVersionModel {
+  final String version;
+  
+  AppVersionModel(this.version);
+}
 
 class VersionService {
   final DioClient _client = DioClient();
 
-  Future<AppVersion> getServerVersion() async {
+  Future<AppVersionModel> getServerVersion() async {
     try {
       final response = await _client.get(
         "${Endpoints.baseUrl}/version",
       );
 
       if (response.statusCode == 200) {
-        return AppVersion.fromJson(response.data);
+        final data = response.data as Map<String, dynamic>;
+        final version = data['version'] as String? ?? '1.0.0';
+        return AppVersionModel(version);
       }
       throw Exception('Failed to load version');
     } catch (e) {

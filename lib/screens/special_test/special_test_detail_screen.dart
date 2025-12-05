@@ -32,12 +32,7 @@ class _SpecialTestDetailScreenState extends State<SpecialTestDetailScreen> {
   @override
   void initState() {
     super.initState();
-    print('🟡 [DetailScreen] initState for testId: ${widget.testId}');
-
-    // If startImmediately is true, mark test as started
-    if (widget.startImmediately) {
-      _isTestStarted = true;
-    }
+    print('🟡 [DetailScreen] initState for testId: ${widget.testId}, startImmediately: ${widget.startImmediately}');
 
     // Simply load the test - we'll check attempt status later if needed
     print('🟡 [DetailScreen] Triggering LoadSpecialTest');
@@ -97,8 +92,10 @@ class _SpecialTestDetailScreenState extends State<SpecialTestDetailScreen> {
           if (state is SpecialTestError) {
             ToastService().error(message: state.message);
           } else if (state is SpecialTestLoaded) {
+            print('🟢 [DetailScreen] Test loaded, startImmediately: ${widget.startImmediately}');
             // If startImmediately is true, start the test automatically
-            if (widget.startImmediately && !_isTestStarted) {
+            if (widget.startImmediately) {
+              print('🟢 [DetailScreen] Auto-starting test...');
               setState(() {
                 _currentTest = state.test;
                 _isTestStarted = true;
@@ -1006,7 +1003,7 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
                               ),
                               SizedBox(height: 16.h),
                               Text(
-                                question.question,
+                                question.question.replaceFirst(RegExp(r'^\d+\.\s*'), ''),
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.w500,
