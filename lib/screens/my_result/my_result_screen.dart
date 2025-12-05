@@ -134,6 +134,13 @@ ToastService toastService = ToastService();
                 else if ((res.type == "SPECIAL" || res.type == "SpecialTest") && resultData["specialTest"] != null) {
                   final specialTest = resultData["specialTest"];
                   final questionCount = specialTest["question_count"] ?? 0;
+                  
+                  // Debug: Print solved value
+                  print('🟡 [MyResult] Special Test Result:');
+                  print('  - solved from backend: ${resultData["solved"]}');
+                  print('  - solved in Result: ${res.solved}');
+                  print('  - type: ${res.type}');
+                  
                   return MyResultSpecialTestCard(
                     result: res,
                     specialTest: specialTest,

@@ -24,8 +24,15 @@ class MyResultSpecialTestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final percentage = questionCount > 0 ? (result.solved! / questionCount * 100) : 0;
+    // Safely get solved count with fallback to 0
+    final solvedCount = result.solved ?? 0;
+    final percentage = questionCount > 0 ? (solvedCount / questionCount * 100) : 0;
     final isPassed = percentage >= 56;
+    
+    print('🟡 [SpecialTestCard] Building card:');
+    print('  - solvedCount: $solvedCount');
+    print('  - questionCount: $questionCount');
+    print('  - percentage: $percentage');
     
     return GestureDetector(
       onTap: onTap,
@@ -161,7 +168,7 @@ class MyResultSpecialTestCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
-                    "${result.solved ?? 0}/$questionCount",
+                    "$solvedCount/$questionCount",
                     style: TextStyle(
                       fontSize: 13.sp,
                       fontWeight: FontWeight.w900,

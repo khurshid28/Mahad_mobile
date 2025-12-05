@@ -922,6 +922,9 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
           listener: (context, state) {
             if (state is SpecialTestSubmitted) {
               _timer?.cancel();
+              // Refresh tests list to update hasAttempted flag
+              context.read<SpecialTestBloc>().add(LoadSpecialTests());
+              
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (_) => SpecialTestResultScreen(result: state.result),
