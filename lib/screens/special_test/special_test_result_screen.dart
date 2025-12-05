@@ -33,12 +33,12 @@ class SpecialTestResultScreen extends StatelessWidget {
             },
           ),
         ),
-        body: Center(
+        body: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.all(32.w),
+            padding: EdgeInsets.all(24.w),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                SizedBox(height: 40.h),
                 // Success Icon
                 Container(
                   width: 120.w,
@@ -74,7 +74,7 @@ class SpecialTestResultScreen extends StatelessWidget {
                 ),
                 
                 // Show score if available
-                if (result.solved != null && result.total != null) ..[
+                if (result.solved != null && result.total != null) ...[
                   SizedBox(height: 32.h),
                   Container(
                     padding: EdgeInsets.all(24.w),
@@ -196,6 +196,7 @@ class SpecialTestResultScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                SizedBox(height: 40.h),
               ],
             ),
           ),

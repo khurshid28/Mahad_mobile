@@ -131,7 +131,7 @@ ToastService toastService = ToastService();
                 }
                 
                 // SpecialTest
-                else if (res.type == "SPECIAL" && resultData["specialTest"] != null) {
+                else if ((res.type == "SPECIAL" || res.type == "SpecialTest") && resultData["specialTest"] != null) {
                   final specialTest = resultData["specialTest"];
                   final questionCount = specialTest["question_count"] ?? 0;
                   return MyResultSpecialTestCard(
