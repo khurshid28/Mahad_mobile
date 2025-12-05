@@ -5,7 +5,7 @@ import 'package:test_app/blocs/special_test/special_test_bloc.dart';
 import 'package:test_app/core/const/const.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/models/special_test.dart';
-import 'package:test_app/screens/special_test/special_test_detail_screen.dart';
+import 'package:test_app/screens/special_test/special_test_detail_screen.dart' as detail;
 
 class SpecialTestListScreen extends StatefulWidget {
   const SpecialTestListScreen({super.key});
@@ -25,16 +25,14 @@ class _SpecialTestListScreenState extends State<SpecialTestListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF1A1A1A)
-          : const Color(0xFFF5F7FA),
+      backgroundColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1A1A1A)
+              : const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text(
           'Maxsus Testlar',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -63,12 +61,10 @@ class _SpecialTestListScreenState extends State<SpecialTestListScreen> {
       body: BlocBuilder<SpecialTestBloc, SpecialTestState>(
         builder: (context, state) {
           print('🟡 [ListScreen] BlocBuilder state: ${state.runtimeType}');
-          
+
           if (state is SpecialTestLoading) {
             print('🟡 [ListScreen] Showing loading...');
-            return CommonLoading(
-              message: "Testlar yuklanmoqda...",
-            );
+            return CommonLoading(message: "Testlar yuklanmoqda...");
           }
 
           if (state is SpecialTestError) {
@@ -127,7 +123,9 @@ class _SpecialTestListScreenState extends State<SpecialTestListScreen> {
             final tests = state.tests;
             print('🟢 [ListScreen] Tests loaded: ${tests.length} tests');
             if (tests.isNotEmpty) {
-              print('🟢 [ListScreen] First test: ${tests[0].name}, active: ${tests[0].isActive}');
+              print(
+                '🟢 [ListScreen] First test: ${tests[0].name}, active: ${tests[0].isActive}',
+              );
             }
 
             if (tests.isEmpty) {
@@ -215,12 +213,7 @@ class _SpecialTestCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white,
-            Colors.white,
-          ],
-        ),
+        gradient: LinearGradient(colors: [Colors.white, Colors.white]),
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
@@ -235,13 +228,17 @@ class _SpecialTestCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: isActive && test.hasAttempted != true
-              ? () {
-                  Navigator.push(
+              ? () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => SpecialTestDetailScreen(testId: test.id),
+                      builder: (_) => detail.SpecialTestDetailScreen(testId: test.id),
                     ),
                   );
+                  // Refresh tests list when returning from detail screen
+                  if (context.mounted) {
+                    context.read<SpecialTestBloc>().add(LoadSpecialTests());
+                  }
                 }
               : null,
           borderRadius: BorderRadius.circular(16.r),
@@ -255,30 +252,32 @@ class _SpecialTestCard extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.all(14.w),
                       decoration: BoxDecoration(
-                        gradient: isActive && test.hasAttempted != true
-                            ? LinearGradient(
-                              colors: [
-                                AppConstant.primaryColor.withOpacity(0.15),
-                                AppConstant.primaryColor.withOpacity(0.05),
-                              ],
-                            )
-                            : LinearGradient(
-                              colors: [
-                                Colors.grey.shade200,
-                                Colors.grey.shade100,
-                              ],
-                            ),
+                        gradient:
+                            isActive && test.hasAttempted != true
+                                ? LinearGradient(
+                                  colors: [
+                                    AppConstant.primaryColor.withOpacity(0.15),
+                                    AppConstant.primaryColor.withOpacity(0.05),
+                                  ],
+                                )
+                                : LinearGradient(
+                                  colors: [
+                                    Colors.grey.shade200,
+                                    Colors.grey.shade100,
+                                  ],
+                                ),
                         borderRadius: BorderRadius.circular(14.r),
                       ),
                       child: Icon(
                         test.hasAttempted == true
                             ? Icons.check_circle
                             : Icons.assignment_outlined,
-                        color: test.hasAttempted == true
-                            ? const Color(0xFF9C27B0)
-                            : isActive
-                            ? const Color(0xFF4CAF50)
-                            : Colors.grey.shade400,
+                        color:
+                            test.hasAttempted == true
+                                ? const Color(0xFF9C27B0)
+                                : isActive
+                                ? const Color(0xFF4CAF50)
+                                : Colors.grey.shade400,
                         size: 24.sp,
                       ),
                     ),
@@ -331,9 +330,10 @@ class _SpecialTestCard extends StatelessWidget {
                     _InfoChip(
                       icon: isActive ? Icons.check_circle : Icons.lock_clock,
                       label: isActive ? 'Faol' : 'Faol emas',
-                      color: isActive
-                          ? const Color(0xFF4CAF50)
-                          : Colors.grey.shade400,
+                      color:
+                          isActive
+                              ? const Color(0xFF4CAF50)
+                              : Colors.grey.shade400,
                     ),
                     if (test.hasAttempted == true)
                       _InfoChip(
@@ -347,17 +347,21 @@ class _SpecialTestCard extends StatelessWidget {
                     test.activationEnd != null) ...[
                   SizedBox(height: 12.h),
                   Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 8.h,
+                    ),
                     decoration: BoxDecoration(
-                      color: isActive
-                          ? const Color(0xFF4CAF50).withOpacity(0.1)
-                          : Colors.grey.shade100,
+                      color:
+                          isActive
+                              ? const Color(0xFF4CAF50).withOpacity(0.1)
+                              : Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(
-                        color: isActive
-                            ? const Color(0xFF4CAF50).withOpacity(0.3)
-                            : Colors.grey.shade300,
+                        color:
+                            isActive
+                                ? const Color(0xFF4CAF50).withOpacity(0.3)
+                                : Colors.grey.shade300,
                       ),
                     ),
                     child: Row(
@@ -365,9 +369,10 @@ class _SpecialTestCard extends StatelessWidget {
                         Icon(
                           Icons.date_range,
                           size: 16.sp,
-                          color: isActive
-                              ? const Color(0xFF4CAF50)
-                              : Colors.grey.shade600,
+                          color:
+                              isActive
+                                  ? const Color(0xFF4CAF50)
+                                  : Colors.grey.shade600,
                         ),
                         SizedBox(width: 8.w),
                         Expanded(
@@ -375,9 +380,10 @@ class _SpecialTestCard extends StatelessWidget {
                             '${_formatDate(test.activationStart!)} - ${_formatDate(test.activationEnd!)}',
                             style: TextStyle(
                               fontSize: 12.sp,
-                              color: isActive
-                                  ? const Color(0xFF4CAF50)
-                                  : Colors.grey.shade600,
+                              color:
+                                  isActive
+                                      ? const Color(0xFF4CAF50)
+                                      : Colors.grey.shade600,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
