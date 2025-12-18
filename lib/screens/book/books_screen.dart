@@ -136,19 +136,212 @@ class _BooksScreenState extends State<BooksScreen> {
     return res;
   }
 
-
-
-  bool hasTime(){
+  bool hasTime() {
     Map? user = StorageService().read(StorageService.user);
     return user?["group"]?["hasTime"] ?? false;
   }
+
+  // Timer sozlamalari dialogini ko'rsatish
+  Future<Map<String, dynamic>?> _showTimerSettingsDialog() async {
+    int? selectedOption =
+        0; // 0: Timer yo'q, 1: Umumiy vaqt, 2: Har savol uchun
+    int fullTimeMinutes = 30;
+    int timePerQuestionSeconds = 60;
+
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8.w),
+                    decoration: BoxDecoration(
+                      color: AppConstant.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Icon(
+                      Icons.timer,
+                      color: AppConstant.primaryColor,
+                      size: 24.w,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Text(
+                    'Timer sozlamalari',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Timer yo'q
+                    RadioListTile<int>(
+                      title: Text('Timer yo\'q'),
+                      value: 0,
+                      groupValue: selectedOption,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedOption = value;
+                        });
+                      },
+                    ),
+                    // Umumiy vaqt
+                    RadioListTile<int>(
+                      title: Text('Umumiy test uchun vaqt'),
+                      value: 1,
+                      groupValue: selectedOption,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedOption = value;
+                        });
+                      },
+                    ),
+                    if (selectedOption == 1)
+                      Padding(
+                        padding: EdgeInsets.only(left: 32.w, top: 8.h),
+                        child: Row(
+                          children: [
+                            Text('Vaqt: '),
+                            SizedBox(
+                              width: 70.w,
+                              child: TextField(
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  hintText: '30',
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 8.w,
+                                  ),
+                                  border: OutlineInputBorder(),
+                                ),
+                                onChanged: (value) {
+                                  fullTimeMinutes = int.tryParse(value) ?? 30;
+                                },
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Text('minut'),
+                          ],
+                        ),
+                      ),
+                    // Har savol uchun
+                    RadioListTile<int>(
+                      title: Text('Har bir savol uchun vaqt'),
+                      value: 2,
+                      groupValue: selectedOption,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedOption = value;
+                        });
+                      },
+                    ),
+                    if (selectedOption == 2)
+                      Padding(
+                        padding: EdgeInsets.only(left: 32.w, top: 8.h),
+                        child: Row(
+                          children: [
+                            Text('Vaqt: '),
+                            SizedBox(
+                              width: 70.w,
+                              child: TextField(
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  hintText: '60',
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 8.w,
+                                  ),
+                                  border: OutlineInputBorder(),
+                                ),
+                                onChanged: (value) {
+                                  timePerQuestionSeconds =
+                                      int.tryParse(value) ?? 60;
+                                },
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Text('sekund/savol'),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, null),
+                  child: Text(
+                    'Bekor qilish',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 15.sp,
+                    ),
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppConstant.primaryColor,
+                        AppConstant.primaryColor.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Map<String, dynamic> result = {
+                        'useTimer': selectedOption != 0,
+                        'fullTime':
+                            selectedOption == 1 ? fullTimeMinutes : null,
+                        'timePerQuestion':
+                            selectedOption == 2 ? timePerQuestionSeconds : null,
+                      };
+                      Navigator.pop(dialogContext, result);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 12.h,
+                      ),
+                    ),
+                    child: Text(
+                      'Davom etish',
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // resizeToAvoidBottomInset: false,
-      backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF1A1A1A)
-          : Colors.grey.shade50,
+      backgroundColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1A1A1A)
+              : Colors.grey.shade50,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
         child: CustomAppBar(
@@ -180,493 +373,687 @@ class _BooksScreenState extends State<BooksScreen> {
                         backgroundColor: Colors.transparent,
                         context: context,
                         builder:
-                            (
-                              context,
-                            ) =>  
-                                 Padding(
-                                 padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-                                  child: BlocBuilder<SectionAllBloc, SectionAllState>(
-                                    builder: (context, stateSectionAll) {
-                                      if (stateSectionAll is SectionAllSuccessState) {
-                                        var sections = stateSectionAll.data;
-                                        return StatefulBuilder(
-                                          builder: (context, sts) {
-                                            return Container(
-                                              height: 0.9.sh,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius: BorderRadius.only(
-                                                  topLeft: Radius.circular(30.r),
-                                                  topRight: Radius.circular(30.r),
+                            (context) => Padding(
+                              padding: EdgeInsets.only(
+                                bottom:
+                                    MediaQuery.of(context).viewInsets.bottom,
+                              ),
+                              child: BlocBuilder<
+                                SectionAllBloc,
+                                SectionAllState
+                              >(
+                                builder: (context, stateSectionAll) {
+                                  if (stateSectionAll
+                                      is SectionAllSuccessState) {
+                                    var sections = stateSectionAll.data;
+                                    return StatefulBuilder(
+                                      builder: (context, sts) {
+                                        return Container(
+                                          height: 0.9.sh,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(30.r),
+                                              topRight: Radius.circular(30.r),
+                                            ),
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 16.w,
+                                                  vertical: 20.h,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    colors: [
+                                                      AppConstant.primaryColor,
+                                                      AppConstant.primaryColor
+                                                          .withOpacity(0.8),
+                                                    ],
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                        topLeft:
+                                                            Radius.circular(
+                                                              30.r,
+                                                            ),
+                                                        topRight:
+                                                            Radius.circular(
+                                                              30.r,
+                                                            ),
+                                                      ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      "Kitoblar va bo'limlar",
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 20.sp,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                      ),
+                                                    ),
+                                                    GestureDetector(
+                                                      onTap:
+                                                          () => Navigator.pop(
+                                                            context,
+                                                          ),
+                                                      child: Container(
+                                                        padding: EdgeInsets.all(
+                                                          8.w,
+                                                        ),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                              color: Colors
+                                                                  .white
+                                                                  .withOpacity(
+                                                                    0.2,
+                                                                  ),
+                                                              shape:
+                                                                  BoxShape
+                                                                      .circle,
+                                                            ),
+                                                        child: Icon(
+                                                          Icons.close,
+                                                          color: Colors.white,
+                                                          size: 20.sp,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                              child: Column(
-                                                children: [
-                                                  Container(
-                                                    padding: EdgeInsets.symmetric(
-                                                      horizontal: 16.w,
-                                                      vertical: 20.h,
-                                                    ),
-                                                    decoration: BoxDecoration(
-                                                      gradient: LinearGradient(
-                                                        colors: [
-                                                          AppConstant.primaryColor,
-                                                          AppConstant.primaryColor.withOpacity(0.8),
-                                                        ],
-                                                      ),
-                                                      borderRadius: BorderRadius.only(
-                                                        topLeft: Radius.circular(30.r),
-                                                        topRight: Radius.circular(30.r),
-                                                      ),
-                                                    ),
-                                                    child: Row(
-                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                      children: [
-                                                        Text(
-                                                          "Kitoblar va bo'limlar",
-                                                          style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 20.sp,
-                                                            fontWeight: FontWeight.w700,
-                                                          ),
-                                                        ),
-                                                        GestureDetector(
-                                                          onTap: () => Navigator.pop(context),
-                                                          child: Container(
-                                                            padding: EdgeInsets.all(8.w),
-                                                            decoration: BoxDecoration(
-                                                              color: Colors.white.withOpacity(0.2),
-                                                              shape: BoxShape.circle,
-                                                            ),
-                                                            child: Icon(
-                                                              Icons.close,
-                                                              color: Colors.white,
-                                                              size: 20.sp,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
+                                              Expanded(
+                                                child: SingleChildScrollView(
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal: 16.w,
+                                                    vertical: 16.h,
                                                   ),
-                                                  Expanded(
-                                                    child: SingleChildScrollView(
-                                                      padding: EdgeInsets.symmetric(
-                                                        horizontal: 16.w,
-                                                        vertical: 16.h,
-                                                      ),
-                                                      child: Column(
-                                                        children: [
-                                                    ...List.generate(selectedItems.length, (
-                                                      index,
-                                                    ) {
-                                                      var sortedSections =
-                                                          sections
-                                                              .where(
-                                                                (e) =>
-                                                                    e["book_id"]
-                                                                        .toString() ==
-                                                                    data[index]["id"]
-                                                                        .toString(),
-                                                              )
-                                                              .toList();
-                                  
-                                                      if ((selectedItems[index]["items"]
-                                                              as List)
-                                                          .isEmpty) {
-                                                        selectedItems[index]["items"] =
-                                                            sortedSections.map((e) {
-                                                              e["selected"] = false;
-                                                              return e;
-                                                            }).toList();
-                                                      }
-                                  
-                                                      return Column(
-                                                        children: [
-                                                          GestureDetector(
-                                                            onTap: () {
-                                                              sts(() {
-                                                                var value =
-                                                                    selectedItems[index]["selected"];
-                                                                selectedItems[index]["selected"] =
-                                                                    !value;
-                                  
-                                                                selectedItems[index]["items"] =
-                                                                    (selectedItems[index]["items"]
-                                                                            as List)
-                                                                        .map((e) {
-                                                                          e["selected"] =
-                                                                              !value;
-                                  
-                                                                          return e;
-                                                                        })
-                                                                        .toList();
-                                                              });
-                                                            },
-                                                            child: Row(
-                                                              children: [
-                                                                Container(
-                                                                  width: 34.w,
-                                                                  height: 34.w,
-                                                                  alignment: Alignment.center,
-                                                                  decoration: BoxDecoration(
-                                                                    borderRadius: BorderRadius.circular(12.r),
-                                                                    gradient: selectedItems[index]["selected"]
-                                                                        ? LinearGradient(
-                                                                            colors: [
-                                                                              AppConstant.primaryColor,
-                                                                              AppConstant.primaryColor.withOpacity(0.8),
-                                                                            ],
-                                                                          )
-                                                                        : null,
-                                                                    border: !selectedItems[index]["selected"]
-                                                                        ? Border.all(
-                                                                            color: Colors.grey.shade400,
-                                                                            width: 2.w,
-                                                                          )
-                                                                        : null,
-                                                                    boxShadow: selectedItems[index]["selected"]
-                                                                        ? [
-                                                                            BoxShadow(
-                                                                              color: AppConstant.primaryColor.withOpacity(0.3),
-                                                                              blurRadius: 8,
-                                                                              offset: Offset(0, 3),
-                                                                            ),
-                                                                          ]
-                                                                        : null,
-                                                                  ),
-                                                                  child: selectedItems[index]["selected"]
-                                                                      ? Icon(
-                                                                          Icons.check_rounded,
-                                                                          color: Colors.white,
-                                                                          size: 20.sp,
-                                                                        )
-                                                                      : null,
-                                                                ),
-                                  
-                                                                SizedBox(width: 10.w),
-                                                                SizedBox(
-                                                                  width: 260.w,
-                                                                  child: Text(
-                                                                    data[index]["name"]
-                                                                        .toString(),
-                                                                    style:
-                                                                        TextStyle(),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                          if (selectedItems[index]["selected"])
-                                                            ...List.generate(
-                                                              sortedSections.length,
-                                                              (i) => Padding(
-                                                                padding:
-                                                                    EdgeInsets.symmetric(
-                                                                      horizontal:
-                                                                          16.w,
-                                                                      vertical: 4.h,
-                                                                    ),
-                                                                child: GestureDetector(
-                                                                  onTap: () {
-                                                                    selectedItems[index]["items"][i]["selected"] =
-                                                                        !selectedItems[index]["items"][i]["selected"];
-                                                                    sts(() {});
-                                                                  },
-                                                                  child: Row(
-                                                                    children: [
-                                                                      Container(
-                                                                        width: 34.w,
-                                                                        height: 34.w,
-                                                                        alignment: Alignment.center,
-                                                                        decoration: BoxDecoration(
-                                                                          borderRadius: BorderRadius.circular(12.r),
-                                                                          gradient: selectedItems[index]["items"][i]["selected"]
+                                                  child: Column(
+                                                    children: [
+                                                      ...List.generate(selectedItems.length, (
+                                                        index,
+                                                      ) {
+                                                        var sortedSections =
+                                                            sections
+                                                                .where(
+                                                                  (e) =>
+                                                                      e["book_id"]
+                                                                          .toString() ==
+                                                                      data[index]["id"]
+                                                                          .toString(),
+                                                                )
+                                                                .toList();
+
+                                                        if ((selectedItems[index]["items"]
+                                                                as List)
+                                                            .isEmpty) {
+                                                          selectedItems[index]["items"] =
+                                                              sortedSections.map((
+                                                                e,
+                                                              ) {
+                                                                e["selected"] =
+                                                                    false;
+                                                                return e;
+                                                              }).toList();
+                                                        }
+
+                                                        return Column(
+                                                          children: [
+                                                            GestureDetector(
+                                                              onTap: () {
+                                                                sts(() {
+                                                                  var value =
+                                                                      selectedItems[index]["selected"];
+                                                                  selectedItems[index]["selected"] =
+                                                                      !value;
+
+                                                                  selectedItems[index]["items"] =
+                                                                      (selectedItems[index]["items"]
+                                                                              as List)
+                                                                          .map((
+                                                                            e,
+                                                                          ) {
+                                                                            e["selected"] =
+                                                                                !value;
+
+                                                                            return e;
+                                                                          })
+                                                                          .toList();
+                                                                });
+                                                              },
+                                                              child: Row(
+                                                                children: [
+                                                                  Container(
+                                                                    width: 34.w,
+                                                                    height:
+                                                                        34.w,
+                                                                    alignment:
+                                                                        Alignment
+                                                                            .center,
+                                                                    decoration: BoxDecoration(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                            12.r,
+                                                                          ),
+                                                                      gradient:
+                                                                          selectedItems[index]["selected"]
                                                                               ? LinearGradient(
-                                                                                  colors: [
-                                                                                    AppConstant.accentOrange,
-                                                                                    AppConstant.accentOrange.withOpacity(0.8),
-                                                                                  ],
-                                                                                )
-                                                                              : null,
-                                                                          border: !selectedItems[index]["items"][i]["selected"]
-                                                                              ? Border.all(
-                                                                                  color: Colors.grey.shade400,
-                                                                                  width: 2.w,
-                                                                                )
-                                                                              : null,
-                                                                          boxShadow: selectedItems[index]["items"][i]["selected"]
-                                                                              ? [
-                                                                                  BoxShadow(
-                                                                                    color: AppConstant.accentOrange.withOpacity(0.3),
-                                                                                    blurRadius: 8,
-                                                                                    offset: Offset(0, 3),
+                                                                                colors: [
+                                                                                  AppConstant.primaryColor,
+                                                                                  AppConstant.primaryColor.withOpacity(
+                                                                                    0.8,
                                                                                   ),
-                                                                                ]
-                                                                              : null,
-                                                                        ),
-                                                                        child: selectedItems[index]["items"][i]["selected"]
-                                                                            ? Icon(
-                                                                                Icons.check_rounded,
-                                                                                color: Colors.white,
-                                                                                size: 20.sp,
+                                                                                ],
                                                                               )
+                                                                              : null,
+                                                                      border:
+                                                                          !selectedItems[index]["selected"]
+                                                                              ? Border.all(
+                                                                                color:
+                                                                                    Colors.grey.shade400,
+                                                                                width:
+                                                                                    2.w,
+                                                                              )
+                                                                              : null,
+                                                                      boxShadow:
+                                                                          selectedItems[index]["selected"]
+                                                                              ? [
+                                                                                BoxShadow(
+                                                                                  color: AppConstant.primaryColor.withOpacity(
+                                                                                    0.3,
+                                                                                  ),
+                                                                                  blurRadius:
+                                                                                      8,
+                                                                                  offset: Offset(
+                                                                                    0,
+                                                                                    3,
+                                                                                  ),
+                                                                                ),
+                                                                              ]
+                                                                              : null,
+                                                                    ),
+                                                                    child:
+                                                                        selectedItems[index]["selected"]
+                                                                            ? Icon(
+                                                                              Icons.check_rounded,
+                                                                              color:
+                                                                                  Colors.white,
+                                                                              size:
+                                                                                  20.sp,
+                                                                            )
                                                                             : null,
-                                                                      ),
-                                  
-                                                                      SizedBox(
-                                                                        width: 10.w,
-                                                                      ),
-                                                                      SizedBox(
-                                                                        width: 244.w,
-                                                                        child: Text(
-                                                                          selectedItems[index]["items"][i]["name"]
-                                                                              .toString(),
-                                                                          style:
-                                                                              TextStyle(),
-                                                                        ),
-                                                                      ),
-                                                                    ],
                                                                   ),
-                                                                ),
+
+                                                                  SizedBox(
+                                                                    width: 10.w,
+                                                                  ),
+                                                                  SizedBox(
+                                                                    width:
+                                                                        260.w,
+                                                                    child: Text(
+                                                                      data[index]["name"]
+                                                                          .toString(),
+                                                                      style:
+                                                                          TextStyle(),
+                                                                    ),
+                                                                  ),
+                                                                ],
                                                               ),
                                                             ),
-                                                          SizedBox(height: 16.h),
-                                                        
-                                                         ],
-                                                      );
-                                                    }),
-                                                          SizedBox(height: 24.h),
-                                                          Container(
-                                                            padding: EdgeInsets.all(20.w),
-                                                            decoration: BoxDecoration(
-                                                              color: Colors.white,
-                                                              borderRadius: BorderRadius.circular(16.r),
-                                                              border: Border.all(
-                                                                color: AppConstant.primaryColor.withOpacity(0.3),
-                                                                width: 2,
-                                                              ),
-                                                              boxShadow: [
-                                                                BoxShadow(
-                                                                  color: AppConstant.primaryColor.withOpacity(0.1),
-                                                                  blurRadius: 10,
-                                                                  offset: Offset(0, 4),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            child: Row(
-                                                              children: [
-                                                                Container(
-                                                                  padding: EdgeInsets.all(12.w),
-                                                                  decoration: BoxDecoration(
-                                                                    gradient: LinearGradient(
-                                                                      colors: [
-                                                                        AppConstant.primaryColor,
-                                                                        AppConstant.primaryColor.withOpacity(0.8),
+                                                            if (selectedItems[index]["selected"])
+                                                              ...List.generate(
+                                                                sortedSections
+                                                                    .length,
+                                                                (i) => Padding(
+                                                                  padding: EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        16.w,
+                                                                    vertical:
+                                                                        4.h,
+                                                                  ),
+                                                                  child: GestureDetector(
+                                                                    onTap: () {
+                                                                      selectedItems[index]["items"][i]["selected"] =
+                                                                          !selectedItems[index]["items"][i]["selected"];
+                                                                      sts(
+                                                                        () {},
+                                                                      );
+                                                                    },
+                                                                    child: Row(
+                                                                      children: [
+                                                                        Container(
+                                                                          width:
+                                                                              34.w,
+                                                                          height:
+                                                                              34.w,
+                                                                          alignment:
+                                                                              Alignment.center,
+                                                                          decoration: BoxDecoration(
+                                                                            borderRadius: BorderRadius.circular(
+                                                                              12.r,
+                                                                            ),
+                                                                            gradient:
+                                                                                selectedItems[index]["items"][i]["selected"]
+                                                                                    ? LinearGradient(
+                                                                                      colors: [
+                                                                                        AppConstant.accentOrange,
+                                                                                        AppConstant.accentOrange.withOpacity(
+                                                                                          0.8,
+                                                                                        ),
+                                                                                      ],
+                                                                                    )
+                                                                                    : null,
+                                                                            border:
+                                                                                !selectedItems[index]["items"][i]["selected"]
+                                                                                    ? Border.all(
+                                                                                      color:
+                                                                                          Colors.grey.shade400,
+                                                                                      width:
+                                                                                          2.w,
+                                                                                    )
+                                                                                    : null,
+                                                                            boxShadow:
+                                                                                selectedItems[index]["items"][i]["selected"]
+                                                                                    ? [
+                                                                                      BoxShadow(
+                                                                                        color: AppConstant.accentOrange.withOpacity(
+                                                                                          0.3,
+                                                                                        ),
+                                                                                        blurRadius:
+                                                                                            8,
+                                                                                        offset: Offset(
+                                                                                          0,
+                                                                                          3,
+                                                                                        ),
+                                                                                      ),
+                                                                                    ]
+                                                                                    : null,
+                                                                          ),
+                                                                          child:
+                                                                              selectedItems[index]["items"][i]["selected"]
+                                                                                  ? Icon(
+                                                                                    Icons.check_rounded,
+                                                                                    color:
+                                                                                        Colors.white,
+                                                                                    size:
+                                                                                        20.sp,
+                                                                                  )
+                                                                                  : null,
+                                                                        ),
+
+                                                                        SizedBox(
+                                                                          width:
+                                                                              10.w,
+                                                                        ),
+                                                                        SizedBox(
+                                                                          width:
+                                                                              244.w,
+                                                                          child: Text(
+                                                                            selectedItems[index]["items"][i]["name"].toString(),
+                                                                            style:
+                                                                                TextStyle(),
+                                                                          ),
+                                                                        ),
                                                                       ],
                                                                     ),
-                                                                    borderRadius: BorderRadius.circular(12.r),
-                                                                  ),
-                                                                  child: Icon(
-                                                                    Icons.format_list_numbered_rounded,
-                                                                    color: Colors.white,
-                                                                    size: 24.sp,
                                                                   ),
                                                                 ),
-                                                                SizedBox(width: 16.w),
-                                                                Expanded(
-                                                                  child: Column(
-                                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                                    children: [
-                                                                      Text(
-                                                                        "Test soni",
-                                                                        style: TextStyle(
-                                                                          fontSize: 13.sp,
-                                                                          color: Colors.grey.shade600,
-                                                                          fontWeight: FontWeight.w600,
-                                                                        ),
-                                                                      ),
-                                                                      SizedBox(height: 8.h),
-                                                                      Container(
-                                                                        padding: EdgeInsets.symmetric(
-                                                                          horizontal: 12.w,
-                                                                          vertical: 8.h,
-                                                                        ),
-                                                                        decoration: BoxDecoration(
-                                                                          color: AppConstant.primaryColor.withOpacity(0.05),
-                                                                          borderRadius: BorderRadius.circular(10.r),
-                                                                          border: Border.all(
-                                                                            color: AppConstant.primaryColor.withOpacity(0.2),
-                                                                            width: 1,
-                                                                          ),
-                                                                        ),
-                                                                        child: TextFormField(
-                                                                          controller: numberOfTestController,
-                                                                          keyboardType: TextInputType.number,
-                                                                          cursorColor: AppConstant.primaryColor,
-                                                                          onChanged: (value) => sts(() {}),
-                                                                          style: TextStyle(
-                                                                            color: AppConstant.primaryColor,
-                                                                            fontSize: 20.sp,
-                                                                            fontWeight: FontWeight.w900,
-                                                                          ),
-                                                                          decoration: InputDecoration(
-                                                                            hintText: '20',
-                                                                            hintStyle: TextStyle(
-                                                                              color: AppConstant.primaryColor.withOpacity(0.3),
-                                                                              fontSize: 20.sp,
-                                                                              fontWeight: FontWeight.w900,
-                                                                            ),
-                                                                            border: InputBorder.none,
-                                                                            enabledBorder: InputBorder.none,
-                                                                            focusedBorder: InputBorder.none,
-                                                                            contentPadding: EdgeInsets.zero,
-                                                                            isDense: true,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                              ],
+                                                              ),
+                                                            SizedBox(
+                                                              height: 16.h,
                                                             ),
+                                                          ],
+                                                        );
+                                                      }),
+                                                      SizedBox(height: 24.h),
+                                                      Container(
+                                                        padding: EdgeInsets.all(
+                                                          20.w,
+                                                        ),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.white,
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                16.r,
+                                                              ),
+                                                          border: Border.all(
+                                                            color: AppConstant
+                                                                .primaryColor
+                                                                .withOpacity(
+                                                                  0.3,
+                                                                ),
+                                                            width: 2,
                                                           ),
-                                                          SizedBox(height: 24.h),
-                                                          Container(
-                                                            decoration: BoxDecoration(
-                                                              borderRadius: BorderRadius.circular(16.r),
-                                                              gradient: (checkTestBoshlash())
-                                                                  ? LinearGradient(
-                                                                      colors: [
-                                                                        AppConstant.primaryColor,
-                                                                        AppConstant.primaryColor.withOpacity(0.8),
-                                                                      ],
-                                                                    )
-                                                                  : null,
-                                                              color: (checkTestBoshlash())
-                                                                  ? null
-                                                                  : Colors.grey.shade300,
-                                                              boxShadow: (checkTestBoshlash())
-                                                                  ? [
-                                                                      BoxShadow(
-                                                                        color: AppConstant.primaryColor.withOpacity(0.4),
-                                                                        blurRadius: 12,
-                                                                        offset: Offset(0, 6),
-                                                                      ),
-                                                                    ]
-                                                                  : null,
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: AppConstant
+                                                                  .primaryColor
+                                                                  .withOpacity(
+                                                                    0.1,
+                                                                  ),
+                                                              blurRadius: 10,
+                                                              offset: Offset(
+                                                                0,
+                                                                4,
+                                                              ),
                                                             ),
-                                                            child: Material(
-                                                              color: Colors.transparent,
-                                                              child: InkWell(
-                                                                onTap: () async {
+                                                          ],
+                                                        ),
+                                                        child: Row(
+                                                          children: [
+                                                            Container(
+                                                              padding:
+                                                                  EdgeInsets.all(
+                                                                    12.w,
+                                                                  ),
+                                                              decoration: BoxDecoration(
+                                                                gradient: LinearGradient(
+                                                                  colors: [
+                                                                    AppConstant
+                                                                        .primaryColor,
+                                                                    AppConstant
+                                                                        .primaryColor
+                                                                        .withOpacity(
+                                                                          0.8,
+                                                                        ),
+                                                                  ],
+                                                                ),
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      12.r,
+                                                                    ),
+                                                              ),
+                                                              child: Icon(
+                                                                Icons
+                                                                    .format_list_numbered_rounded,
+                                                                color:
+                                                                    Colors
+                                                                        .white,
+                                                                size: 24.sp,
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                              width: 16.w,
+                                                            ),
+                                                            Expanded(
+                                                              child: Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  Text(
+                                                                    "Test soni",
+                                                                    style: TextStyle(
+                                                                      fontSize:
+                                                                          13.sp,
+                                                                      color:
+                                                                          Colors
+                                                                              .grey
+                                                                              .shade600,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w600,
+                                                                    ),
+                                                                  ),
+                                                                  SizedBox(
+                                                                    height: 8.h,
+                                                                  ),
+                                                                  Container(
+                                                                    padding: EdgeInsets.symmetric(
+                                                                      horizontal:
+                                                                          12.w,
+                                                                      vertical:
+                                                                          8.h,
+                                                                    ),
+                                                                    decoration: BoxDecoration(
+                                                                      color: AppConstant
+                                                                          .primaryColor
+                                                                          .withOpacity(
+                                                                            0.05,
+                                                                          ),
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                            10.r,
+                                                                          ),
+                                                                      border: Border.all(
+                                                                        color: AppConstant
+                                                                            .primaryColor
+                                                                            .withOpacity(
+                                                                              0.2,
+                                                                            ),
+                                                                        width:
+                                                                            1,
+                                                                      ),
+                                                                    ),
+                                                                    child: TextFormField(
+                                                                      controller:
+                                                                          numberOfTestController,
+                                                                      keyboardType:
+                                                                          TextInputType
+                                                                              .number,
+                                                                      cursorColor:
+                                                                          AppConstant
+                                                                              .primaryColor,
+                                                                      onChanged:
+                                                                          (
+                                                                            value,
+                                                                          ) => sts(
+                                                                            () {},
+                                                                          ),
+                                                                      style: TextStyle(
+                                                                        color:
+                                                                            AppConstant.primaryColor,
+                                                                        fontSize:
+                                                                            20.sp,
+                                                                        fontWeight:
+                                                                            FontWeight.w900,
+                                                                      ),
+                                                                      decoration: InputDecoration(
+                                                                        hintText:
+                                                                            '20',
+                                                                        hintStyle: TextStyle(
+                                                                          color: AppConstant.primaryColor.withOpacity(
+                                                                            0.3,
+                                                                          ),
+                                                                          fontSize:
+                                                                              20.sp,
+                                                                          fontWeight:
+                                                                              FontWeight.w900,
+                                                                        ),
+                                                                        border:
+                                                                            InputBorder.none,
+                                                                        enabledBorder:
+                                                                            InputBorder.none,
+                                                                        focusedBorder:
+                                                                            InputBorder.none,
+                                                                        contentPadding:
+                                                                            EdgeInsets.zero,
+                                                                        isDense:
+                                                                            true,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: 24.h),
+                                                      Container(
+                                                        decoration: BoxDecoration(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                16.r,
+                                                              ),
+                                                          gradient:
+                                                              (checkTestBoshlash())
+                                                                  ? LinearGradient(
+                                                                    colors: [
+                                                                      AppConstant
+                                                                          .primaryColor,
+                                                                      AppConstant
+                                                                          .primaryColor
+                                                                          .withOpacity(
+                                                                            0.8,
+                                                                          ),
+                                                                    ],
+                                                                  )
+                                                                  : null,
+                                                          color:
+                                                              (checkTestBoshlash())
+                                                                  ? null
+                                                                  : Colors
+                                                                      .grey
+                                                                      .shade300,
+                                                          boxShadow:
+                                                              (checkTestBoshlash())
+                                                                  ? [
+                                                                    BoxShadow(
+                                                                      color: AppConstant
+                                                                          .primaryColor
+                                                                          .withOpacity(
+                                                                            0.4,
+                                                                          ),
+                                                                      blurRadius:
+                                                                          12,
+                                                                      offset:
+                                                                          Offset(
+                                                                            0,
+                                                                            6,
+                                                                          ),
+                                                                    ),
+                                                                  ]
+                                                                  : null,
+                                                        ),
+                                                        child: Material(
+                                                          color:
+                                                              Colors
+                                                                  .transparent,
+                                                          child: InkWell(
+                                                            onTap: () async {
                                                               // var login = "+998${phoneController.text.replaceAll(" ", "")}";
                                                               // var password = passwordController.text;
                                                               // if (login.length == 13 && password.length >= 8) {
                                                               //   await AuthController.login(context, login: login, password: password);
                                                               // }
                                                               if (checkTestBoshlash()) {
-                                                                // var count =
-                                                                //     countAll();
-                                                                // if (int.parse(
-                                                                //       numberOfTestController
-                                                                //           .text,
-                                                                //     ) <=
-                                                                //     count) {
-                                                                Navigator.pop(context);
-                                                                  final uuid = Uuid();
-                                                                  
-                                                                  await Navigator.push(
-                                                                    context,
-                                                                    MaterialPageRoute(
-                                                                      builder:
-                                                                          (
-                                                                            context,
-                                                                          ) => hasTime() ? RandomTestScreen(
-                                                                            sections:
-                                                                                selecteds(),
-                                                                            count:
-                                                                                int.parse(numberOfTestController.text),
-                                                                            section: Section(
-                                                                              name:
-                                                                                  "Random",
-                                                                              count:
-                                                                                  0,
-                                                                              test_id:
-                                                                                  uuid.v4(),
-                                                                            ),
-                                                                          ) : RandomTestScreenNotime(
-                                                                            sections:
-                                                                                selecteds(),
-                                                                            count:
-                                                                                int.parse(numberOfTestController.text),
-                                                                            section: Section(
-                                                                              name:
-                                                                                  "Random",
-                                                                              count:
-                                                                                  0,
-                                                                              test_id:
-                                                                                  uuid.v4(),
-                                                                            ),
+                                                                Navigator.pop(
+                                                                  context,
+                                                                );
+                                                                final uuid =
+                                                                    Uuid();
+
+                                                                // Random test uchun timer sozlamalarini tanlash
+                                                                final timerSettings =
+                                                                    await _showTimerSettingsDialog();
+
+                                                                if (timerSettings ==
+                                                                    null) {
+                                                                  // User bekor qildi
+                                                                  return;
+                                                                }
+
+                                                                await Navigator.push(
+                                                                  context,
+                                                                  MaterialPageRoute(
+                                                                    builder:
+                                                                        (
+                                                                          context,
+                                                                        ) => RandomTestScreen(
+                                                                          sections:
+                                                                              selecteds(),
+                                                                          count: int.parse(
+                                                                            numberOfTestController.text,
                                                                           ),
-                                                                    ),
-                                                                  );
-                                                                // } else {
-                                                                //   toastService.error(
-                                                                //     message:
-                                                                //         "Jami test $count ta ",
-                                                                //   );
-                                                                // }
+                                                                          section: Section(
+                                                                            name:
+                                                                                "Random",
+                                                                            count:
+                                                                                0,
+                                                                            test_id:
+                                                                                uuid.v4(),
+                                                                          ),
+                                                                          useTimer:
+                                                                              timerSettings['useTimer'],
+                                                                          customFullTime:
+                                                                              timerSettings['fullTime'],
+                                                                          customTimePerQuestion:
+                                                                              timerSettings['timePerQuestion'],
+                                                                        ),
+                                                                  ),
+                                                                );
                                                               }
-                                                                },
-                                                                borderRadius: BorderRadius.circular(16.r),
-                                                                child: Padding(
-                                                                  padding: EdgeInsets.symmetric(vertical: 16.h),
-                                                                  child: Row(
-                                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                                    children: [
-                                                                      Icon(
-                                                                        Icons.play_arrow_rounded,
-                                                                        color: (checkTestBoshlash())
+                                                            },
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  16.r,
+                                                                ),
+                                                            child: Padding(
+                                                              padding:
+                                                                  EdgeInsets.symmetric(
+                                                                    vertical:
+                                                                        16.h,
+                                                                  ),
+                                                              child: Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  Icon(
+                                                                    Icons
+                                                                        .play_arrow_rounded,
+                                                                    color:
+                                                                        (checkTestBoshlash())
                                                                             ? Colors.white
                                                                             : Colors.grey.shade500,
-                                                                        size: 24.sp,
-                                                                      ),
-                                                                      SizedBox(width: 8.w),
-                                                                      Text(
-                                                                        "Testni boshlash",
-                                                                        style: TextStyle(
-                                                                          color: (checkTestBoshlash())
+                                                                    size: 24.sp,
+                                                                  ),
+                                                                  SizedBox(
+                                                                    width: 8.w,
+                                                                  ),
+                                                                  Text(
+                                                                    "Testni boshlash",
+                                                                    style: TextStyle(
+                                                                      color:
+                                                                          (checkTestBoshlash())
                                                                               ? Colors.white
                                                                               : Colors.grey.shade500,
-                                                                          fontSize: 16.sp,
-                                                                          fontWeight: FontWeight.w600,
-                                                                        ),
-                                                                      ),
-                                                                    ],
+                                                                      fontSize:
+                                                                          16.sp,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w600,
+                                                                    ),
                                                                   ),
-                                                                ),
+                                                                ],
                                                               ),
                                                             ),
                                                           ),
-                                                          SizedBox(height: 32.h),
-                                                        ],
+                                                        ),
                                                       ),
-                                                    ),
+                                                      SizedBox(height: 32.h),
+                                                    ],
                                                   ),
-                                                ],
+                                                ),
                                               ),
-                                            );
-                                          },
+                                            ],
+                                          ),
                                         );
-                                      } else {
-                                        return SizedBox();
-                                      }
-                                    },
-                                  ),
-                                )
-                           ,
+                                      },
+                                    );
+                                  } else {
+                                    return SizedBox();
+                                  }
+                                },
+                              ),
+                            ),
                       );
                     },
                     child: Row(
@@ -710,10 +1097,7 @@ class _BooksScreenState extends State<BooksScreen> {
                 cursorColor: AppConstant.primaryColor,
                 onChanged: (e) => setState(() {}),
                 controller: seachController,
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500),
                 decoration: InputDecoration(
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 20.w,
@@ -732,20 +1116,21 @@ class _BooksScreenState extends State<BooksScreen> {
                     color: AppConstant.primaryColor,
                     size: 22.w,
                   ),
-                  suffixIcon: seachController.text.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(
-                            Icons.clear_rounded,
-                            color: Colors.grey.shade400,
-                            size: 20.w,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              seachController.clear();
-                            });
-                          },
-                        )
-                      : null,
+                  suffixIcon:
+                      seachController.text.isNotEmpty
+                          ? IconButton(
+                            icon: Icon(
+                              Icons.clear_rounded,
+                              color: Colors.grey.shade400,
+                              size: 20.w,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                seachController.clear();
+                              });
+                            },
+                          )
+                          : null,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r),
                     borderSide: BorderSide.none,
@@ -869,7 +1254,7 @@ class _BooksScreenState extends State<BooksScreen> {
             );
           }
           List filterdata = _filterBooks(data);
-          
+
           if (filterdata.isEmpty) {
             return Expanded(
               child: Center(
@@ -904,7 +1289,7 @@ class _BooksScreenState extends State<BooksScreen> {
               ),
             );
           }
-          
+
           return Expanded(
             child: GridView.builder(
               padding: EdgeInsets.symmetric(vertical: 10.h),
@@ -947,9 +1332,7 @@ class _BooksScreenState extends State<BooksScreen> {
         } else if (state is BookAllWaitingState) {
           return SizedBox(
             height: 300.h,
-            child: CommonLoading(
-              message: "Ma'lumot yuklanmoqda...",
-            ),
+            child: CommonLoading(message: "Ma'lumot yuklanmoqda..."),
           );
         } else {
           return SizedBox();

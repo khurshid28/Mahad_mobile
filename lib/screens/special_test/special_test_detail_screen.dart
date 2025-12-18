@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:test_app/blocs/special_test/special_test_bloc.dart';
+import 'package:test_app/controller/student_controller.dart';
 import 'package:test_app/core/const/const.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/models/special_test.dart';
@@ -32,7 +33,9 @@ class _SpecialTestDetailScreenState extends State<SpecialTestDetailScreen> {
   @override
   void initState() {
     super.initState();
-    print('🟡 [DetailScreen] initState for testId: ${widget.testId}, startImmediately: ${widget.startImmediately}');
+    print(
+      '🟡 [DetailScreen] initState for testId: ${widget.testId}, startImmediately: ${widget.startImmediately}',
+    );
 
     // Simply load the test - we'll check attempt status later if needed
     print('🟡 [DetailScreen] Triggering LoadSpecialTest');
@@ -92,7 +95,9 @@ class _SpecialTestDetailScreenState extends State<SpecialTestDetailScreen> {
           if (state is SpecialTestError) {
             ToastService().error(message: state.message);
           } else if (state is SpecialTestLoaded) {
-            print('🟢 [DetailScreen] Test loaded, startImmediately: ${widget.startImmediately}');
+            print(
+              '🟢 [DetailScreen] Test loaded, startImmediately: ${widget.startImmediately}',
+            );
             // If startImmediately is true, start the test automatically
             if (widget.startImmediately) {
               print('🟢 [DetailScreen] Auto-starting test...');
@@ -513,8 +518,41 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
   final Map<int, String> _answers = {};
   int _currentQuestionIndex = 0;
   Timer? _timer;
+  Timer? _perQuestionTimer;
   int? _remainingSeconds;
+  int _perQuestionRemainingTime = 0;
   bool _isSubmitting = false;
+  Map<String, dynamic>? groupData;
+
+  // Group timer parametrlarini olish
+  bool isPerQuestionTime() {
+    if (groupData == null) return false;
+    int fullTime = groupData?["fullTime"] ?? 0;
+    int timeMinutes = groupData?["timeMinutes"] ?? 0;
+    return fullTime == 0 && timeMinutes > 0;
+  }
+
+  int? getTestTimeInSeconds() {
+    if (groupData == null) return null;
+    bool hasTime = groupData?["hasTime"] ?? false;
+
+    if (!hasTime) return null;
+
+    int fullTime = groupData?["fullTime"] ?? 0;
+    int timeMinutes = groupData?["timeMinutes"] ?? 0;
+    int questionCount = widget.test.questions.length;
+
+    // fullTime > 0 bo'lsa, umumiy vaqt ishlatiladi
+    if (fullTime > 0) {
+      return fullTime * 60; // minutlarni sekundlarga o'zgartirish
+    }
+    // fullTime == 0 bo'lsa, har bir savol uchun timeMinutes ishlatiladi
+    else if (timeMinutes > 0) {
+      return timeMinutes * questionCount * 60;
+    }
+
+    return null;
+  }
 
   @override
   void initState() {
@@ -523,13 +561,65 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
     // Try to load from storage first
     _loadFromStorage();
 
-    if (widget.test.timeInSeconds != null && _remainingSeconds == null) {
-      _remainingSeconds = widget.test.timeInSeconds;
-      _saveToStorage(); // Save initial state
-    }
+    // /my-group dan guruh ma'lumotlarini olish
+    _loadGroupDataAndStartTimers();
 
-    if (_remainingSeconds != null && _remainingSeconds! > 0) {
-      _startTimer();
+    // Force UI update after loading
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  Future<void> _loadGroupDataAndStartTimers() async {
+    final group = await StudentController.getMyGroup(context);
+    if (group != null && mounted) {
+      setState(() {
+        groupData = group;
+      });
+      _startTimersBasedOnGroup();
+    } else if (widget.test.timeInSeconds != null && _remainingSeconds == null) {
+      // Test o'zining vaqti bo'lsa
+      _remainingSeconds = widget.test.timeInSeconds;
+      _saveToStorage();
+      if (_remainingSeconds! > 0) {
+        _startTimer();
+      }
+    }
+  }
+
+  void _startTimersBasedOnGroup() {
+    if (groupData == null) return;
+
+    bool hasTime = groupData?["hasTime"] ?? false;
+
+    if (hasTime) {
+      if (isPerQuestionTime()) {
+        // Har bir savol uchun alohida vaqt
+        int timeMinutes = groupData?["timeMinutes"] ?? 0;
+        if (_perQuestionRemainingTime == 0) {
+          _perQuestionRemainingTime = timeMinutes * 60;
+        }
+        _startPerQuestionTimer();
+      } else {
+        // Umumiy test uchun vaqt
+        if (_remainingSeconds == null) {
+          _remainingSeconds =
+              getTestTimeInSeconds() ?? widget.test.timeInSeconds;
+          _saveToStorage();
+        }
+        if (_remainingSeconds != null && _remainingSeconds! > 0) {
+          _startTimer();
+        }
+      }
+    } else if (widget.test.timeInSeconds != null && _remainingSeconds == null) {
+      // Test o'zining vaqti bo'lsa
+      _remainingSeconds = widget.test.timeInSeconds;
+      _saveToStorage();
+      if (_remainingSeconds! > 0) {
+        _startTimer();
+      }
     }
 
     // Force UI update after loading
@@ -543,7 +633,38 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _perQuestionTimer?.cancel();
     super.dispose();
+  }
+
+  void _startPerQuestionTimer() {
+    _perQuestionTimer?.cancel();
+
+    _perQuestionTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (_perQuestionRemainingTime <= 0) {
+        // Vaqt tugadi, keyingi savolga o'tish
+        if (_currentQuestionIndex < widget.test.questions.length - 1) {
+          setState(() {
+            _currentQuestionIndex++;
+            int timeMinutes = groupData?["timeMinutes"] ?? 0;
+            _perQuestionRemainingTime = timeMinutes * 60;
+          });
+          _saveToStorage();
+        } else {
+          // Oxirgi savol, testni tugatish
+          timer.cancel();
+          _submitTest();
+        }
+      } else {
+        _perQuestionRemainingTime--;
+        setState(() {});
+      }
+    });
   }
 
   void _loadFromStorage() {
@@ -1003,7 +1124,10 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
                               ),
                               SizedBox(height: 16.h),
                               Text(
-                                question.question.replaceFirst(RegExp(r'^\d+\.\s*'), ''),
+                                question.question.replaceFirst(
+                                  RegExp(r'^\d+\.\s*'),
+                                  '',
+                                ),
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.w500,

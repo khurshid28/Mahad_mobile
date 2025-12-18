@@ -13,12 +13,11 @@ class Endpoints {
   static String section = dotenv.env["section"] ?? "";
   static String test = dotenv.env["test"] ?? "";
 
-
   static String result = dotenv.env["result"] ?? "";
 
   static String rate = dotenv.env["rate"] ?? "";
 
   static String specialTest = dotenv.env["special_test"] ?? "";
 
-  
+  static String myGroup = "${baseUrl}/student/my-group";
 }

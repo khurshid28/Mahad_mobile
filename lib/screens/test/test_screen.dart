@@ -5,6 +5,7 @@ import 'package:test_app/blocs/test/test_bloc.dart';
 import 'package:test_app/blocs/test/test_state.dart';
 import 'package:test_app/controller/result_controller.dart';
 import 'package:test_app/controller/test_controller.dart';
+import 'package:test_app/controller/student_controller.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/section.dart';
@@ -183,38 +184,76 @@ class _TestScreenState extends State<TestScreen> {
   Timer? timer;
   Timer? perQuestionTimer;
   int perQuestionRemainingTime = 0;
+  Map<String, dynamic>? groupData;
 
   bool isPerQuestionTime() {
-    Map? user = StorageService().read(StorageService.user);
-    int fullTime = user?["group"]?["fullTime"] ?? 0;
-    int timeMinutes = user?["group"]?["timeMinutes"] ?? 0;
+    if (groupData == null) return false;
+    bool hasTime = groupData?["hasTime"] ?? false;
+    if (!hasTime) return false;
+
+    int fullTime = groupData?["fullTime"] ?? 0;
+    int timeMinutes = groupData?["timeMinutes"] ?? 0;
     return fullTime == 0 && timeMinutes > 0;
   }
 
   getFinishTime(int count) {
-    Map? user = StorageService().read(StorageService.user);
+    if (groupData == null) return 0;
+    bool hasTime = groupData?["hasTime"] ?? false;
 
-    if (user?["group"]?["fullTime"] == null) {
-      return ((user?["group"]?["timeMinutes"] ?? 0) * count);
-    } else {
-      return user?["group"]?["fullTime"] == 0
-          ? ((user?["group"]?["timeMinutes"] ?? 0) * count)
-          : user?["group"]?["fullTime"];
+    if (!hasTime) return 0; // Timer yo'q
+
+    int fullTime = groupData?["fullTime"] ?? 0;
+    int timeMinutes = groupData?["timeMinutes"] ?? 0;
+
+    // fullTime > 0 bo'lsa, umumiy vaqt (sekundlarda)
+    if (fullTime > 0) {
+      return fullTime * 60;
     }
+    // fullTime == 0 bo'lsa, har bir savol uchun timeMinutes
+    else if (timeMinutes > 0) {
+      return timeMinutes * count * 60;
+    }
+
+    return 0;
   }
 
   @override
   void initState() {
     super.initState();
-    
+
     // Load current question index from storage
     loadCurrentIndex();
-    
+
+    // /my-group dan guruh ma'lumotlarini olish
+    _loadGroupData();
+
+    TestController.getByid(
+      context,
+      id: int.tryParse(widget.section.test_id.toString()) ?? 0,
+    );
+  }
+
+  Future<void> _loadGroupData() async {
+    final group = await StudentController.getMyGroup(context);
+    if (group != null && mounted) {
+      setState(() {
+        groupData = group;
+      });
+      _startTimers();
+    }
+  }
+
+  void _startTimers() {
+    if (groupData == null) return;
+
+    bool hasTime = groupData?["hasTime"] ?? false;
+    if (!hasTime) return;
+
     // Har bir savol uchun vaqt bo'lsa
     if (isPerQuestionTime()) {
-      Map? user = StorageService().read(StorageService.user);
-      perQuestionRemainingTime = (user?["group"]?["timeMinutes"] ?? 0);
-      
+      int timeMinutes = groupData?["timeMinutes"] ?? 0;
+      perQuestionRemainingTime = timeMinutes * 60;
+
       perQuestionTimer = Timer.periodic(Duration(seconds: 1), (timer) {
         if (mounted) {
           if (perQuestionRemainingTime <= 0) {
@@ -224,10 +263,11 @@ class _TestScreenState extends State<TestScreen> {
               setState(() {
                 item_index++;
                 saveCurrentIndex();
-                perQuestionRemainingTime = (user?["group"]?["timeMinutes"] ?? 0);
+                perQuestionRemainingTime = timeMinutes * 60;
               });
             } else {
               // Oxirgi savol, testni tugatish
+              timer.cancel();
               _finishTest();
             }
           } else {
@@ -241,13 +281,16 @@ class _TestScreenState extends State<TestScreen> {
       timer = Timer.periodic(Duration(seconds: 1), (timer) {
         if (mounted) {
           if (remainingTime <= 0) {
+            timer.cancel();
             _finishTest();
+          } else {
+            remainingTime--;
+            setState(() {});
           }
-          setState(() {});
         }
       });
     }
-    
+
     TestController.getByid(
       context,
       id: int.tryParse(widget.section.test_id.toString()) ?? 0,
@@ -407,193 +450,317 @@ class _TestScreenState extends State<TestScreen> {
           var results = getAnswers(count);
 
           String? answer = results["${item_index + 1}"];
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: SizedBox(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 1.sw - 64,
-                        child: Row(
-                          children: [
-                            Text(
-                              isPerQuestionTime()
-                                  ? "Savol vaqti: ${perQuestionRemainingTime}s"
-                                  : remainingTime >= 0
-                                      ? "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"
-                                      : "Tugash vaqti:  00:00",
-                              style: TextStyle(
-                                color:
-                                    (isPerQuestionTime() ? perQuestionRemainingTime : remainingTime) > 0
-                                        ? AppConstant.blueColor1
-                                        : AppConstant.redColor,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16.sp,
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 1.sw - 64,
+                          child: Row(
+                            children: [
+                              Text(
+                                isPerQuestionTime()
+                                    ? "Savol vaqti: ${perQuestionRemainingTime}s"
+                                    : remainingTime >= 0
+                                    ? "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"
+                                    : "Tugash vaqti:  00:00",
+                                style: TextStyle(
+                                  color:
+                                      (isPerQuestionTime()
+                                                  ? perQuestionRemainingTime
+                                                  : remainingTime) >
+                                              0
+                                          ? AppConstant.blueColor1
+                                          : AppConstant.redColor,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16.sp,
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 16.w),
-                            Text(
-                              "[${item_index + 1}/$count]",
-                              style: TextStyle(
-                                color: AppConstant.primaryColor,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 18.sp,
+                              SizedBox(width: 16.w),
+                              Text(
+                                "[${item_index + 1}/$count]",
+                                style: TextStyle(
+                                  color: AppConstant.primaryColor,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 18.sp,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-                      SizedBox(
-                        width: 1.sw - 64,
-                        child: Text(
-                          "${test['number']}.${realText(test['question'].toString())}",
-                          textAlign: TextAlign.start,
-                          style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyLarge?.color,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16.sp,
+                            ],
                           ),
                         ),
-                      ),
+                        SizedBox(height: 16.h),
+                        SizedBox(
+                          width: 1.sw - 64,
+                          child: Text(
+                            "${test['number']}.${realText(test['question'].toString())}",
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge?.color,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16.sp,
+                            ),
+                          ),
+                        ),
 
-                      ...List.generate(
-                        4,
-                        (index) => Padding(
-                          padding: EdgeInsets.only(top: 12.h),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () async {
-                                print(test["answer"]);
-                                if ((answer?.isEmpty ?? true)) {
-                                  await writeAnswer(
-                                    count,
-                                    index: item_index,
-                                    result: ["A", "B", "C", "D"][index],
-                                  );
-                                  setState(() {
-                                    answer = ["A", "B", "C", "D"][index];
-                                  });
-                                }
-                              },
-                              borderRadius: BorderRadius.circular(12.r),
-                              child: Container(
-                                width: 1.sw - 32.w,
-                                decoration: BoxDecoration(
-                                  color: (answer?.isNotEmpty ?? false) &&
-                                          ["A", "B", "C", "D"][index] == test["answer"]
-                                      ? AppConstant.primaryColor.withOpacity(0.1)
-                                      : answer == ["A", "B", "C", "D"][index]
-                                      ? AppConstant.redColor.withOpacity(0.1)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  border: Border.all(
-                                    color: (answer?.isNotEmpty ?? false) &&
-                                            ["A", "B", "C", "D"][index] == test["answer"]
-                                        ? AppConstant.primaryColor
-                                        : answer == ["A", "B", "C", "D"][index]
-                                        ? AppConstant.redColor
-                                        : Colors.grey.shade300,
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 4,
-                                      offset: Offset(0, 2),
+                        ...List.generate(
+                          4,
+                          (index) => Padding(
+                            padding: EdgeInsets.only(top: 12.h),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () async {
+                                  print(test["answer"]);
+                                  if ((answer?.isEmpty ?? true)) {
+                                    await writeAnswer(
+                                      count,
+                                      index: item_index,
+                                      result: ["A", "B", "C", "D"][index],
+                                    );
+                                    setState(() {
+                                      answer = ["A", "B", "C", "D"][index];
+                                    });
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(12.r),
+                                child: Container(
+                                  width: 1.sw - 32.w,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        (answer?.isNotEmpty ?? false) &&
+                                                ["A", "B", "C", "D"][index] ==
+                                                    test["answer"]
+                                            ? AppConstant.primaryColor
+                                                .withOpacity(0.1)
+                                            : answer ==
+                                                ["A", "B", "C", "D"][index]
+                                            ? AppConstant.redColor.withOpacity(
+                                              0.1,
+                                            )
+                                            : Colors.white,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    border: Border.all(
+                                      color:
+                                          (answer?.isNotEmpty ?? false) &&
+                                                  ["A", "B", "C", "D"][index] ==
+                                                      test["answer"]
+                                              ? AppConstant.primaryColor
+                                              : answer ==
+                                                  ["A", "B", "C", "D"][index]
+                                              ? AppConstant.redColor
+                                              : Colors.grey.shade300,
+                                      width: 1.5,
                                     ),
-                                  ],
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.all(16.w),
-                                  child: Row(
-                                    children: [
-                                  ((answer?.isNotEmpty ?? false) &&
-                                          ["A", "B", "C", "D"][index] ==
-                                              test["answer"])
-                                      ? Container(
-                                        width: 34.w,
-                                        height: 34.w,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            12.r,
-                                          ),
-                                          color: AppConstant.primaryColor,
-                                        ),
-                                        child: SvgPicture.asset(
-                                          'assets/icons/check.svg',
-                                          width: 18.w,
-                                          colorFilter: const ColorFilter.mode(
-                                            AppConstant.whiteColor,
-                                            BlendMode.srcIn,
-                                          ),
-                                        ),
-                                      )
-                                      : answer == ["A", "B", "C", "D"][index]
-                                      ? Container(
-                                        width: 34.w,
-                                        height: 34.w,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            12.r,
-                                          ),
-                                          color: AppConstant.redColor,
-                                        ),
-                                        child: SvgPicture.asset(
-                                          'assets/icons/close.svg',
-                                          width: 18.w,
-                                          colorFilter: const ColorFilter.mode(
-                                            AppConstant.whiteColor,
-                                            BlendMode.srcIn,
-                                          ),
-                                        ),
-                                      )
-                                      : Container(
-                                        width: 34.w,
-                                        height: 34.w,
-
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            12.r,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.grey.shade500,
-                                            width: 3.w,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          [
-                                            "A",
-                                            "B",
-                                            "C",
-                                            "D",
-                                          ][index].toString(),
-                                          style: TextStyle(
-                                            color: Colors.grey.shade500,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
                                       ),
+                                    ],
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16.w),
+                                    child: Row(
+                                      children: [
+                                        ((answer?.isNotEmpty ?? false) &&
+                                                ["A", "B", "C", "D"][index] ==
+                                                    test["answer"])
+                                            ? Container(
+                                              width: 34.w,
+                                              height: 34.w,
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(12.r),
+                                                color: AppConstant.primaryColor,
+                                              ),
+                                              child: SvgPicture.asset(
+                                                'assets/icons/check.svg',
+                                                width: 18.w,
+                                                colorFilter:
+                                                    const ColorFilter.mode(
+                                                      AppConstant.whiteColor,
+                                                      BlendMode.srcIn,
+                                                    ),
+                                              ),
+                                            )
+                                            : answer ==
+                                                ["A", "B", "C", "D"][index]
+                                            ? Container(
+                                              width: 34.w,
+                                              height: 34.w,
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(12.r),
+                                                color: AppConstant.redColor,
+                                              ),
+                                              child: SvgPicture.asset(
+                                                'assets/icons/close.svg',
+                                                width: 18.w,
+                                                colorFilter:
+                                                    const ColorFilter.mode(
+                                                      AppConstant.whiteColor,
+                                                      BlendMode.srcIn,
+                                                    ),
+                                              ),
+                                            )
+                                            : Container(
+                                              width: 34.w,
+                                              height: 34.w,
 
-                                      SizedBox(width: 12.w),
-                                      Expanded(
-                                        child: Text(
-                                          test["answer_${["A", "B", "C", "D"][index]}"]
-                                              .toString(),
-                                          style: TextStyle(
-                                            fontSize: 15.sp,
-                                            fontWeight: FontWeight.w500,
-                                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(12.r),
+                                                border: Border.all(
+                                                  color: Colors.grey.shade500,
+                                                  width: 3.w,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                [
+                                                  "A",
+                                                  "B",
+                                                  "C",
+                                                  "D",
+                                                ][index].toString(),
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade500,
+                                                  fontWeight: FontWeight.w900,
+                                                ),
+                                              ),
+                                            ),
+
+                                        SizedBox(width: 12.w),
+                                        Expanded(
+                                          child: Text(
+                                            test["answer_${["A", "B", "C", "D"][index]}"]
+                                                .toString(),
+                                            style: TextStyle(
+                                              fontSize: 15.sp,
+                                              fontWeight: FontWeight.w500,
+                                              color:
+                                                  Theme.of(
+                                                    context,
+                                                  ).textTheme.bodyLarge?.color,
+                                            ),
                                           ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                BlocListener<ResultPostBloc, ResultPostState>(
+                  child: SizedBox(),
+                  listener: (context, state) async {
+                    if (state is ResultPostWaitingState) {
+                      loadingService.showLoading(context);
+                    } else if (state is ResultPostErrorState) {
+                      loadingService.closeLoading(context);
+                      if (state.statusCode == 401) {
+                        Logout(context);
+                      } else {
+                        toastService.error(
+                          message: state.message ?? "Xatolik Bor",
+                        );
+                      }
+                    } else if (state is ResultPostSuccessState) {
+                      loadingService.closeLoading(context);
+
+                      await Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => FinishTestScreen(
+                                count: count,
+                                right: rightAnswer(test_items),
+                              ),
+                        ),
+                      );
+                      clearAnswers();
+                    }
+                  },
+                ),
+
+                SizedBox(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!isPerQuestionTime())
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 8.h,
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12.r),
+                              color: AppConstant.primaryColor,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppConstant.primaryColor.withOpacity(
+                                    0.3,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () async {
+                                  if (item_index == count - 1) {
+                                    await _finishTest();
+                                  } else if (item_index < count - 1) {
+                                    setState(() {
+                                      answer = "";
+                                      item_index++;
+                                      saveCurrentIndex();
+                                    });
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(12.r),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        item_index == count - 1
+                                            ? Icons.check_circle_outline
+                                            : Icons.arrow_forward,
+                                        color: Colors.white,
+                                        size: 24.sp,
+                                      ),
+                                      SizedBox(width: 8.w),
+                                      Text(
+                                        item_index == count - 1
+                                            ? "Tugatish"
+                                            : "Davom qilish",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ],
@@ -603,165 +770,67 @@ class _TestScreenState extends State<TestScreen> {
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
 
-              BlocListener<ResultPostBloc, ResultPostState>(
-                child: SizedBox(),
-                listener: (context, state) async {
-                  if (state is ResultPostWaitingState) {
-                    loadingService.showLoading(context);
-                  } else if (state is ResultPostErrorState) {
-                    loadingService.closeLoading(context);
-                    if (state.statusCode == 401) {
-                      Logout(context);
-                    } else {
-                      toastService.error(
-                        message: state.message ?? "Xatolik Bor",
-                      );
-                    }
-                  } else if (state is ResultPostSuccessState) {
-                    loadingService.closeLoading(context);
-
-                    await Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => FinishTestScreen(
-                              count: count,
-                              right: rightAnswer(test_items),
-                            ),
-                      ),
-                    );
-                    clearAnswers();
-                  }
-                },
-              ),
-
-              SizedBox(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (!isPerQuestionTime())
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12.r),
-                            color: AppConstant.primaryColor,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppConstant.primaryColor.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
+                      if (item_index > 0 && !isPerQuestionTime())
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 8.h,
                           ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () async {
-                                if (item_index == count - 1) {
-                                  await _finishTest();
-                                } else if (item_index < count - 1) {
-                                  setState(() {
-                                    answer = "";
-                                    item_index++;
-                                    saveCurrentIndex();
-                                  });
-                                }
-                              },
-                            borderRadius: BorderRadius.circular(12.r),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16.h),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    item_index == count - 1
-                                        ? Icons.check_circle_outline
-                                        : Icons.arrow_forward,
-                                    color: Colors.white,
-                                    size: 24.sp,
-                                  ),
-                                  SizedBox(width: 8.w),
-                                  Text(
-                                    item_index == count - 1
-                                        ? "Tugatish"
-                                        : "Davom qilish",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    if (item_index > 0 && !isPerQuestionTime())
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(
-                              color: AppConstant.primaryColor,
-                              width: 1.5,
-                            ),
-                            color: Colors.white,
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                if (item_index > 0) {
-                                  setState(() {
-                                    answer = "";
-                                    item_index--;
-                                    saveCurrentIndex();
-                                  });
-                                }
-                              },
+                          child: Container(
+                            decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12.r),
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 16.h),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.arrow_back,
-                                      color: AppConstant.primaryColor,
-                                      size: 24.sp,
-                                    ),
-                                    SizedBox(width: 8.w),
-                                    Text(
-                                      "Orqaga qaytish",
-                                      style: TextStyle(
+                              border: Border.all(
+                                color: AppConstant.primaryColor,
+                                width: 1.5,
+                              ),
+                              color: Colors.white,
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  if (item_index > 0) {
+                                    setState(() {
+                                      answer = "";
+                                      item_index--;
+                                      saveCurrentIndex();
+                                    });
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(12.r),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.arrow_back,
                                         color: AppConstant.primaryColor,
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.w600,
+                                        size: 24.sp,
                                       ),
-                                    ),
-                                  ],
+                                      SizedBox(width: 8.w),
+                                      Text(
+                                        "Orqaga qaytish",
+                                        style: TextStyle(
+                                          color: AppConstant.primaryColor,
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    SizedBox(height: 32.h),
-                  ],
+                      SizedBox(height: 32.h),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         } else if (state is TestWaitingState) {
           return CommonLoading(message: "Ma'lumot yuklanmoqda...");
