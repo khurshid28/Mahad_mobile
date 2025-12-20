@@ -771,7 +771,82 @@ class _TestScreenState extends State<TestScreen> {
                           ),
                         ),
 
-                      if (item_index > 0 && !isPerQuestionTime())
+                      // Har bir savol uchun vaqt bo'lsa va forceNextQuestion false bo'lsa tugmani ko'rsatamiz
+                      if (isPerQuestionTime() &&
+                          !(groupData?["forceNextQuestion"] ?? false))
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 8.h,
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12.r),
+                              color: AppConstant.primaryColor,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppConstant.primaryColor.withOpacity(
+                                    0.3,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () async {
+                                  if (item_index == count - 1) {
+                                    await _finishTest();
+                                  } else if (item_index < count - 1) {
+                                    setState(() {
+                                      answer = "";
+                                      item_index++;
+                                      saveCurrentIndex();
+                                      // Reset timer for next question
+                                      int timeMinutes =
+                                          groupData?["timeMinutes"] ?? 0;
+                                      perQuestionRemainingTime =
+                                          timeMinutes * 60;
+                                    });
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(12.r),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        item_index == count - 1
+                                            ? Icons.check_circle_outline
+                                            : Icons.arrow_forward,
+                                        color: Colors.white,
+                                        size: 24.sp,
+                                      ),
+                                      SizedBox(width: 8.w),
+                                      Text(
+                                        item_index == count - 1
+                                            ? "Tugatish"
+                                            : "Keyingi savol",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      if (item_index > 0 &&
+                          !isPerQuestionTime() &&
+                          !(groupData?["forceNextQuestion"] ?? false))
                         Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: 16.w,

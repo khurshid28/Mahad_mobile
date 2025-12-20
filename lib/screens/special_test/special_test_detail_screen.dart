@@ -647,18 +647,27 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
       }
 
       if (_perQuestionRemainingTime <= 0) {
-        // Vaqt tugadi, keyingi savolga o'tish
-        if (_currentQuestionIndex < widget.test.questions.length - 1) {
-          setState(() {
-            _currentQuestionIndex++;
-            int timeMinutes = groupData?["timeMinutes"] ?? 0;
-            _perQuestionRemainingTime = timeMinutes * 60;
-          });
-          _saveToStorage();
-        } else {
-          // Oxirgi savol, testni tugatish
-          timer.cancel();
-          _submitTest();
+        // Vaqt tugadi, test'ning yoki guruhning forceNextQuestion tekshirish
+        bool forceNextQuestion =
+            widget.test.forceNextQuestion ??
+            (groupData?["forceNextQuestion"] ?? false);
+
+        if (forceNextQuestion) {
+          // Majburiy keyingi savolga o'tish
+          if (_currentQuestionIndex < widget.test.questions.length - 1) {
+            setState(() {
+              _currentQuestionIndex++;
+              int timeMinutes =
+                  widget.test.timePerQuestion ??
+                  (groupData?["timeMinutes"] ?? 0);
+              _perQuestionRemainingTime = timeMinutes * 60;
+            });
+            _saveToStorage();
+          } else {
+            // Oxirgi savol, testni tugatish
+            timer.cancel();
+            _submitTest();
+          }
         }
       } else {
         _perQuestionRemainingTime--;
@@ -1190,51 +1199,78 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
                             ),
                           ),
                         if (_currentQuestionIndex > 0) SizedBox(width: 12.w),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed:
-                                _isSubmitting
-                                    ? null
-                                    : () {
-                                      if (_currentQuestionIndex <
-                                          widget.test.questions.length - 1) {
-                                        setState(() {
-                                          _currentQuestionIndex++;
-                                        });
-                                      } else {
-                                        _submitTest();
-                                      }
-                                    },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4CAF50),
-                              padding: EdgeInsets.symmetric(vertical: 14.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.r),
+                        // Agar perQuestionTime va forceNextQuestion true bo'lsa, tugmani yashirish
+                        // Test'ning o'zidan yoki guruhdan forceNextQuestion olinadi
+                        if (!((widget.test.timePerQuestion != null &&
+                                widget.test.timePerQuestion! > 0 &&
+                                (widget.test.forceNextQuestion ?? false)) ||
+                            (groupData?["timeMinutes"] != null &&
+                                groupData?["timeMinutes"] > 0 &&
+                                groupData?["fullTime"] == 0 &&
+                                (groupData?["forceNextQuestion"] ?? false))))
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed:
+                                  _isSubmitting
+                                      ? null
+                                      : () {
+                                        if (_currentQuestionIndex <
+                                            widget.test.questions.length - 1) {
+                                          setState(() {
+                                            _currentQuestionIndex++;
+                                            // Reset timer for next question if per question mode
+                                            if (widget.test.timePerQuestion !=
+                                                    null &&
+                                                widget.test.timePerQuestion! >
+                                                    0) {
+                                              _perQuestionRemainingTime =
+                                                  widget.test.timePerQuestion! *
+                                                  60;
+                                            } else if (groupData != null &&
+                                                groupData?["timeMinutes"] !=
+                                                    null &&
+                                                groupData?["timeMinutes"] > 0) {
+                                              int timeMinutes =
+                                                  groupData?["timeMinutes"] ??
+                                                  0;
+                                              _perQuestionRemainingTime =
+                                                  timeMinutes * 60;
+                                            }
+                                          });
+                                        } else {
+                                          _submitTest();
+                                        }
+                                      },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4CAF50),
+                                padding: EdgeInsets.symmetric(vertical: 14.h),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                elevation: 0,
                               ),
-                              elevation: 0,
+                              child:
+                                  _isSubmitting
+                                      ? SizedBox(
+                                        height: 20.h,
+                                        width: 20.h,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                      : Text(
+                                        _currentQuestionIndex <
+                                                widget.test.questions.length - 1
+                                            ? 'Keyingi'
+                                            : 'Topshirish',
+                                        style: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                             ),
-                            child:
-                                _isSubmitting
-                                    ? SizedBox(
-                                      height: 20.h,
-                                      width: 20.h,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                    : Text(
-                                      _currentQuestionIndex <
-                                              widget.test.questions.length - 1
-                                          ? 'Keyingi'
-                                          : 'Topshirish',
-                                      style: TextStyle(
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
                           ),
-                        ),
                       ],
                     ),
                   ),

@@ -147,6 +147,7 @@ class _BooksScreenState extends State<BooksScreen> {
         0; // 0: Timer yo'q, 1: Umumiy vaqt, 2: Har savol uchun
     int fullTimeMinutes = 30;
     int timePerQuestionSeconds = 60;
+    bool forceNextQuestion = false;
 
     return await showDialog<Map<String, dynamic>>(
       context: context,
@@ -249,28 +250,56 @@ class _BooksScreenState extends State<BooksScreen> {
                     if (selectedOption == 2)
                       Padding(
                         padding: EdgeInsets.only(left: 32.w, top: 8.h),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Vaqt: '),
-                            SizedBox(
-                              width: 70.w,
-                              child: TextField(
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  hintText: '60',
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 8.w,
+                            Row(
+                              children: [
+                                Text('Vaqt: '),
+                                SizedBox(
+                                  width: 70.w,
+                                  child: TextField(
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      hintText: '60',
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 8.w,
+                                      ),
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    onChanged: (value) {
+                                      timePerQuestionSeconds =
+                                          int.tryParse(value) ?? 60;
+                                    },
                                   ),
-                                  border: OutlineInputBorder(),
                                 ),
-                                onChanged: (value) {
-                                  timePerQuestionSeconds =
-                                      int.tryParse(value) ?? 60;
-                                },
-                              ),
+                                SizedBox(width: 8.w),
+                                Text('sekund/savol'),
+                              ],
                             ),
-                            SizedBox(width: 8.w),
-                            Text('sekund/savol'),
+                            SizedBox(height: 16.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Keyingi savolga o\'tish majburiy',
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                Switch(
+                                  value: forceNextQuestion,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      forceNextQuestion = value;
+                                    });
+                                  },
+                                  activeColor: AppConstant.primaryColor,
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -306,6 +335,8 @@ class _BooksScreenState extends State<BooksScreen> {
                             selectedOption == 1 ? fullTimeMinutes : null,
                         'timePerQuestion':
                             selectedOption == 2 ? timePerQuestionSeconds : null,
+                        'forceNextQuestion':
+                            selectedOption == 2 ? forceNextQuestion : false,
                       };
                       Navigator.pop(dialogContext, result);
                     },
@@ -986,6 +1017,9 @@ class _BooksScreenState extends State<BooksScreen> {
                                                                               timerSettings['fullTime'],
                                                                           customTimePerQuestion:
                                                                               timerSettings['timePerQuestion'],
+                                                                          forceNextQuestion:
+                                                                              timerSettings['forceNextQuestion'] ??
+                                                                              false,
                                                                         ),
                                                                   ),
                                                                 );

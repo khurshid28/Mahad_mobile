@@ -24,6 +24,7 @@ class RandomTestScreen extends StatefulWidget {
   final int?
   customTimePerQuestion; // Student tanlagan har bir savol uchun vaqt (minutlarda)
   final bool? useTimer; // Timer ishlatilsinmi
+  final bool? forceNextQuestion; // Keyingi savolga o'tish majburiy
 
   RandomTestScreen({
     super.key,
@@ -33,6 +34,7 @@ class RandomTestScreen extends StatefulWidget {
     this.customFullTime,
     this.customTimePerQuestion,
     this.useTimer,
+    this.forceNextQuestion,
   });
 
   @override
@@ -309,24 +311,31 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
         perQuestionTimer = Timer.periodic(Duration(seconds: 1), (timer) {
           if (mounted) {
             if (perQuestionRemainingTime <= 0) {
-              // Vaqt tugadi, keyingi savolga o'tish
-              var count = test_items.length;
-              if (item_index < count - 1) {
-                setState(() {
-                  item_index++;
-                  saveCurrentIndex();
-                  int timeValue =
-                      widget.customTimePerQuestion ??
-                      (user?["group"]?["timeMinutes"] ?? 0);
-                  perQuestionRemainingTime =
-                      widget.customTimePerQuestion != null
-                          ? timeValue
-                          : (timeValue * 60);
-                });
-              } else {
-                // Oxirgi savol, testni tugatish
-                timer.cancel();
-                _finishTest();
+              // Vaqt tugadi, guruhda forceNextQuestion tekshirish
+              Map? user = StorageService().read(StorageService.user);
+              bool forceNextQuestion =
+                  user?["group"]?["forceNextQuestion"] ?? false;
+
+              if (forceNextQuestion) {
+                // Majburiy keyingi savolga o'tish
+                var count = test_items.length;
+                if (item_index < count - 1) {
+                  setState(() {
+                    item_index++;
+                    saveCurrentIndex();
+                    int timeValue =
+                        widget.customTimePerQuestion ??
+                        (user?["group"]?["timeMinutes"] ?? 0);
+                    perQuestionRemainingTime =
+                        widget.customTimePerQuestion != null
+                            ? timeValue
+                            : (timeValue * 60);
+                  });
+                } else {
+                  // Oxirgi savol, testni tugatish
+                  timer.cancel();
+                  _finishTest();
+                }
               }
             } else {
               perQuestionRemainingTime--;
@@ -792,7 +801,92 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
                           ),
                         ),
 
-                      if (item_index > 0 && !isPerQuestionTime())
+                      // Har bir savol uchun vaqt bo'lsa va forceNextQuestion false bo'lsa tugmani ko'rsatamiz
+                      if (isPerQuestionTime() &&
+                          !(widget.forceNextQuestion ??
+                              StorageService().read(
+                                StorageService.user,
+                              )?["group"]?["forceNextQuestion"] ??
+                              false))
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 8.h,
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12.r),
+                              color: AppConstant.primaryColor,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppConstant.primaryColor.withOpacity(
+                                    0.3,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () async {
+                                  if (item_index == count - 1) {
+                                    await _finishTest();
+                                  } else if (item_index < count - 1) {
+                                    setState(() {
+                                      answer = "";
+                                      item_index++;
+                                      saveCurrentIndex();
+                                      // Reset timer for next question
+                                      Map? user = StorageService().read(
+                                        StorageService.user,
+                                      );
+                                      int timeValue =
+                                          widget.customTimePerQuestion ??
+                                          (user?["group"]?["timeMinutes"] ?? 0);
+                                      perQuestionRemainingTime =
+                                          widget.customTimePerQuestion != null
+                                              ? timeValue
+                                              : (timeValue * 60);
+                                    });
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(12.r),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        item_index == count - 1
+                                            ? Icons.check_circle_outline
+                                            : Icons.arrow_forward,
+                                        color: Colors.white,
+                                        size: 24.sp,
+                                      ),
+                                      SizedBox(width: 8.w),
+                                      Text(
+                                        item_index == count - 1
+                                            ? "Tugatish"
+                                            : "Keyingi savol",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      if (item_index > 0 &&
+                          !isPerQuestionTime() &&
+                          !(widget.forceNextQuestion ?? false))
                         Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: 16.w,

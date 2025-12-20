@@ -8,6 +8,7 @@ class SpecialTest {
   final String? activationEnd;
   final int? timePerQuestion;
   final int? totalTime;
+  final bool? forceNextQuestion;
   final int questionCount;
   final List<int> sectionIds;
   final List<int> groupIds;
@@ -26,6 +27,7 @@ class SpecialTest {
     this.activationEnd,
     this.timePerQuestion,
     this.totalTime,
+    this.forceNextQuestion,
     required this.questionCount,
     required this.sectionIds,
     required this.groupIds,
@@ -49,6 +51,7 @@ class SpecialTest {
         activationEnd: json['activation_end'],
         timePerQuestion: json['time_per_question'],
         totalTime: json['total_time'],
+        forceNextQuestion: json['force_next_question'],
         questionCount: json['question_count'] ?? 0,
         sectionIds: List<int>.from(json['section_ids'] ?? []),
         groupIds: List<int>.from(json['group_ids'] ?? []),
