@@ -436,27 +436,44 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
-                              if (state is SpecialTestsLoaded) {
-                                final activeTests = state.tests.where(
-                                  (test) => test.isActive && test.hasAttempted != true,
-                                ).toList();
-                                
-                                if (activeTests.isNotEmpty) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) =>
-                                              detail.SpecialTestDetailScreen(
-                                                testId: activeTests.first.id,
-                                                startImmediately: true,
-                                              ),
-                                    ),
-                                  );
-                                  return;
+                              // Avval ishlab turgan testni tekshirish
+                              final allKeys = StorageService().box.getKeys();
+                              for (var key in allKeys) {
+                                if (key.toString().startsWith(
+                                  '${StorageService.specialTest}-',
+                                )) {
+                                  final testData = StorageService().read(key);
+                                  if (testData != null && testData is Map) {
+                                    final finishTime = DateTime.tryParse(
+                                      testData['finish_time']?.toString() ?? '',
+                                    );
+                                    if (finishTime != null &&
+                                        finishTime.isAfter(DateTime.now())) {
+                                      // Ishlab turgan test topildi, unga o'tish
+                                      final testId = key
+                                          .toString()
+                                          .replaceFirst(
+                                            '${StorageService.specialTest}-',
+                                            '',
+                                          );
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) =>
+                                                  detail.SpecialTestDetailScreen(
+                                                    testId: int.parse(testId),
+                                                    startImmediately: true,
+                                                  ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                  }
                                 }
                               }
-                              
+
+                              // Boshqa holatlarda listga o'tish
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(

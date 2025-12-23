@@ -357,17 +357,14 @@ class _SpecialTestCard extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder:
-                            (_) =>
-                                detail.SpecialTestDetailScreen(
-                                  testId: test.id,
-                                  startImmediately: true,
-                                ),
+                            (_) => detail.SpecialTestDetailScreen(
+                              testId: test.id,
+                              startImmediately: true,
+                            ),
                       ),
                     );
                     // Refresh when returning from test
-                    print(
-                      '🟡 [ListScreen] Returned from test, refreshing...',
-                    );
+                    print('🟡 [ListScreen] Returned from test, refreshing...');
                     if (context.mounted) {
                       onReturn?.call();
                     }
@@ -548,7 +545,9 @@ class _SpecialTestCard extends StatelessWidget {
   String _formatDate(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
-      return '${date.day}.${date.month}.${date.year}';
+      // UTC+5 (O'zbekiston vaqti) ga o'tkazish
+      final uzbekTime = date.toUtc().add(Duration(hours: 5));
+      return '${uzbekTime.day.toString().padLeft(2, '0')}.${uzbekTime.month.toString().padLeft(2, '0')}.${uzbekTime.year} ${uzbekTime.hour.toString().padLeft(2, '0')}:${uzbekTime.minute.toString().padLeft(2, '0')}';
     } catch (e) {
       return dateStr;
     }
