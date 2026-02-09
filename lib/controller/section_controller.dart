@@ -27,20 +27,7 @@ class SectionController {
   }
 
 
-static Future<void> getByid(BuildContext context,{required int id}) async {
-    try {
-      await BlocProvider.of<SectionBloc>(context).get(id : id);
-    } catch (e, track) {
-      if (kDebugMode) {
-        print("Controller Error >>$e");
-        print("Controller track >>$track");
-      }
-      var err = e as DioExceptions;
-
-      BlocProvider.of<SectionBloc>(
-        context,
-      ).emit(SectionErrorState(message: err.message, title: err.message,statusCode: 500));
-    }
+  static Future<void> getByid(BuildContext context, {required int id}) async {
+    await BlocProvider.of<SectionBloc>(context).get(id: id);
   }
-
 }

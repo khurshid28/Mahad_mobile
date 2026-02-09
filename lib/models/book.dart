@@ -6,8 +6,16 @@ class Book {
   final Color? color;
   final Color? borderColor;
   final int id;
+  final int passingPercentage;
 
   
 
-  Book({required this.name, required this.imagePath,  this.color,  this.borderColor,required this.id});
+  Book({
+    required this.name, 
+    required this.imagePath,  
+    this.color,  
+    this.borderColor,
+    required this.id,
+    this.passingPercentage = 60,
+  });
 }

@@ -21,7 +21,7 @@ class SectionCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: !block ? onTap : null,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12.r),
         child: Container(
           padding: EdgeInsets.all(16.w),

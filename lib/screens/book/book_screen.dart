@@ -38,12 +38,13 @@ class _BookScreenState extends State<BookScreen> {
     if (results.isEmpty) {
       return 0;
     }
-    var score = 0;
-    for (var r in results) {
-      score += (r["solved"] as int);
-    }
-
-    return (score * 1000 / (count * results.length)).floor() / 10;
+    
+    // Get the latest result (first in the list since it's ordered by desc)
+    var latestResult = results.first;
+    int solved = latestResult["solved"] ?? 0;
+    
+    // Calculate percentage based on latest result
+    return ((solved * 100.0) / count).clamp(0, 100).roundToDouble();
   }
 
   ToastService toastService = ToastService();
@@ -161,15 +162,24 @@ class _BookScreenState extends State<BookScreen> {
 
               bool isBlocked =
                   widget.fullBlock ||
-                  (widget.stepBlock && index != 0 && (prev?.percent ?? 0) < 60);
+                  (widget.stepBlock && index != 0 && (prev?.percent ?? 0) < widget.book.passingPercentage);
 
               return Padding(
                 padding: EdgeInsets.only(bottom: 12.h),
                 child: SectionCard(
                   section: section,
                   block: isBlocked,
-                  isFailed: 60 > section.percent,
+                  isFailed: widget.book.passingPercentage > section.percent,
                   onTap: () {
+                    if (isBlocked) {
+                      // Show message why it's blocked
+                      toastService.error(
+                        message: widget.fullBlock
+                            ? "Bu kitob to'liq qulflangan"
+                            : "Oldingi bo'limni kamida ${widget.book.passingPercentage}% natija bilan tugatishingiz kerak",
+                      );
+                      return;
+                    }
                     Navigator.push(
                       context,
                       MaterialPageRoute(

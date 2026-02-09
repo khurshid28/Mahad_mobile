@@ -92,6 +92,33 @@ class _SectionScreenState extends State<SectionScreen> {
                 if (state is SectionErrorState) {
                   if (state.statusCode == 401) {
                     Logout(context);
+                  } else if (state.statusCode == 403) {
+                    // Forbidden - access denied (e.g., previous section not passed)
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(
+                          "Ruxsat berilmadi",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18.sp,
+                          ),
+                        ),
+                        content: Text(
+                          state.message ?? "Bu bo'limga kirish uchun oldingi bo'limni tugatishingiz kerak",
+                          style: TextStyle(fontSize: 14.sp),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop(); // Go back to previous screen
+                            },
+                            child: Text("OK"),
+                          ),
+                        ],
+                      ),
+                    );
                   } else {
                     toastService.error(message: state.message ?? "Xatolik Bor");
                   }

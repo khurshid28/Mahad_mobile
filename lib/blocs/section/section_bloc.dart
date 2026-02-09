@@ -30,10 +30,15 @@ class SectionBloc extends Cubit<SectionState> {
     if (response.statusCode == 200) {
       emit(SectionSuccessState(data: response.data));
     } else {
+      // Backend error message (e.g. ForbiddenException with custom message)
+      String errorMessage = response.data is Map 
+          ? (response.data["message"] ?? response.data["error"] ?? "Xatolik yuz berdi")
+          : "Xatolik yuz berdi";
+      
       emit(
         SectionErrorState(
-          title: response.data["error"],
-          message: response.data["error"],
+          title: "Xatolik",
+          message: errorMessage,
           statusCode: response.statusCode
         ),
       );
