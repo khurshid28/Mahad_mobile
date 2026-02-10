@@ -1346,6 +1346,7 @@ class _BooksScreenState extends State<BooksScreen> {
                   book: book,
                   backgroundColor: AppConstant.primaryColor.withOpacity(0.05),
                   borderColor: AppConstant.primaryColor,
+                  isBlocked: filterdata[index]["fullBlock"] ?? false,
                   onTap: () {
                     Navigator.push(
                       context,
