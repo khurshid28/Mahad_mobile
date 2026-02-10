@@ -299,12 +299,7 @@ class _BooksBodyState extends State<BooksBody> {
                   borderColor: AppConstant.primaryColor,
                   isBlocked: isBookBlocked,
                   onTap: () {
-                    if (isBookBlocked) {
-                      toastService.error(
-                        message: "Bu kitob to'liq qulflangan. Admin bilan bog'laning.",
-                      );
-                      return;
-                    }
+                    // Navigate to book screen - if blocked, will show locked message inside
                     Navigator.push(
                       context,
                       MaterialPageRoute(

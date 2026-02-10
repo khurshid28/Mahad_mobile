@@ -201,30 +201,69 @@ class _BookScreenState extends State<BookScreen> {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
-        child: CustomAppBar(titleText: widget.book.name, isLeading: true),
+        child: CustomAppBar(
+          titleText: widget.fullBlock 
+            ? "${widget.book.name} 🔒" 
+            : widget.book.name,
+          isLeading: true,
+        ),
       ),
       backgroundColor:
           Theme.of(context).brightness == Brightness.dark
               ? const Color(0xFF1A1A1A)
               : Colors.grey.shade50,
-      body: Column(
-        children: [
-          BlocListener<SectionAllBloc, SectionAllState>(
-            child: SizedBox(),
-            listener: (context, state) async {
-              if (state is SectionAllErrorState) {
-                if (state.statusCode == 401) {
-                  Logout(context);
-                } else {
-                  toastService.error(message: state.message ?? "Xatolik Bor");
-                }
-              } else if (state is SectionAllSuccessState) {}
-            },
-          ),
+      body: widget.fullBlock
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.lock_rounded,
+                    size: 80.sp,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    "Bu kitob qulflangan",
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 40.w),
+                    child: Text(
+                      "Ushbu kitobga admin tomonidan ruhsat berilmagan. Iltimos, admin bilan bog'laning.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Column(
+              children: [
+                BlocListener<SectionAllBloc, SectionAllState>(
+                  child: SizedBox(),
+                  listener: (context, state) async {
+                    if (state is SectionAllErrorState) {
+                      if (state.statusCode == 401) {
+                        Logout(context);
+                      } else {
+                        toastService.error(message: state.message ?? "Xatolik Bor");
+                      }
+                    } else if (state is SectionAllSuccessState) {}
+                  },
+                ),
 
-          Expanded(child: bodySection()),
-        ],
-      ),
+                Expanded(child: bodySection()),
+              ],
+            ),
     );
   }
 
