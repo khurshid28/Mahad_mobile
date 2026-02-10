@@ -28,37 +28,42 @@ class _RateScreenState extends State<RateScreen> {
   // ];
 
   num getPercent(List results) {
-    double score = 0;
-    int totalTests = 0;
-
     if (results.isEmpty) {
       return 0;
     }
 
+    // Kitoblar bo'yicha guruhlash
+    Map<int, List<double>> bookScores = {};
+    List<double> specialScores = [];
+    List<double> randomScores = [];
+
     for (var r in results) {
       try {
         if (r["type"] == "RANDOM") {
+          // Random testlar
           int solved = (r["solved"] ?? 0) as int;
           int totalItems = ((r["answers"] ?? []) as List).length;
           if (totalItems > 0) {
-            score += solved / totalItems;
-            totalTests++;
+            randomScores.add((solved / totalItems) * 100);
           }
         } else if (r["type"] == "SPECIAL") {
           // Maxsus testlar
           int solved = (r["solved"] ?? 0) as int;
           int totalItems = ((r["answers"] ?? []) as List).length;
           if (totalItems > 0) {
-            score += solved / totalItems;
-            totalTests++;
+            specialScores.add((solved / totalItems) * 100);
           }
         } else {
-          // Oddiy testlar
+          // Oddiy testlar - kitob bo'yicha guruhlash
+          int? bookId = r["test"]?["section"]?["book_id"];
           int solved = (r["solved"] ?? 0) as int;
-          int totalItems = r["test"]?["_count"]?["test_items"] ?? 1;
-          if (totalItems > 0) {
-            score += solved / totalItems;
-            totalTests++;
+          var testItemsCount = r["test"]?["_count"]?["test_items"];
+          if (bookId != null && testItemsCount != null && testItemsCount > 0) {
+            int totalItems = testItemsCount as int;
+            if (!bookScores.containsKey(bookId)) {
+              bookScores[bookId] = [];
+            }
+            bookScores[bookId]!.add((solved / totalItems) * 100);
           }
         }
       } catch (e) {
@@ -66,8 +71,51 @@ class _RateScreenState extends State<RateScreen> {
       }
     }
 
-    if (totalTests == 0) return 0;
-    return (score * 1000 / totalTests).floor() / 10;
+    // Har bir kitobning o'rtachasini hisoblash
+    List<double> bookAverages = [];
+    bookScores.forEach((bookId, scores) {
+      if (scores.isNotEmpty) {
+        double avg = scores.reduce((a, b) => a + b) / scores.length;
+        bookAverages.add(avg);
+      }
+    });
+
+    // Barcha o'rtachalarni birlashtirish
+    List<double> allAverages = [
+      ...bookAverages,
+      ...specialScores,
+      ...randomScores,
+    ];
+
+    if (allAverages.isEmpty) return 0;
+    double totalAverage = allAverages.reduce((a, b) => a + b) / allAverages.length;
+    return (totalAverage * 10).floor() / 10;
+  }
+
+  Map<String, int> getTestCounts(List results) {
+    Set<int> bookIds = {};
+    int specialTests = 0;
+
+    for (var r in results) {
+      try {
+        if (r["type"] == "SPECIAL") {
+          specialTests++;
+        } else if (r["type"] != "RANDOM") {
+          // Oddiy testlar - kitob ID ni olish
+          var bookId = r["test"]?["section"]?["book_id"];
+          if (bookId != null) {
+            bookIds.add(bookId as int);
+          }
+        }
+      } catch (e) {
+        print("❌ Error counting tests: $e");
+      }
+    }
+
+    return {
+      'special': specialTests,
+      'regular': bookIds.length, // Unique kitoblar soni
+    };
   }
 
   List sortRates(List data) {
@@ -266,16 +314,21 @@ class _RateScreenState extends State<RateScreen> {
                 child: Column(
                   children: List.generate(
                     data.length,
-                    (index) => RateCard(
-                      rate: Rate(
-                        avg: getPercent(data[index]["results"]),
-                        try_count: (data[index]["results"] as List).length,
-                        name: data[index]["name"].toString(),
-                        index: index,
-                        id: data[index]["id"],
-                      ),
-                      onTap: () {},
-                    ),
+                    (index) {
+                      var testCounts = getTestCounts(data[index]["results"]);
+                      return RateCard(
+                        rate: Rate(
+                          avg: getPercent(data[index]["results"]),
+                          try_count: (data[index]["results"] as List).length,
+                          name: data[index]["name"].toString(),
+                          index: index,
+                          id: data[index]["id"],
+                          specialTestCount: testCounts['special'] ?? 0,
+                          regularTestCount: testCounts['regular'] ?? 0,
+                        ),
+                        onTap: () {},
+                      );
+                    },
                   ),
                 ),
               ),

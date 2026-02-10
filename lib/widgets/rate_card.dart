@@ -142,17 +142,44 @@ class RateCard extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.assignment_turned_in,
-                                size: 14.sp,
+                                Icons.book_outlined,
+                                size: 12.sp,
                                 color: AppConstant.primaryColor,
                               ),
                               SizedBox(width: 4.w),
                               Text(
-                                '${rate.try_count} ta',
+                                '${rate.regularTestCount}',
                                 style: TextStyle(
-                                  fontSize: 12.sp,
+                                  fontSize: 11.sp,
                                   fontWeight: FontWeight.w600,
                                   color: AppConstant.primaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                          decoration: BoxDecoration(
+                            color: AppConstant.accentOrange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.stars,
+                                size: 12.sp,
+                                color: AppConstant.accentOrange,
+                              ),
+                              SizedBox(width: 4.w),
+                              Text(
+                                '${rate.specialTestCount}',
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppConstant.accentOrange,
                                 ),
                               ),
                             ],

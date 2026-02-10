@@ -8,8 +8,10 @@ import 'package:test_app/models/book.dart';
 import 'package:test_app/models/section.dart';
 import 'package:test_app/screens/section/section_screen.dart';
 import 'package:test_app/service/logout.dart';
+import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
 import 'package:test_app/widgets/section_card.dart';
+import 'package:test_app/screens/test/random_test_screen.dart';
 
 class BookScreen extends StatefulWidget {
   final Book book;
@@ -45,6 +47,152 @@ class _BookScreenState extends State<BookScreen> {
     
     // Calculate percentage based on latest result
     return ((solved * 100.0) / count).clamp(0, 100).roundToDouble();
+  }
+
+  bool hasTime() {
+    Map? user = StorageService().read(StorageService.user);
+    return user?["group"]?["hasTime"] ?? false;
+  }
+
+  void showRandomTestDialog(BuildContext context, List data) {
+    int testCount = 20;
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.shuffle_rounded,
+                    color: AppConstant.primaryColor,
+                    size: 24.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    "Tasodifiy Test",
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Test savollar soni:",
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Slider(
+                          value: testCount.toDouble(),
+                          min: 10,
+                          max: 100,
+                          divisions: 18,
+                          label: testCount.toString(),
+                          activeColor: AppConstant.primaryColor,
+                          onChanged: (value) {
+                            setState(() {
+                              testCount = value.toInt();
+                            });
+                          },
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 6.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppConstant.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Text(
+                          "$testCount",
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppConstant.primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    "Bekor qilish",
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    List<int> sectionIds = data
+                        .map<int>((s) => s["id"] as int)
+                        .toList();
+                    
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RandomTestScreen(
+                          section: Section(
+                            name: widget.book.name,
+                            id: widget.book.id,
+                            count: testCount,
+                          ),
+                          sections: sectionIds,
+                          count: testCount,
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppConstant.primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 10.h,
+                    ),
+                  ),
+                  child: Text(
+                    "Boshlash",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   ToastService toastService = ToastService();
@@ -139,30 +287,116 @@ class _BookScreenState extends State<BookScreen> {
 
           return ListView.builder(
             padding: EdgeInsets.all(16.w),
-            itemCount: data.length,
+            itemCount: data.length + 1, // +1 for random test button
             itemBuilder: (context, index) {
+              // First item - Random Test Button
+              if (index == 0) {
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 16.h),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppConstant.primaryColor,
+                          AppConstant.primaryColor.withOpacity(0.8),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppConstant.primaryColor.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => showRandomTestDialog(context, data),
+                        borderRadius: BorderRadius.circular(16.r),
+                        child: Padding(
+                          padding: EdgeInsets.all(20.w),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 56.w,
+                                height: 56.w,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                child: Icon(
+                                  Icons.shuffle_rounded,
+                                  color: Colors.white,
+                                  size: 28.sp,
+                                ),
+                              ),
+                              SizedBox(width: 16.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Tasodifiy Test",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18.sp,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4.h),
+                                    Text(
+                                      "Barcha bo'limlardan aralash",
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: Colors.white,
+                                size: 20.sp,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              // Regular section cards
+              int dataIndex = index - 1;
               Section section = Section(
-                name: data[index]["name"],
-                id: data[index]["id"],
-                count: data[index]["test"]?["_count"]?["test_items"] ?? 0,
-                percent: getPercent(data[index]),
-                test_id: data[index]["test"]?["id"].toString(),
+                name: data[dataIndex]["name"],
+                id: data[dataIndex]["id"],
+                count: data[dataIndex]["test"]?["_count"]?["test_items"] ?? 0,
+                percent: getPercent(data[dataIndex]),
+                test_id: data[dataIndex]["test"]?["id"].toString(),
               );
 
               Section? prev;
-              if (index != 0) {
+              if (dataIndex != 0) {
                 prev = Section(
-                  name: data[index - 1]["name"],
-                  id: data[index - 1]["id"],
-                  count: data[index - 1]["test"]?["_count"]?["test_items"] ?? 0,
-                  percent: getPercent(data[index - 1]),
-                  test_id: data[index - 1]["test"]?["id"].toString(),
+                  name: data[dataIndex - 1]["name"],
+                  id: data[dataIndex - 1]["id"],
+                  count: data[dataIndex - 1]["test"]?["_count"]?["test_items"] ?? 0,
+                  percent: getPercent(data[dataIndex - 1]),
+                  test_id: data[dataIndex - 1]["test"]?["id"].toString(),
                 );
               }
 
               bool isBlocked =
                   widget.fullBlock ||
-                  (widget.stepBlock && index != 0 && (prev?.percent ?? 0) < widget.book.passingPercentage);
+                  (widget.stepBlock && dataIndex != 0 && (prev?.percent ?? 0) < widget.book.passingPercentage);
 
               return Padding(
                 padding: EdgeInsets.only(bottom: 12.h),
