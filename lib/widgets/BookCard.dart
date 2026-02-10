@@ -6,7 +6,7 @@ import 'package:test_app/models/book.dart';
 class BookCard extends StatelessWidget {
   final Book book;
   final Color backgroundColor;
-  final Color borderColor; // Har bir subject uchun alohida border rangi
+  final Color borderColor;
   final VoidCallback onTap;
   final bool isBlocked;
   
@@ -24,68 +24,76 @@ class BookCard extends StatelessWidget {
       onTap: onTap,
       child: Stack(
         children: [
+          // Main card content
           Container(
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: borderColor, width: 1.5), // Fanning o‘ziga mos rang
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                book.imagePath,
-                height: 80,
-                width: 80,
-                fit: BoxFit.cover,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              book.name,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
-      if (isBlocked)
-        Positioned.fill(
-          child: Container(
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
+              color: backgroundColor,
               borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: borderColor, width: 1.5),
             ),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.lock_rounded,
-                    color: Colors.white,
-                    size: 40,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    book.imagePath,
+                    height: 80,
+                    width: 80,
+                    fit: BoxFit.cover,
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Qulflangan',
+                ),
+                SizedBox(height: 10),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    book.name,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
-    ),
+          // Blocking overlay
+          if (isBlocked)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.75),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.lock_rounded,
+                        color: Colors.white,
+                        size: 48,
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Qulflangan',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
