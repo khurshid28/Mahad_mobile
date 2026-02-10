@@ -5,6 +5,7 @@ class Rate {
   final int index;
   final String name;
   final int specialTestCount;
+  final int bookCount;
   final int regularTestCount;
  
   Rate({
@@ -14,6 +15,7 @@ class Rate {
     required this.index,
     required this.name,
     this.specialTestCount = 0,
+    this.bookCount = 0,
     this.regularTestCount = 0,
   });
 }

@@ -95,13 +95,15 @@ class _RateScreenState extends State<RateScreen> {
   Map<String, int> getTestCounts(List results) {
     Set<int> bookIds = {};
     int specialTests = 0;
+    int regularTests = 0;
 
     for (var r in results) {
       try {
         if (r["type"] == "SPECIAL") {
           specialTests++;
         } else if (r["type"] != "RANDOM") {
-          // Oddiy testlar - kitob ID ni olish
+          // Oddiy testlar
+          regularTests++;
           var bookId = r["test"]?["section"]?["book_id"];
           if (bookId != null) {
             bookIds.add(bookId as int);
@@ -114,7 +116,8 @@ class _RateScreenState extends State<RateScreen> {
 
     return {
       'special': specialTests,
-      'regular': bookIds.length, // Unique kitoblar soni
+      'books': bookIds.length, // Unique kitoblar soni
+      'regularTests': regularTests, // Jami oddiy testlar soni
     };
   }
 
@@ -324,7 +327,8 @@ class _RateScreenState extends State<RateScreen> {
                           index: index,
                           id: data[index]["id"],
                           specialTestCount: testCounts['special'] ?? 0,
-                          regularTestCount: testCounts['regular'] ?? 0,
+                          bookCount: testCounts['books'] ?? 0,
+                          regularTestCount: testCounts['regularTests'] ?? 0,
                         ),
                         onTap: () {},
                       );

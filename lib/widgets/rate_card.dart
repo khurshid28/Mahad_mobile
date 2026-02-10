@@ -148,7 +148,7 @@ class RateCard extends StatelessWidget {
                               ),
                               SizedBox(width: 4.w),
                               Text(
-                                '${rate.regularTestCount}',
+                                '${rate.bookCount}/${rate.regularTestCount}',
                                 style: TextStyle(
                                   fontSize: 11.sp,
                                   fontWeight: FontWeight.w600,
