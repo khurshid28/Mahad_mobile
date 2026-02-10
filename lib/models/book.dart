@@ -7,6 +7,8 @@ class Book {
   final Color? borderColor;
   final int id;
   final int passingPercentage;
+  final bool fullBlock;
+  final bool stepBlock;
 
   
 
@@ -17,5 +19,7 @@ class Book {
     this.borderColor,
     required this.id,
     this.passingPercentage = 60,
+    this.fullBlock = false,
+    this.stepBlock = false,
   });
 }

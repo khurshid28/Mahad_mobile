@@ -288,6 +288,8 @@ class _BooksBodyState extends State<BooksBody> {
                   imagePath:
                       Endpoints.domain + filterdata[index]["image"].toString(),
                   passingPercentage: filterdata[index]["passingPercentage"] ?? 60,
+                  fullBlock: filterdata[index]["fullBlock"] ?? false,
+                  stepBlock: filterdata[index]["stepBlock"] ?? false,
                 );
                 return BookCard(
                   book: book,
