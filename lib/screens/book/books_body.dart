@@ -21,6 +21,8 @@ class BooksBody extends StatefulWidget {
 }
 
 class _BooksBodyState extends State<BooksBody> {
+  ToastService toastService = ToastService();
+  
   // final List<Book> books = [
   //   Book(name: "Germaniya tarixi", imagePath: "assets/images/history.png"),
   //   Book(name: "Angliya tarixi", imagePath: "assets/images/adabiyot.png"),
@@ -291,11 +293,19 @@ class _BooksBodyState extends State<BooksBody> {
                   fullBlock: filterdata[index]["fullBlock"] ?? false,
                   stepBlock: filterdata[index]["stepBlock"] ?? false,
                 );
+                bool isBookBlocked = filterdata[index]["fullBlock"] ?? false;
                 return BookCard(
                   book: book,
                   backgroundColor: AppConstant.primaryColor.withOpacity(0.05),
                   borderColor: AppConstant.primaryColor,
+                  isBlocked: isBookBlocked,
                   onTap: () {
+                    if (isBookBlocked) {
+                      toastService.error(
+                        message: "Bu kitob to'liq qulflangan. Admin bilan bog'laning.",
+                      );
+                      return;
+                    }
                     Navigator.push(
                       context,
                       MaterialPageRoute(

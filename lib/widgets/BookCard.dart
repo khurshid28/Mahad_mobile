@@ -7,18 +7,24 @@ class BookCard extends StatelessWidget {
   final Book book;
   final Color backgroundColor;
   final Color borderColor; // Har bir subject uchun alohida border rangi
- final VoidCallback onTap;
+  final VoidCallback onTap;
+  final bool isBlocked;
+  
   BookCard({
     required this.book,
     required this.backgroundColor,
-    required this.borderColor, required   this.onTap,
+    required this.borderColor, 
+    required this.onTap,
+    this.isBlocked = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: Stack(
+        children: [
+          Container(
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(15),
@@ -48,6 +54,38 @@ class BookCard extends StatelessWidget {
           ],
         ),
       ),
+      if (isBlocked)
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.lock_rounded,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Qulflangan',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
     );
   }
 }
