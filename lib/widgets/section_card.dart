@@ -9,11 +9,13 @@ class SectionCard extends StatelessWidget {
   final VoidCallback onTap;
   bool block;
   bool isFailed;
+  final int passingPercentage;
   SectionCard({
     required this.section,
     required this.onTap,
     this.block = false,
     this.isFailed = false,
+    this.passingPercentage = 60,
   });
 
   @override
@@ -114,27 +116,30 @@ class SectionCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    if (!isFailed)
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 10.w,
-                          vertical: 6.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: Text(
-                          "${section.percent}%",
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w700,
-                            color: Theme.of(context).primaryColor,
-                          ),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 6.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isFailed
+                            ? AppConstant.redColor.withOpacity(0.1)
+                            : Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Text(
+                        isFailed
+                            ? "${section.percent.round()}/$passingPercentage%"
+                            : "${section.percent.round()}%",
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                          color: isFailed
+                              ? AppConstant.redColor
+                              : Theme.of(context).primaryColor,
                         ),
                       ),
+                    ),
                     SizedBox(height: 8.h),
                     Icon(
                       Icons.arrow_forward_ios_rounded,

@@ -443,6 +443,7 @@ class _BookScreenState extends State<BookScreen> {
                   section: section,
                   block: isBlocked,
                   isFailed: widget.book.passingPercentage > section.percent,
+                  passingPercentage: widget.book.passingPercentage,
                   onTap: () {
                     if (isBlocked) {
                       // Show message why it's blocked
