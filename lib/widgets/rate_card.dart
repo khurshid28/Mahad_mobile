@@ -175,7 +175,7 @@ class RateCard extends StatelessWidget {
                               ),
                               SizedBox(width: 4.w),
                               Text(
-                                '${rate.specialTestCount}',
+                                rate.specialTestCount > 0 ? '${rate.specialTestCount}' : '0/0',
                                 style: TextStyle(
                                   fontSize: 11.sp,
                                   fontWeight: FontWeight.w600,
