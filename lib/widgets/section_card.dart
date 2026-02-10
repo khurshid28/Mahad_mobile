@@ -127,17 +127,31 @@ class SectionCard extends StatelessWidget {
                             : Theme.of(context).primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
-                      child: Text(
-                        isFailed
-                            ? "${section.percent.round()}/$passingPercentage%"
-                            : "${section.percent.round()}%",
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w700,
-                          color: isFailed
-                              ? AppConstant.redColor
-                              : Theme.of(context).primaryColor,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "${section.percent.round()}/$passingPercentage",
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w700,
+                              color: isFailed
+                                  ? AppConstant.redColor
+                                  : Theme.of(context).primaryColor,
+                            ),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            "%",
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w700,
+                              color: isFailed
+                                  ? AppConstant.redColor
+                                  : Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     SizedBox(height: 8.h),
