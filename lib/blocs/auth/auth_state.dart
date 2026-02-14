@@ -17,3 +17,8 @@ class AuthErrorState extends AuthState {
   int? statusCode;
   AuthErrorState({required this.message, required this.title,required this.statusCode});
 }
+
+class AuthUpdateRequiredState extends AuthState {
+  final String message;
+  AuthUpdateRequiredState({required this.message});
+}

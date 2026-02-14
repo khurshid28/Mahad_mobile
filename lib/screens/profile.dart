@@ -2,6 +2,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:test_app/core/endpoints/endpoints.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/screens/my_result/my_result_screen.dart';
+import 'package:test_app/screens/profile/device_screen.dart';
 import 'package:test_app/screens/settings/settings_screen.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
@@ -17,12 +18,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<IconData> tileIcon = [
     Icons.settings_outlined,
     Icons.description_outlined,
+    Icons.phone_android_outlined,
     Icons.phone_outlined,
     Icons.logout_outlined,
   ];
   List<String> tileText = [
     'Sozlamalar',
     'Mening natijalarim',
+    'Qurilma',
     'Biz bilan aloqa',
     'Chiqish',
   ];
@@ -218,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Column(
               children: List.generate(
-                4,
+                5,
                 (index) => Padding(
                   padding: EdgeInsets.only(bottom: 12.h),
                   child: InkWell(
@@ -235,6 +238,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => MyResultScreen(),
+                          ),
+                        );
+                      } else if (index == 2) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DeviceScreen(),
                           ),
                         );
                       } else if (index == tileText.length - 2) {
@@ -273,7 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             width: 45.w,
                             height: 45.w,
                             decoration: BoxDecoration(
-                              color: index == 3
+                              color: index == 4
                                   ? Colors.red.withOpacity(0.1)
                                   : AppConstant.primaryColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12.r),
@@ -281,7 +291,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Icon(
                               tileIcon[index],
                               size: 24.w,
-                              color: index == 3 ? Colors.red : AppConstant.primaryColor,
+                              color: index == 4 ? Colors.red : AppConstant.primaryColor,
                             ),
                           ),
                           SizedBox(width: 16.w),

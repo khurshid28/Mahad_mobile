@@ -87,6 +87,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   listener: (context, state) async {
                     if (state is AuthWaitingState) {
                       loadingService.showLoading(context);
+                    } else if (state is AuthUpdateRequiredState) {
+                      loadingService.closeLoading(context);
+                      _showUpdateRequiredDialog(state.message);
                     } else if (state is AuthErrorState) {
                       loadingService.closeLoading(context);
                       toastService.error(message: state.message ?? "Xatolik Bor");
@@ -203,6 +206,25 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (context) => const MainScreen()),
       );
     }
+  }
+
+  void _showUpdateRequiredDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Ilova yangilanishi kerak"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildLoginButton() {
