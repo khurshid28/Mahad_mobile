@@ -74,12 +74,20 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
+      backgroundColor: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Qurilma'),
+        title: const Text('Qurilma ma\'lumotlari'),
         centerTitle: true,
+        elevation: 0,
         backgroundColor: AppConstant.primaryColor,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: BlocBuilder<DeviceBloc, DeviceState>(
         bloc: deviceBloc,
@@ -118,15 +126,104 @@ class _DeviceScreenState extends State<DeviceScreen> {
             final device = state.device;
             return RefreshIndicator(
               onRefresh: () => deviceBloc.fetchMyDevice(),
+              color: AppConstant.primaryColor,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.all(16.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Device Status Banner
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppConstant.primaryColor,
+                            AppConstant.primaryColor.withOpacity(0.7),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppConstant.primaryColor.withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(12.w),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Icon(
+                              getDeviceIcon(device.deviceType),
+                              size: 32.sp,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 16.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  device.deviceName,
+                                  style: TextStyle(
+                                    fontSize: 18.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle,
+                                      size: 16.sp,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      'Bu qurilma faol',
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        color: Colors.white.withOpacity(0.9),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    SizedBox(height: 24.h),
+                    
+                    Text(
+                      'Qurilma tafsilotlari',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    
+                    SizedBox(height: 12.h),
+                    
                     // Device Info Card
                     Card(
-                      elevation: 2,
+                      elevation: isDark ? 2 : 1,
+                      color: isDark ? Colors.grey.shade800 : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.r),
                       ),
@@ -134,92 +231,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         padding: EdgeInsets.all(16.w),
                         child: Column(
                           children: [
-                            // Device Icon and Name
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(12.w),
-                                  decoration: BoxDecoration(
-                                    color: getDeviceColor(device.deviceType).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12.r),
-                                  ),
-                                  child: Icon(
-                                    getDeviceIcon(device.deviceType),
-                                    size: 32.sp,
-                                    color: getDeviceColor(device.deviceType),
-                                  ),
-                                ),
-                                SizedBox(width: 16.w),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        device.deviceName,
-                                        style: TextStyle(
-                                          fontSize: 18.sp,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4.h),
-                                      Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 8.w,
-                                          vertical: 4.h,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(4.r),
-                                        ),
-                                        child: Text(
-                                          device.deviceType,
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            color: Colors.green,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (device.isActive)
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 12.w,
-                                      vertical: 6.h,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green,
-                                      borderRadius: BorderRadius.circular(20.r),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.check_circle,
-                                          size: 16.sp,
-                                          color: Colors.white,
-                                        ),
-                                        SizedBox(width: 4.w),
-                                        Text(
-                                          'Bu qurilma',
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            
-                            Divider(height: 32.h),
-                            
-                            // Last Active
-                            _buildInfoRow(
                               icon: Icons.access_time,
                               label: 'Oxirgi faollik',
                               value: formatLastActive(device.lastActive),
@@ -260,9 +271,14 @@ class _DeviceScreenState extends State<DeviceScreen> {
                     
                     // Info Card
                     Card(
-                      elevation: 1,
+                      elevation: isDark ? 2 : 1,
+                      color: isDark ? Colors.grey.shade800 : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.r),
+                        side: BorderSide(
+                          color: AppConstant.primaryColor.withOpacity(0.2),
+                          width: 1,
+                        ),
                       ),
                       child: Padding(
                         padding: EdgeInsets.all(16.w),
@@ -279,7 +295,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                                 'Boshqa qurilmadan kirsangiz, bu qurilma avtomatik chiqariladi.',
                                 style: TextStyle(
                                   fontSize: 14.sp,
-                                  color: Colors.grey.shade700,
+                                  color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
                                 ),
                               ),
                             ),
@@ -304,13 +320,22 @@ class _DeviceScreenState extends State<DeviceScreen> {
     required String label,
     required String value,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 20.sp,
-          color: AppConstant.primaryColor,
+        Container(
+          padding: EdgeInsets.all(8.w),
+          decoration: BoxDecoration(
+            color: AppConstant.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Icon(
+            icon,
+            size: 20.sp,
+            color: AppConstant.primaryColor,
+          ),
         ),
         SizedBox(width: 12.w),
         Expanded(
@@ -320,8 +345,9 @@ class _DeviceScreenState extends State<DeviceScreen> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.grey.shade600,
+                  fontSize: 13.sp,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               SizedBox(height: 4.h),
@@ -329,7 +355,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
                 value,
                 style: TextStyle(
                   fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
             ],
