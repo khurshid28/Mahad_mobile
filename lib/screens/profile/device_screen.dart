@@ -231,6 +231,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         padding: EdgeInsets.all(16.w),
                         child: Column(
                           children: [
+                            _buildInfoRow(
                               icon: Icons.access_time,
                               label: 'Oxirgi faollik',
                               value: formatLastActive(device.lastActive),
@@ -292,7 +293,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
                             SizedBox(width: 12.w),
                             Expanded(
                               child: Text(
-                                'Boshqa qurilmadan kirsangiz, bu qurilma avtomatik chiqariladi.',
+                                'Bu qurilma faol ekan, boshqa qurilmadan kira olmaysiz. Avval bu qurilmani o\'chirish kerak.',
                                 style: TextStyle(
                                   fontSize: 14.sp,
                                   color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
