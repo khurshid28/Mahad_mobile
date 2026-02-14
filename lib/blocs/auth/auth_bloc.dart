@@ -45,8 +45,8 @@ class AuthBloc extends Cubit<AuthState> {
       } else {
         emit(
           AuthErrorState(
-              title: response.data["error"], 
-              message: response.data["error"],
+              title: response.data["error"] ?? "Xato", 
+              message: response.data["message"] ?? response.data["error"] ?? "Noma'lum xato",
               statusCode: response.statusCode),
         );
       }

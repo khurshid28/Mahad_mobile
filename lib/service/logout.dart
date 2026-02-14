@@ -21,6 +21,6 @@ Future Logout(BuildContext context, {String? message}) async {
   if (message != null) {
     toastService.success(message: message);
   } else {
-    toastService.error(message: "Token Expired");
+    toastService.error(message: "Sessiya tugadi. Qaytadan kiring");
   }
 }
