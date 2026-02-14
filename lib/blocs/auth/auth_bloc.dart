@@ -65,6 +65,19 @@ class AuthBloc extends Cubit<AuthState> {
         return;
       }
       
+      // Handle 403 Forbidden (Device Blocked)
+      if (e.response?.statusCode == 403) {
+        final message = e.response?.data['message'] ?? "Qurilma bloklangan. Admin bilan bog'laning";
+        emit(
+          AuthErrorState(
+            title: 'Qurilma bloklangan',
+            message: message,
+            statusCode: e.response?.statusCode,
+          ),
+        );
+        return;
+      }
+      
       emit(
         AuthErrorState(
           title: 'Xato',
