@@ -24,6 +24,37 @@ class TestScreenNotime extends StatefulWidget {
 }
 
 class _TestScreenNotimeState extends State<TestScreenNotime> {
+  // Maxsus javoblarni tekshirish
+  bool _isSpecialAnswer(String? answer) {
+    if (answer == null || answer.isEmpty) return false;
+    
+    String normalized = answer.toLowerCase().trim();
+    normalized = normalized.replaceAll(RegExp(r'\s+'), ' ');
+    String withoutApostrophes = normalized.replaceAll(RegExp(r"['`′´ʹʻ]"), "");
+    
+    final specialPatterns = [
+      "togri javob yoq",
+      "to'g'ri javob yo'q",
+      "toʻgʻri javob yoʻq",
+      "barcha javoblar togri",
+      "barcha javoblar to'g'ri",
+      "barcha javoblar toʻgʻri",
+      "hammasi togri",
+      "hammasi to'g'ri",
+      "togri javob berilmagan",
+      "to'g'ri javob berilmagan",
+      "toʻgʻri javob berilmagan",
+    ];
+    
+    for (var pattern in specialPatterns) {
+      if (normalized.contains(pattern)) return true;
+      String patternWithoutApostrophes = pattern.replaceAll(RegExp(r"['`′´ʹʻ]"), "");
+      if (withoutApostrophes.contains(patternWithoutApostrophes)) return true;
+    }
+    
+    return false;
+  }
+
   Map getAnswers(int count) {
     var res = StorageService().read(
       "${StorageService.result}-${widget.section.test_id}",
@@ -114,9 +145,42 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
 
       for (var i = 0; i < len; i++) {
         var item = items[i];
-        var rightIndex = random.nextInt(4);
-        var answers = ["A", "B", "C", "D"];
-        var answersRandom = ["A", "B", "C", "D"];
+        
+        // Collect all valid answers
+        var allAnswers = <String, String>{};
+        if (item["answer_A"] != null && item["answer_A"].toString().isNotEmpty) {
+          allAnswers["A"] = item["answer_A"].toString();
+        }
+        if (item["answer_B"] != null && item["answer_B"].toString().isNotEmpty) {
+          allAnswers["B"] = item["answer_B"].toString();
+        }
+        if (item["answer_C"] != null && item["answer_C"].toString().isNotEmpty) {
+          allAnswers["C"] = item["answer_C"].toString();
+        }
+        if (item["answer_D"] != null && item["answer_D"].toString().isNotEmpty) {
+          allAnswers["D"] = item["answer_D"].toString();
+        }
+        
+        // Check if last answer is special
+        var answerKeys = allAnswers.keys.toList();
+        String? specialAnswerKey;
+        String? specialAnswerValue;
+        
+        if (answerKeys.isNotEmpty) {
+          var lastKey = answerKeys.last;
+          var lastValue = allAnswers[lastKey];
+          if (_isSpecialAnswer(lastValue)) {
+            specialAnswerKey = lastKey;
+            specialAnswerValue = lastValue;
+            allAnswers.remove(lastKey);
+            answerKeys.remove(lastKey);
+          }
+        }
+        
+        // Original shuffle logic for non-special answers
+        var rightIndex = random.nextInt(answerKeys.length);
+        var answers = List<String>.from(answerKeys);
+        var answersRandom = List<String>.from(answerKeys);
 
         var rightAnswer = answers[rightIndex];
         answersRandom.removeAt(rightIndex);
@@ -124,35 +188,32 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
 
         var ans = item["answer"] ?? "";
         var ansText = item["answer_" + ans];
-        var extraItem = {};
+        var extraItem = <String, String>{};
         extraItem["answer_$rightAnswer"] = ansText;
-        //change value
-        var extra = item["answer_" + ans];
-        item["answer_" + ans] = item["answer_$rightAnswer"];
-        item["answer_$rightAnswer"] = extra;
-
+        
+        // Shuffle remaining answers
         answersRandom.shuffle(random);
-        // print("shuffle");
-        // print(item["answer"]);
-        // print("Random answer : " + rightAnswer);
-        // print(answersRandom);
-
-        //  print(" Right : extraItem[${'answer_' + rightAnswer}] = item[${'answer_' + item["answer"]}]");
 
         for (var j = 0; j < answers.length; j++) {
-          //  print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
           extraItem["answer_${answersRandom[j]}"] =
-              item["answer_${answers[j]}"];
+              allAnswers[answers[j]] ?? "";
+        }
+        
+        // Add special answer at the end if exists
+        if (specialAnswerKey != null && specialAnswerValue != null) {
+          var allKeys = ["A", "B", "C", "D"];
+          var usedKeys = [rightAnswer, ...answersRandom];
+          var remainingKey = allKeys.firstWhere((k) => !usedKeys.contains(k));
+          extraItem["answer_$remainingKey"] = specialAnswerValue;
         }
 
         resItems.add({
           "number": i + 1,
-
           "question": item["question"] ?? "",
-          "answer_A": extraItem["answer_A"],
-          "answer_B": extraItem["answer_B"],
-          "answer_C": extraItem["answer_C"],
-          "answer_D": extraItem["answer_D"],
+          "answer_A": extraItem["answer_A"] ?? "",
+          "answer_B": extraItem["answer_B"] ?? "",
+          "answer_C": extraItem["answer_C"] ?? "",
+          "answer_D": extraItem["answer_D"] ?? "",
           "answer": rightAnswer,
           "createdt": item["createdt"],
           "updatedAt": item["updatedAt"],

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -523,6 +524,124 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
   int _perQuestionRemainingTime = 0;
   bool _isSubmitting = false;
   Map<String, dynamic>? groupData;
+  
+  // Har bir savol uchun aralashtirilgan javoblar tartibi
+  // Key: question id, Value: Map of display position -> original answer key
+  final Map<int, Map<String, String>> _shuffledAnswers = {};
+
+  // Maxsus javoblarni tekshirish - turli yozuv uslublarini qo'llab-quvvatlash
+  bool _isSpecialAnswer(String? answer) {
+    if (answer == null || answer.isEmpty) return false;
+    
+    // Textni normallash: kichik harf, bo'shliqlarni tozalash
+    String normalized = answer.toLowerCase().trim();
+    // Ortiqcha bo'shliqlarni olib tashlash
+    normalized = normalized.replaceAll(RegExp(r'\s+'), ' ');
+    
+    // Apostrof belgilarini olib tashlagan versiya ham tayyorlaymiz
+    String withoutApostrophes = normalized.replaceAll(RegExp(r"['`′´ʹʻ]"), "");
+    
+    // Maxsus javoblar ro'yxati - apostrof bilan va apostrofsiz
+    final specialPatterns = [
+      // To'g'ri javob yo'q - barcha variantlar
+      "togri javob yoq",      // apostrofsiz
+      "to'g'ri javob yo'q",   // apostrof bilan
+      "toʻgʻri javob yoʻq",   // maxsus apostrof
+      "to'gri javob yo'q",    // aralash
+      // Barcha javoblar to'g'ri - barcha variantlar
+      "barcha javoblar togri",   // apostrofsiz
+      "barcha javoblar to'g'ri", // apostrof bilan
+      "barcha javoblar toʻgʻri", // maxsus apostrof
+      "barcha javoblar to'gri",  // aralash
+      "hammasi togri",           // apostrofsiz
+      "hammasi to'g'ri",         // apostrof bilan
+      "hammasi toʻgʻri",         // maxsus apostrof
+      // To'g'ri javob berilmagan - barcha variantlar
+      "togri javob berilmagan",     // apostrofsiz
+      "to'g'ri javob berilmagan",   // apostrof bilan
+      "toʻgʻri javob berilmagan",   // maxsus apostrof
+      "to'gri javob berilmagan",    // aralash
+    ];
+    
+    for (var pattern in specialPatterns) {
+      // Original text (normalized) da tekshirish
+      if (normalized.contains(pattern)) {
+        return true;
+      }
+      // Apostrofsiz versiyada ham tekshirish
+      String patternWithoutApostrophes = pattern.replaceAll(RegExp(r"['`′´ʹʻ]"), "");
+      if (withoutApostrophes.contains(patternWithoutApostrophes)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  // Javoblarni aralash, lekin maxsus javoblarni ohirda qoldirish
+  void _initializeShuffledAnswers() {
+    final random = math.Random();
+    
+    for (var question in widget.test.questions) {
+      // Original answers
+      final answers = {
+        'A': question.answerA,
+        'B': question.answerB,
+        'C': question.answerC,
+        'D': question.answerD,
+      };
+      
+      // Filter out null/empty answers and convert to non-nullable
+      final validAnswers = <MapEntry<String, String>>[];
+      answers.entries.forEach((e) {
+        if (e.value != null && e.value!.isNotEmpty) {
+          validAnswers.add(MapEntry(e.key, e.value!));
+        }
+      });
+      
+      if (validAnswers.length <= 1) {
+        // No need to shuffle if only 1 or 0 answers
+        _shuffledAnswers[question.id] = {
+          for (var entry in validAnswers) entry.key: entry.key
+        };
+        continue;
+      }
+      
+      // Check if last answer is special
+      final lastEntry = validAnswers.last;
+      final lastIsSpecial = _isSpecialAnswer(lastEntry.value);
+      
+      List<MapEntry<String, String>> toShuffle;
+      MapEntry<String, String>? specialLast;
+      
+      if (lastIsSpecial) {
+        // Keep last answer at end, shuffle the rest
+        toShuffle = validAnswers.sublist(0, validAnswers.length - 1);
+        specialLast = lastEntry;
+      } else {
+        // Shuffle all answers
+        toShuffle = List.from(validAnswers);
+      }
+      
+      // Shuffle the answers
+      toShuffle.shuffle(random);
+      
+      // Create mapping: display position -> original key
+      final shuffleMap = <String, String>{};
+      final displayKeys = ['A', 'B', 'C', 'D'];
+      
+      for (int i = 0; i < toShuffle.length; i++) {
+        shuffleMap[displayKeys[i]] = toShuffle[i].key;
+      }
+      
+      // Add special answer at the end if exists
+      if (specialLast != null) {
+        shuffleMap[displayKeys[toShuffle.length]] = specialLast.key;
+      }
+      
+      _shuffledAnswers[question.id] = shuffleMap;
+    }
+  }
 
   // Group timer parametrlarini olish
   bool isPerQuestionTime() {
@@ -557,6 +676,9 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Initialize shuffled answers before loading from storage
+    _initializeShuffledAnswers();
 
     // Try to load from storage first
     _loadFromStorage();
@@ -681,6 +803,19 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
     final data = StorageService().read(storageKey);
 
     if (data != null && data is Map) {
+      // Load shuffled answers if available
+      if (data['shuffled_answers'] != null) {
+        final shuffledData = data['shuffled_answers'] as Map;
+        _shuffledAnswers.clear();
+        shuffledData.forEach((questionIdStr, mapping) {
+          final questionId = int.parse(questionIdStr.toString());
+          final mappingData = Map<String, dynamic>.from(mapping as Map);
+          _shuffledAnswers[questionId] = mappingData.map(
+            (key, value) => MapEntry(key.toString(), value.toString())
+          );
+        });
+      }
+      
       // Load answers
       if (data['answers'] != null) {
         final answersMap = Map<String, dynamic>.from(data['answers']);
@@ -721,6 +856,12 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
               : null,
       'answers': _answers.map((key, value) => MapEntry(key.toString(), value)),
       'current_index': _currentQuestionIndex,
+      'shuffled_answers': _shuffledAnswers.map(
+        (questionId, mapping) => MapEntry(
+          questionId.toString(), 
+          mapping.map((k, v) => MapEntry(k, v))
+        )
+      ),
     };
 
     StorageService().write(storageKey, data);
@@ -859,8 +1000,17 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
     await _clearStorage();
 
     final answersMap = <String, String>{};
-    _answers.forEach((questionId, answer) {
-      answersMap[questionId.toString()] = answer;
+    _answers.forEach((questionId, displayAnswer) {
+      // Convert display position to original answer key
+      final shuffleMap = _shuffledAnswers[questionId];
+      String originalAnswer = displayAnswer;
+      
+      if (shuffleMap != null && shuffleMap.containsKey(displayAnswer)) {
+        // Get the original answer key from shuffle mapping
+        originalAnswer = shuffleMap[displayAnswer]!;
+      }
+      
+      answersMap[questionId.toString()] = originalAnswer;
     });
 
     // Fill unanswered questions with empty answer
@@ -1284,117 +1434,144 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
   }
 
   List<Widget> _buildOptions(SpecialTestQuestion question) {
-    final options = ['A', 'B', 'C', 'D'];
-    final answers = [
-      question.answerA,
-      question.answerB,
-      question.answerC,
-      question.answerD,
-    ];
-
-    return List.generate(4, (index) {
-      if (answers[index] == null || answers[index]!.isEmpty) {
+    final displayOptions = ['A', 'B', 'C', 'D'];
+    
+    // Original answers map
+    final originalAnswers = {
+      'A': question.answerA,
+      'B': question.answerB,
+      'C': question.answerC,
+      'D': question.answerD,
+    };
+    
+    // Get shuffle mapping for this question
+    final shuffleMap = _shuffledAnswers[question.id];
+    
+    if (shuffleMap == null || shuffleMap.isEmpty) {
+      // No shuffle mapping, use original order (fallback)
+      return List.generate(4, (index) {
+        final option = displayOptions[index];
+        final answerText = originalAnswers[option];
+        
+        if (answerText == null || answerText.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        
+        return _buildOptionWidget(question.id, option, answerText);
+      });
+    }
+    
+    // Use shuffled order
+    return shuffleMap.entries.map((entry) {
+      final displayOption = entry.key; // A, B, C, D (display position)
+      final originalOption = entry.value; // Original answer key
+      final answerText = originalAnswers[originalOption];
+      
+      if (answerText == null || answerText.isEmpty) {
         return const SizedBox.shrink();
       }
-
-      final option = options[index];
-      final isSelected = _answers[question.id] == option;
-
-      return Container(
-        margin: EdgeInsets.only(bottom: 12.h),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap:
-                _isSubmitting
-                    ? null
-                    : () {
-                      setState(() {
-                        _answers[question.id] = option;
-                      });
-                      // Save to storage after answer
-                      _saveToStorage();
-                    },
-            borderRadius: BorderRadius.circular(12.r),
-            child: Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
+      
+      return _buildOptionWidget(question.id, displayOption, answerText);
+    }).toList();
+  }
+  
+  Widget _buildOptionWidget(int questionId, String option, String answerText) {
+    final isSelected = _answers[questionId] == option;
+    
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap:
+              _isSubmitting
+                  ? null
+                  : () {
+                    setState(() {
+                      _answers[questionId] = option;
+                    });
+                    // Save to storage after answer
+                    _saveToStorage();
+                  },
+          borderRadius: BorderRadius.circular(12.r),
+          child: Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color:
+                  isSelected
+                      ? const Color(0xFF4CAF50).withOpacity(0.1)
+                      : Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
                 color:
                     isSelected
-                        ? const Color(0xFF4CAF50).withOpacity(0.1)
-                        : Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                  color:
-                      isSelected
-                          ? const Color(0xFF4CAF50)
-                          : Colors.grey.shade300,
-                  width: isSelected ? 2 : 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                        ? const Color(0xFF4CAF50)
+                        : Colors.grey.shade300,
+                width: isSelected ? 2 : 1,
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32.w,
-                    height: 32.w,
-                    decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32.w,
+                  height: 32.w,
+                  decoration: BoxDecoration(
+                    color:
+                        isSelected
+                            ? const Color(0xFF4CAF50)
+                            : Colors.grey.shade100,
+                    shape: BoxShape.circle,
+                    border: Border.all(
                       color:
                           isSelected
                               ? const Color(0xFF4CAF50)
-                              : Colors.grey.shade100,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color:
-                            isSelected
-                                ? const Color(0xFF4CAF50)
-                                : Colors.grey.shade400,
-                        width: 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        option,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.white : Colors.black54,
-                        ),
-                      ),
+                              : Colors.grey.shade400,
+                      width: 2,
                     ),
                   ),
-                  SizedBox(width: 16.w),
-                  Expanded(
+                  child: Center(
                     child: Text(
-                      answers[index]!,
+                      option,
                       style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.normal,
-                        color: Colors.black87,
-                        height: 1.4,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected ? Colors.white : Colors.black54,
                       ),
                     ),
                   ),
-                  if (isSelected)
-                    Icon(
-                      Icons.check_circle,
-                      color: const Color(0xFF4CAF50),
-                      size: 24.sp,
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Text(
+                    answerText,
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.normal,
+                      color: Colors.black87,
+                      height: 1.4,
                     ),
-                ],
-              ),
+                  ),
+                ),
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle,
+                    color: const Color(0xFF4CAF50),
+                    size: 24.sp,
+                  ),
+              ],
             ),
           ),
         ),
-      );
-    });
+      ),
+    );
   }
 
   String _formatRemainingTime(int seconds) {
