@@ -16,7 +16,7 @@ import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+import 'package:screen_protector/screen_protector.dart';
 import 'package:vibration/vibration.dart';
 
 import 'dart:math' as math;
@@ -55,9 +55,9 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
   }
 
   Future<void> _disableScreenshot() async {
-    if (!kIsWeb && Platform.isAndroid) {
+    if (!kIsWeb) {
       try {
-        await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
+        await ScreenProtector.protectDataLeakageOn();
       } catch (e) {
         print('Screenshot bloklashda xato: $e');
       }
@@ -65,9 +65,9 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
   }
 
   Future<void> _enableScreenshot() async {
-    if (!kIsWeb && Platform.isAndroid) {
+    if (!kIsWeb) {
       try {
-        await FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
+        await ScreenProtector.protectDataLeakageOff();
       } catch (e) {
         print('Screenshot yoqishda xato: $e');
       }

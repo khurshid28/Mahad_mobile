@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+import 'package:screen_protector/screen_protector.dart';
 import 'package:test_app/blocs/special_test/special_test_bloc.dart';
 import 'package:test_app/controller/student_controller.dart';
 import 'package:test_app/core/const/const.dart';
@@ -563,9 +563,9 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
   }
 
   Future<void> _disableScreenshot() async {
-    if (!kIsWeb && Platform.isAndroid) {
+    if (!kIsWeb) {
       try {
-        await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
+        await ScreenProtector.protectDataLeakageOn();
       } catch (e) {
         print('Screenshot bloklashda xato: $e');
       }
@@ -573,9 +573,9 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
   }
 
   Future<void> _enableScreenshot() async {
-    if (!kIsWeb && Platform.isAndroid) {
+    if (!kIsWeb) {
       try {
-        await FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
+        await ScreenProtector.protectDataLeakageOff();
       } catch (e) {
         print('Screenshot yoqishda xato: $e');
       }
