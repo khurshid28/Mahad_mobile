@@ -13,7 +13,6 @@ import 'package:test_app/service/loading_Service.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:screen_protector/screen_protector.dart';
 import 'package:vibration/vibration.dart';

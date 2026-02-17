@@ -14,7 +14,6 @@ import 'package:test_app/service/loading_Service.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:screen_protector/screen_protector.dart';
 import 'package:vibration/vibration.dart';
@@ -656,26 +655,59 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
                           child: Row(
                             children: [
                               if (groupData != null && (groupData!["hasTime"] ?? false) && _timersStarted)
-                                Text(
-                                  isPerQuestionTime()
-                                      ? "Savol vaqti: ${formatTime(perQuestionRemainingTime)}"
-                                      : remainingTime >= 0
-                                      ? "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"
-                                      : "Tugash vaqti:  00:00",
-                                  style: TextStyle(
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12.w,
+                                    vertical: 6.h,
+                                  ),
+                                  decoration: BoxDecoration(
                                     color:
                                         (isPerQuestionTime()
                                                     ? perQuestionRemainingTime
                                                     : remainingTime) >
                                                 5
-                                            ? AppConstant.blueColor1
-                                            : AppConstant.redColor, // 5 sekund qolganda qizil
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16.sp,
+                                            ? AppConstant.blueColor1.withOpacity(0.15)
+                                            : AppConstant.redColor.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(20.r),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 16.sp,
+                                        color:
+                                            (isPerQuestionTime()
+                                                        ? perQuestionRemainingTime
+                                                        : remainingTime) >
+                                                    5
+                                                ? AppConstant.blueColor1
+                                                : AppConstant.redColor,
+                                      ),
+                                      SizedBox(width: 4.w),
+                                      Text(
+                                        isPerQuestionTime()
+                                            ? "Savol vaqti: ${formatTime(perQuestionRemainingTime)}"
+                                            : remainingTime >= 0
+                                            ? "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"
+                                            : "00:00",
+                                        style: TextStyle(
+                                          color:
+                                              (isPerQuestionTime()
+                                                          ? perQuestionRemainingTime
+                                                          : remainingTime) >
+                                                      5
+                                                  ? AppConstant.blueColor1
+                                                  : AppConstant.redColor,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14.sp,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               if (groupData != null && (groupData!["hasTime"] ?? false))
-                                SizedBox(width: 16.w),
+                                SizedBox(width: 12.w),
                               Text(
                                 "[${item_index + 1}/$count]",
                                 style: TextStyle(
