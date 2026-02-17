@@ -14,6 +14,10 @@ import 'package:test_app/service/loading_Service.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+import 'package:vibration/vibration.dart';
 
 import 'dart:math' as math;
 
@@ -25,6 +29,79 @@ class TestScreen extends StatefulWidget {
 }
 
 class _TestScreenState extends State<TestScreen> {
+  @override
+  void initState() {
+    super.initState();
+    print('🔵 [test_screen] initState() boshlandi - test_id: ${widget.section.test_id}');
+    _disableScreenshot();
+    loadCurrentIndex();
+    print('🔵 [test_screen] _loadGroupData() chaqirish oldidan...');
+    _loadGroupData();
+    print('🔵 [test_screen] TestController.getByid() chaqirilmoqda...');
+    TestController.getByid(
+      context,
+      id: int.tryParse(widget.section.test_id.toString()) ?? 0,
+    );
+  }
+
+  @override
+  void dispose() {
+    _enableScreenshot();
+    timer?.cancel();
+    perQuestionTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _disableScreenshot() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
+      } catch (e) {
+        print('Screenshot bloklashda xato: $e');
+      }
+    }
+  }
+
+  Future<void> _enableScreenshot() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        await FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
+      } catch (e) {
+        print('Screenshot yoqishda xato: $e');
+      }
+    }
+  }
+
+  bool _isSpecialAnswer(String? answer) {
+    if (answer == null || answer.isEmpty) return false;
+    
+    String normalized = answer.toLowerCase().trim();
+    normalized = normalized.replaceAll(RegExp(r'\s+'), ' ');
+    String withoutApostrophes = normalized.replaceAll(RegExp(r"['`′´ʹʻ]"), "");
+    
+    final specialPatterns = [
+      "togri javob yoq",
+      "to'g'ri javob yo'q",
+      "toʻgʻri javob yoʻq",
+      "barcha javoblar togri",
+      "barcha javoblar to'g'ri",
+      "barcha javoblar toʻgʻri",
+      "hammasi togri",
+      "hammasi to'g'ri",
+      "togri javob berilmagan",
+      "to'g'ri javob berilmagan",
+      "toʻgʻri javob berilmagan",
+    ];
+    
+    for (var pattern in specialPatterns) {
+      if (normalized.contains(pattern)) return true;
+      String patternWithoutApostrophes = pattern.replaceAll(RegExp(r"['`′´ʹʻ]"), "");
+      if (withoutApostrophes.contains(patternWithoutApostrophes)) return true;
+    }
+    
+    return false;
+  }
+
   Map getAnswers(int count) {
     var res = StorageService().read(
       "${StorageService.result}-${widget.section.test_id}",
@@ -102,11 +179,19 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   Map? getTestsFromStorage(List items) {
+    print('🟡 [test_screen] getTestsFromStorage chaqirildi, items.length=${items.length}');
+    
     var test = StorageService().read(
       "${StorageService.test}-${widget.section.test_id}",
     );
 
     if (test == null) {
+      print('🟡 [test_screen] Storage da malumot yoq, yangi test yaratilmoqda...');
+      print('🟡 [test_screen] groupData holati: ${groupData != null ? "mavjud" : "NULL"}');
+      if (groupData != null) {
+        print('🟡 [test_screen] groupData: hasTime=${groupData?["hasTime"]}, timeMinutes=${groupData?["timeMinutes"]}, fullTime=${groupData?["fullTime"]}');
+      }
+      
       var resItems = [];
       math.Random random = math.Random();
 
@@ -115,45 +200,83 @@ class _TestScreenState extends State<TestScreen> {
 
       for (var i = 0; i < len; i++) {
         var item = items[i];
-        var rightIndex = random.nextInt(4);
-        var answers = ["A", "B", "C", "D"];
-        var answersRandom = ["A", "B", "C", "D"];
-
-        var rightAnswer = answers[rightIndex];
-        answersRandom.removeAt(rightIndex);
-        answers.removeAt(rightIndex);
-
+        
+        // Collect all valid answers
+        var allAnswers = <String, String>{};
+        if (item["answer_A"] != null && item["answer_A"].toString().isNotEmpty) {
+          allAnswers["A"] = item["answer_A"].toString();
+        }
+        if (item["answer_B"] != null && item["answer_B"].toString().isNotEmpty) {
+          allAnswers["B"] = item["answer_B"].toString();
+        }
+        if (item["answer_C"] != null && item["answer_C"].toString().isNotEmpty) {
+          allAnswers["C"] = item["answer_C"].toString();
+        }
+        if (item["answer_D"] != null && item["answer_D"].toString().isNotEmpty) {
+          allAnswers["D"] = item["answer_D"].toString();
+        }
+        
+        // Check if last answer is special
+        var answerKeys = allAnswers.keys.toList();
+        String? specialAnswerKey;
+        String? specialAnswerValue;
+        
+        if (answerKeys.isNotEmpty) {
+          var lastKey = answerKeys.last;
+          var lastValue = allAnswers[lastKey];
+          if (_isSpecialAnswer(lastValue)) {
+            specialAnswerKey = lastKey;
+            specialAnswerValue = lastValue;
+            allAnswers.remove(lastKey);
+            answerKeys.remove(lastKey);
+          }
+        }
+        
+        // Original shuffle logic for non-special answers
         var ans = item["answer"] ?? "";
-        var ansText = item["answer_" + ans];
-        var extraItem = {};
+        var ansText = allAnswers[ans] ?? item["answer_" + ans];
+        allAnswers.remove(ans);  // To'g'ri javobni olib tashlash
+        answerKeys.remove(ans);  // To'g'ri javob kalitini ro'yxatdan olib tashlash
+        
+        var rightIndex = random.nextInt(4);
+        var availableKeys = ["A", "B", "C", "D"];
+        var rightAnswer = availableKeys[rightIndex];
+        
+        var extraItem = <String, String>{};
         extraItem["answer_$rightAnswer"] = ansText;
-        //change value
-        var extra = item["answer_" + ans];
-        item["answer_" + ans] = item["answer_$rightAnswer"];
-        item["answer_$rightAnswer"] = extra;
-
-        answersRandom.shuffle(random);
-        // print("shuffle");
-        // print(item["answer"]);
-        // print("Random answer : " + rightAnswer);
-        // print(answersRandom);
-
-        //  print(" Right : extraItem[${'answer_' + rightAnswer}] = item[${'answer_' + item["answer"]}]");
-
-        for (var j = 0; j < answers.length; j++) {
-          //  print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
-          extraItem["answer_${answersRandom[j]}"] =
-              item["answer_${answers[j]}"];
+        
+        // Shuffle remaining answer keys
+        answerKeys.shuffle(random);
+        
+        // Assign remaining answers to available keys
+        int keyIndex = 0;
+        for (var key in availableKeys) {
+          if (key == rightAnswer) continue;  // Skip to'g'ri javob pozitsiyasi
+          if (keyIndex < answerKeys.length) {
+            extraItem["answer_$key"] = allAnswers[answerKeys[keyIndex]] ?? "";
+            keyIndex++;
+          }
+        }
+        
+        // Add special answer at the end if exists
+        if (specialAnswerKey != null && specialAnswerValue != null) {
+          var allKeys = ["A", "B", "C", "D"];
+          // Find the unused key
+          for (var key in allKeys) {
+            if (!extraItem.containsKey("answer_$key")) {
+              extraItem["answer_$key"] = specialAnswerValue;
+              break;
+            }
+          }
         }
 
         resItems.add({
           "number": i + 1,
-
           "question": item["question"] ?? "",
-          "answer_A": extraItem["answer_A"],
-          "answer_B": extraItem["answer_B"],
-          "answer_C": extraItem["answer_C"],
-          "answer_D": extraItem["answer_D"],
+          "answer_A": extraItem["answer_A"] ?? "",
+          "answer_B": extraItem["answer_B"] ?? "",
+          "answer_C": extraItem["answer_C"] ?? "",
+          "answer_D": extraItem["answer_D"] ?? "",
           "answer": rightAnswer,
           "createdt": item["createdt"],
           "updatedAt": item["updatedAt"],
@@ -164,12 +287,20 @@ class _TestScreenState extends State<TestScreen> {
       }
 
       var now = DateTime.now();
-      int finishTime = getFinishTime(resItems.length); // in minutes
+      int finishTime = getFinishTime(resItems.length); // in seconds
+      print('🟢 [test_screen] finishTime hisoblandi: ${finishTime}s (${finishTime ~/ 60}min)');
 
       Map? data = {
         "time": now.toString(),
         "finish_time": now.add(Duration(seconds: finishTime)).toString(),
         "data": resItems,
+        "section": {
+          "id": widget.section.id,
+          "test_id": widget.section.test_id,
+          "name": widget.section.name,
+          "count": widget.section.count,
+          "percent": widget.section.percent,
+        },
       };
 
       StorageService().write(
@@ -178,6 +309,7 @@ class _TestScreenState extends State<TestScreen> {
       );
       return data;
     }
+    print('🟢 [test_screen] Storage dan malumot topildi');
     return test;
   }
 
@@ -185,6 +317,7 @@ class _TestScreenState extends State<TestScreen> {
   Timer? perQuestionTimer;
   int perQuestionRemainingTime = 0;
   Map<String, dynamic>? groupData;
+  bool _timersStarted = false;
 
   bool isPerQuestionTime() {
     if (groupData == null) return false;
@@ -193,7 +326,18 @@ class _TestScreenState extends State<TestScreen> {
 
     int fullTime = groupData?["fullTime"] ?? 0;
     int timeMinutes = groupData?["timeMinutes"] ?? 0;
-    return fullTime == 0 && timeMinutes > 0;
+    bool forceNext = groupData?["forceNextQuestion"] ?? false;
+    
+    // Faqat forceNextQuestion=true bo'lganda har bir savol uchun alohida timer
+    // false bo'lsa umumiy vaqt ko'rsatamiz
+    return fullTime == 0 && timeMinutes > 0 && forceNext;
+  }
+
+  String formatTime(int seconds) {
+    if (seconds < 0) seconds = 0;
+    int minutes = seconds ~/ 60;
+    int secs = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
   getFinishTime(int count) {
@@ -203,72 +347,114 @@ class _TestScreenState extends State<TestScreen> {
     if (!hasTime) return 0; // Timer yo'q
 
     int fullTime = groupData?["fullTime"] ?? 0;
-    int timeMinutes = groupData?["timeMinutes"] ?? 0;
+    int timeSeconds = groupData?["timeMinutes"] ?? 0; // Backend nomi: timeMinutes, lekin bu SEKUNDLAR!
 
-    // fullTime > 0 bo'lsa, umumiy vaqt (sekundlarda)
+    // fullTime > 0 bo'lsa, umumiy vaqt (minutlarda -> sekundga)
     if (fullTime > 0) {
       return fullTime * 60;
     }
-    // fullTime == 0 bo'lsa, har bir savol uchun timeMinutes
-    else if (timeMinutes > 0) {
-      return timeMinutes * count * 60;
+    // fullTime == 0 bo'lsa, har bir savol uchun timeSeconds (allaqachon sekundlarda)
+    else if (timeSeconds > 0) {
+      return timeSeconds * count;  // * 60 yo'q, chunki backend sekund jo'natadi!
     }
 
     return 0;
   }
 
-  @override
-  void initState() {
-    super.initState();
-
-    // Load current question index from storage
-    loadCurrentIndex();
-
-    // /my-group dan guruh ma'lumotlarini olish
-    _loadGroupData();
-
-    TestController.getByid(
-      context,
-      id: int.tryParse(widget.section.test_id.toString()) ?? 0,
-    );
-  }
-
   Future<void> _loadGroupData() async {
+    print('🟢 [test_screen] _loadGroupData boshlanmoqda...');
     final group = await StudentController.getMyGroup(context);
+    print('🟢 [test_screen] Guruh malumoti: $group');
     if (group != null && mounted) {
       setState(() {
         groupData = group;
       });
-      _startTimers();
+      print('🟢 [test_screen] groupData ornatildi: hasTime=${groupData?["hasTime"]}, timeMinutes=${groupData?["timeMinutes"]}, fullTime=${groupData?["fullTime"]}');
+    } else {
+      print('🔴 [test_screen] Guruh malumoti null yoki widget unmounted');
     }
   }
 
-  void _startTimers() {
-    if (groupData == null) return;
+  void _startTimersIfNeeded() {
+    print('🟡 [test_screen] _startTimersIfNeeded: _timersStarted=$_timersStarted, groupData=${groupData != null}, test_items.length=${test_items.length}');
+    
+    if (_timersStarted) {
+      print('⚠️ [test_screen] Timer allaqachon ishga tushgan');
+      return;
+    }
+    
+    if (groupData == null) {
+      print('⚠️ [test_screen] groupData null');
+      return;
+    }
+    
+    if (test_items.isEmpty) {
+      print('⚠️ [test_screen] test_items bosh');
+      return;
+    }
 
     bool hasTime = groupData?["hasTime"] ?? false;
-    if (!hasTime) return;
+    print('🟡 [test_screen] hasTime=$hasTime');
+    
+    if (!hasTime) {
+      print('⚠️ [test_screen] Guruhda vaqt yoq (hasTime=false)');
+      return;
+    }
+
+    _timersStarted = true;
+    print('🟢 [test_screen] Timer ishga tushmoqda...');
 
     // Har bir savol uchun vaqt bo'lsa
     if (isPerQuestionTime()) {
-      int timeMinutes = groupData?["timeMinutes"] ?? 0;
-      perQuestionRemainingTime = timeMinutes * 60;
+      // DIQQAT: Backend 'timeMinutes' deb nomlagan lekin bu aslida SEKUNDLAR!
+      int timeSeconds = groupData?["timeMinutes"] ?? 0;
+      
+      // Storage dan oldingi savolning qolgan vaqtini yuklash
+      if (perQuestionRemainingTime == 0) {
+        var storageData = StorageService().read(
+          "${StorageService.test}-${widget.section.test_id}",
+        );
+        int savedTime = storageData?["per_question_time"] ?? 0;
+        
+        if (savedTime > 0) {
+          perQuestionRemainingTime = savedTime;
+          print('🟡 [test_screen] Storage dan yuklandi: ${formatTime(perQuestionRemainingTime)}');
+        } else {
+          perQuestionRemainingTime = timeSeconds;  // timeMinutes aslida sekund!
+          print('🟢 [test_screen] Yangi timer: ${formatTime(perQuestionRemainingTime)}');
+        }
+      }
+      print('🟢 [test_screen] Per-question timer: ${timeSeconds}s (${formatTime(perQuestionRemainingTime)})');
+      
+      bool forceNext = groupData?["forceNextQuestion"] ?? false;
+      print('🟡 [test_screen] forceNextQuestion: $forceNext');
 
       perQuestionTimer = Timer.periodic(Duration(seconds: 1), (timer) {
         if (mounted) {
           if (perQuestionRemainingTime <= 0) {
-            // Vaqt tugadi, keyingi savolga o'tish
-            var count = test_items.length;
-            if (item_index < count - 1) {
-              setState(() {
-                item_index++;
-                saveCurrentIndex();
-                perQuestionRemainingTime = timeMinutes * 60;
-              });
+            // Vaqt tugadi
+            print('⚠️ [test_screen] Vaqt tugadi! forceNextQuestion=$forceNext');
+            
+            if (forceNext) {
+              // Majburiy o'tish - avtomatik keyingi savolga
+              var count = test_items.length;
+              if (item_index < count - 1) {
+                setState(() {
+                  item_index++;
+                  perQuestionRemainingTime = timeSeconds;
+                  saveCurrentIndex();
+                });
+              } else {
+                // Oxirgi savol, testni tugatish
+                timer.cancel();
+                _finishTest();
+              }
             } else {
-              // Oxirgi savol, testni tugatish
+              // forceNextQuestion=false - timer to'xtaydi, o'tish uchun tugma bosish kerak
+              perQuestionRemainingTime = 0;
               timer.cancel();
-              _finishTest();
+              print('⚠️ [test_screen] Timer to\'xtadi, foydalanuvchi o\'zi keyingi savolga o\'tishi kerak');
+              setState(() {});
             }
           } else {
             perQuestionRemainingTime--;
@@ -276,8 +462,9 @@ class _TestScreenState extends State<TestScreen> {
           }
         }
       });
-    } else {
+    } else if (remainingTime > 0) {
       // Umumiy vaqt uchun timer
+      print('🟢 [test_screen] Full test timer: ${remainingTime}s');
       timer = Timer.periodic(Duration(seconds: 1), (timer) {
         if (mounted) {
           if (remainingTime <= 0) {
@@ -289,12 +476,9 @@ class _TestScreenState extends State<TestScreen> {
           }
         }
       });
+    } else {
+      print('⚠️ [test_screen] remainingTime <= 0, timer ishga tushmaydi');
     }
-
-    TestController.getByid(
-      context,
-      id: int.tryParse(widget.section.test_id.toString()) ?? 0,
-    );
   }
 
   Future<void> _finishTest() async {
@@ -322,13 +506,6 @@ class _TestScreenState extends State<TestScreen> {
               )
               .toList(),
     );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    timer?.cancel();
-    perQuestionTimer?.cancel();
   }
 
   String realText(String data) {
@@ -421,11 +598,19 @@ class _TestScreenState extends State<TestScreen> {
     return BlocBuilder<TestBloc, TestState>(
       builder: (context, state) {
         if (state is TestSuccessState) {
+          print('🟢 [test_screen] TestSuccessState keldi, test_items yuklanyapti...');
           Map? storageData = getTestsFromStorage(
             state.data["test_items"] ?? [],
           );
 
           test_items = storageData?["data"] ?? [];
+          print('🟢 [test_screen] test_items yuklandi: ${test_items.length} ta savol');
+          
+          // Test ma'lumotlari tayyor bo'lganda timerlarni ishga tushirish
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            print('🟢 [test_screen] PostFrameCallback: _startTimersIfNeeded chaqirilmoqda...');
+            _startTimersIfNeeded();
+          });
           remainingTime =
               (DateTime.tryParse(
                         (storageData?["finish_time"] ?? "").toString(),
@@ -465,25 +650,28 @@ class _TestScreenState extends State<TestScreen> {
                           width: 1.sw - 64,
                           child: Row(
                             children: [
-                              Text(
-                                isPerQuestionTime()
-                                    ? "Savol vaqti: ${perQuestionRemainingTime}s"
-                                    : remainingTime >= 0
-                                    ? "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"
-                                    : "Tugash vaqti:  00:00",
-                                style: TextStyle(
-                                  color:
-                                      (isPerQuestionTime()
-                                                  ? perQuestionRemainingTime
-                                                  : remainingTime) >
-                                              0
-                                          ? AppConstant.blueColor1
-                                          : AppConstant.redColor,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16.sp,
+                              // Timer faqat ma'lumotlar tayyor bo'lganda ko'rsatish
+                              if (groupData != null && (groupData!["hasTime"] ?? false) && _timersStarted)
+                                Text(
+                                  isPerQuestionTime()
+                                      ? "Savol vaqti: ${formatTime(perQuestionRemainingTime)}"
+                                      : remainingTime >= 0
+                                      ? "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"
+                                      : "Tugash vaqti:  00:00",
+                                  style: TextStyle(
+                                    color:
+                                        (isPerQuestionTime()
+                                                    ? perQuestionRemainingTime
+                                                    : remainingTime) >
+                                                5
+                                            ? AppConstant.blueColor1
+                                            : AppConstant.redColor, // 5 sekund qolganda qizil
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16.sp,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 16.w),
+                              if (groupData != null && (groupData!["hasTime"] ?? false) && _timersStarted)
+                                SizedBox(width: 16.w),
                               Text(
                                 "[${item_index + 1}/$count]",
                                 style: TextStyle(
@@ -520,14 +708,26 @@ class _TestScreenState extends State<TestScreen> {
                                 onTap: () async {
                                   print(test["answer"]);
                                   if ((answer?.isEmpty ?? true)) {
+                                    final selectedAnswer = ["A", "B", "C", "D"][index];
                                     await writeAnswer(
                                       count,
                                       index: item_index,
-                                      result: ["A", "B", "C", "D"][index],
+                                      result: selectedAnswer,
                                     );
                                     setState(() {
-                                      answer = ["A", "B", "C", "D"][index];
+                                      answer = selectedAnswer;
                                     });
+                                    
+                                    // Vibrate on wrong answer (mobile only)
+                                    if (!kIsWeb && selectedAnswer != test["answer"]) {
+                                      try {
+                                        if (await Vibration.hasVibrator() ?? false) {
+                                          Vibration.vibrate(duration: 100);
+                                        }
+                                      } catch (e) {
+                                        print('Vibration error: $e');
+                                      }
+                                    }
                                   }
                                 },
                                 borderRadius: BorderRadius.circular(12.r),
@@ -805,10 +1005,10 @@ class _TestScreenState extends State<TestScreen> {
                                       item_index++;
                                       saveCurrentIndex();
                                       // Reset timer for next question
-                                      int timeMinutes =
-                                          groupData?["timeMinutes"] ?? 0;
+                                      int timeSeconds =
+                                          groupData?["timeMinutes"] ?? 0; // Backend: timeMinutes = SEKUNDLAR!
                                       perQuestionRemainingTime =
-                                          timeMinutes * 60;
+                                          timeSeconds; // * 60 yo'q!
                                     });
                                   }
                                 },
@@ -844,15 +1044,15 @@ class _TestScreenState extends State<TestScreen> {
                           ),
                         ),
 
-                      if (item_index > 0 &&
-                          !isPerQuestionTime() &&
-                          !(groupData?["forceNextQuestion"] ?? false))
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16.w,
-                            vertical: 8.h,
-                          ),
-                          child: Container(
+                      if (item_index > 0)
+                        // forceNextQuestion=true bo'lsa orqaga qaytish yo'q
+                        if (!(groupData?["forceNextQuestion"] ?? false))
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 8.h,
+                            ),
+                            child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12.r),
                               border: Border.all(

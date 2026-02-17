@@ -3,7 +3,7 @@ description: "A new Flutter project."
 
 publish_to: 'none' 
 
-version: 1.3.6+10
+version: 1.3.7+11
 
 environment:
   sdk: ^3.7.0
@@ -33,6 +33,8 @@ dependencies:
   device_info_plus: ^10.1.0
   uuid: ^4.1.0 
   in_app_update: ^4.2.5
+  flutter_windowmanager: ^0.2.0
+  vibration: ^2.0.0
 
 
 dev_dependencies:

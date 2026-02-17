@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'package:test_app/blocs/special_test/special_test_bloc.dart';
 import 'package:test_app/controller/student_controller.dart';
 import 'package:test_app/core/const/const.dart';
@@ -529,6 +532,56 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
   // Key: question id, Value: Map of display position -> original answer key
   final Map<int, Map<String, String>> _shuffledAnswers = {};
 
+  @override
+  void initState() {
+    super.initState();
+    _disableScreenshot();
+
+    // Initialize shuffled answers before loading from storage
+    _initializeShuffledAnswers();
+
+    // Try to load from storage first
+    _loadFromStorage();
+
+    // /my-group dan guruh ma'lumotlarini olish
+    _loadGroupDataAndStartTimers();
+
+    // Force UI update after loading
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _enableScreenshot();
+    _timer?.cancel();
+    _perQuestionTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _disableScreenshot() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
+      } catch (e) {
+        print('Screenshot bloklashda xato: $e');
+      }
+    }
+  }
+
+  Future<void> _enableScreenshot() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        await FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
+      } catch (e) {
+        print('Screenshot yoqishda xato: $e');
+      }
+    }
+  }
+
   // Maxsus javoblarni tekshirish - turli yozuv uslublarini qo'llab-quvvatlash
   bool _isSpecialAnswer(String? answer) {
     if (answer == null || answer.isEmpty) return false;
@@ -651,6 +704,82 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
     return fullTime == 0 && timeMinutes > 0;
   }
 
+  Future<void> _loadGroupDataAndStartTimers() async {
+    print('🟢 [special_test] _loadGroupDataAndStartTimers boshlanmoqda...');
+    final group = await StudentController.getMyGroup(context);
+    print('🟢 [special_test] Guruh malumoti: $group');
+    
+    if (group != null && mounted) {
+      setState(() {
+        groupData = group;
+      });
+      print('🟢 [special_test] groupData ornatildi: hasTime=${groupData?["hasTime"]}, timeMinutes=${groupData?["timeMinutes"]}, fullTime=${groupData?["fullTime"]}');
+      _startTimersBasedOnGroup();
+    } else if (widget.test.timeInSeconds != null && _remainingSeconds == null) {
+      // Test o'zining vaqti bo'lsa
+      print('🟡 [special_test] Test ozining vaqti: ${widget.test.timeInSeconds}s');
+      _remainingSeconds = widget.test.timeInSeconds;
+      _saveToStorage();
+      if (_remainingSeconds! > 0) {
+        _startTimer();
+      }
+    } else {
+      print('🔴 [special_test] Guruh malumoti yoq yoki widget unmounted');
+    }
+  }
+
+  void _startTimersBasedOnGroup() {
+    print('🟡 [special_test] _startTimersBasedOnGroup: groupData=${groupData != null}');
+    
+    if (groupData == null) {
+      print('⚠️ [special_test] groupData null');
+      return;
+    }
+
+    bool hasTime = groupData?["hasTime"] ?? false;
+    print('🟡 [special_test] hasTime=$hasTime');
+
+    if (hasTime) {
+      if (isPerQuestionTime()) {
+        // Har bir savol uchun alohida vaqt
+        int timeMinutes = groupData?["timeMinutes"] ?? 0;
+        if (_perQuestionRemainingTime == 0) {
+          _perQuestionRemainingTime = timeMinutes * 60;
+        }
+        print('🟢 [special_test] Per-question timer: ${timeMinutes}min (${_perQuestionRemainingTime}s)');
+        _startPerQuestionTimer();
+      } else {
+        // Umumiy test uchun vaqt
+        if (_remainingSeconds == null) {
+          _remainingSeconds =
+              getTestTimeInSeconds() ?? widget.test.timeInSeconds;
+          _saveToStorage();
+        }
+        print('🟢 [special_test] Full test timer: ${_remainingSeconds}s');
+        if (_remainingSeconds != null && _remainingSeconds! > 0) {
+          _startTimer();
+        }
+      }
+    } else if (widget.test.timeInSeconds != null && _remainingSeconds == null) {
+      // Test o'zining vaqti bo'lsa
+      print('🟡 [special_test] Test oz vaqti: ${widget.test.timeInSeconds}s');
+      _remainingSeconds = widget.test.timeInSeconds;
+      _saveToStorage();
+      if (_remainingSeconds! > 0) {
+        _startTimer();
+      }
+    } else {
+      print('⚠️ [special_test] Hech qanday timer ishga tushmadi');
+    }
+
+    // Force UI update after loading
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
   int? getTestTimeInSeconds() {
     if (groupData == null) return null;
     bool hasTime = groupData?["hasTime"] ?? false;
@@ -671,92 +800,6 @@ class _TakeTestScreenState extends State<TakeTestScreen> {
     }
 
     return null;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Initialize shuffled answers before loading from storage
-    _initializeShuffledAnswers();
-
-    // Try to load from storage first
-    _loadFromStorage();
-
-    // /my-group dan guruh ma'lumotlarini olish
-    _loadGroupDataAndStartTimers();
-
-    // Force UI update after loading
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
-
-  Future<void> _loadGroupDataAndStartTimers() async {
-    final group = await StudentController.getMyGroup(context);
-    if (group != null && mounted) {
-      setState(() {
-        groupData = group;
-      });
-      _startTimersBasedOnGroup();
-    } else if (widget.test.timeInSeconds != null && _remainingSeconds == null) {
-      // Test o'zining vaqti bo'lsa
-      _remainingSeconds = widget.test.timeInSeconds;
-      _saveToStorage();
-      if (_remainingSeconds! > 0) {
-        _startTimer();
-      }
-    }
-  }
-
-  void _startTimersBasedOnGroup() {
-    if (groupData == null) return;
-
-    bool hasTime = groupData?["hasTime"] ?? false;
-
-    if (hasTime) {
-      if (isPerQuestionTime()) {
-        // Har bir savol uchun alohida vaqt
-        int timeMinutes = groupData?["timeMinutes"] ?? 0;
-        if (_perQuestionRemainingTime == 0) {
-          _perQuestionRemainingTime = timeMinutes * 60;
-        }
-        _startPerQuestionTimer();
-      } else {
-        // Umumiy test uchun vaqt
-        if (_remainingSeconds == null) {
-          _remainingSeconds =
-              getTestTimeInSeconds() ?? widget.test.timeInSeconds;
-          _saveToStorage();
-        }
-        if (_remainingSeconds != null && _remainingSeconds! > 0) {
-          _startTimer();
-        }
-      }
-    } else if (widget.test.timeInSeconds != null && _remainingSeconds == null) {
-      // Test o'zining vaqti bo'lsa
-      _remainingSeconds = widget.test.timeInSeconds;
-      _saveToStorage();
-      if (_remainingSeconds! > 0) {
-        _startTimer();
-      }
-    }
-
-    // Force UI update after loading
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _perQuestionTimer?.cancel();
-    super.dispose();
   }
 
   void _startPerQuestionTimer() {

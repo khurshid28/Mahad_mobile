@@ -13,6 +13,11 @@ import 'package:test_app/service/loading_Service.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+import 'package:vibration/vibration.dart';
+import 'package:uuid/uuid.dart';
 
 import 'dart:math' as math;
 
@@ -31,6 +36,83 @@ class RandomTestScreenNotime extends StatefulWidget {
 }
 
 class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
+  final uuid = const Uuid();
+  
+  @override
+  void initState() {
+    super.initState();
+    _disableScreenshot();
+    test_random_id = uuid.v4().hashCode;
+    print("INITTTTTTTTTTTTTTTTTTTTTTTTT >>");
+    
+    TestController.getRandom(
+      context,
+      count: widget.count,
+      sections: widget.sections,
+    );
+
+    // Load current question index from storage
+    Future.delayed(Duration(milliseconds: 100), () {
+      loadCurrentIndex();
+    });
+  }
+
+  @override
+  void dispose() {
+    _enableScreenshot();
+    super.dispose();
+  }
+
+  Future<void> _disableScreenshot() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
+      } catch (e) {
+        print('Screenshot bloklashda xato: $e');
+      }
+    }
+  }
+
+  Future<void> _enableScreenshot() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        await FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
+      } catch (e) {
+        print('Screenshot yoqishda xato: $e');
+      }
+    }
+  }
+
+  bool _isSpecialAnswer(String? answer) {
+    if (answer == null || answer.isEmpty) return false;
+    
+    String normalized = answer.toLowerCase().trim();
+    normalized = normalized.replaceAll(RegExp(r'\s+'), ' ');
+    String withoutApostrophes = normalized.replaceAll(RegExp(r"['`′´ʹʻ]"), "");
+    
+    final specialPatterns = [
+      "togri javob yoq",
+      "to'g'ri javob yo'q",
+      "toʻgʻri javob yoʻq",
+      "barcha javoblar togri",
+      "barcha javoblar to'g'ri",
+      "barcha javoblar toʻgʻri",
+      "hammasi togri",
+      "hammasi to'g'ri",
+      "togri javob berilmagan",
+      "to'g'ri javob berilmagan",
+      "toʻgʻri javob berilmagan",
+    ];
+    
+    for (var pattern in specialPatterns) {
+      if (normalized.contains(pattern)) return true;
+      String patternWithoutApostrophes = pattern.replaceAll(RegExp(r"['`′´ʹʻ]"), "");
+      if (withoutApostrophes.contains(patternWithoutApostrophes)) return true;
+    }
+    
+    return false;
+  }
+
   Map getAnswers(int count) {
     String resKey = "${StorageService.result}-$test_random_id";
     var res = StorageService().read("${StorageService.result}-$test_random_id");
@@ -108,45 +190,83 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
 
       for (var i = 0; i < len; i++) {
         var item = items[i];
-        var rightIndex = random.nextInt(4);
-        var answers = ["A", "B", "C", "D"];
-        var answersRandom = ["A", "B", "C", "D"];
-
-        var rightAnswer = answers[rightIndex];
-        answersRandom.removeAt(rightIndex);
-        answers.removeAt(rightIndex);
-
+        
+        // Collect all valid answers
+        var allAnswers = <String, String>{};
+        if (item["answer_A"] != null && item["answer_A"].toString().isNotEmpty) {
+          allAnswers["A"] = item["answer_A"].toString();
+        }
+        if (item["answer_B"] != null && item["answer_B"].toString().isNotEmpty) {
+          allAnswers["B"] = item["answer_B"].toString();
+        }
+        if (item["answer_C"] != null && item["answer_C"].toString().isNotEmpty) {
+          allAnswers["C"] = item["answer_C"].toString();
+        }
+        if (item["answer_D"] != null && item["answer_D"].toString().isNotEmpty) {
+          allAnswers["D"] = item["answer_D"].toString();
+        }
+        
+        // Check if last answer is special
+        var answerKeys = allAnswers.keys.toList();
+        String? specialAnswerKey;
+        String? specialAnswerValue;
+        
+        if (answerKeys.isNotEmpty) {
+          var lastKey = answerKeys.last;
+          var lastValue = allAnswers[lastKey];
+          if (_isSpecialAnswer(lastValue)) {
+            specialAnswerKey = lastKey;
+            specialAnswerValue = lastValue;
+            allAnswers.remove(lastKey);
+            answerKeys.remove(lastKey);
+          }
+        }
+        
+        // Original shuffle logic for non-special answers
         var ans = item["answer"] ?? "";
-        var ansText = item["answer_" + ans];
-        var extraItem = {};
+        var ansText = allAnswers[ans] ?? item["answer_" + ans];
+        allAnswers.remove(ans);  // To'g'ri javobni olib tashlash
+        answerKeys.remove(ans);  // To'g'ri javob kalitini ro'yxatdan olib tashlash
+        
+        var rightIndex = random.nextInt(4);
+        var availableKeys = ["A", "B", "C", "D"];
+        var rightAnswer = availableKeys[rightIndex];
+        
+        var extraItem = <String, String>{};
         extraItem["answer_$rightAnswer"] = ansText;
-        //change value
-        var extra = item["answer_" + ans];
-        item["answer_" + ans] = item["answer_$rightAnswer"];
-        item["answer_$rightAnswer"] = extra;
-
-        answersRandom.shuffle(random);
-        // print("shuffle");
-        // print(item["answer"]);
-        // print("Random answer : " + rightAnswer);
-        // print(answersRandom);
-
-        //  print(" Right : extraItem[${'answer_' + rightAnswer}] = item[${'answer_' + item["answer"]}]");
-
-        for (var j = 0; j < answers.length; j++) {
-          //  print("extraItem[${'answer_' + answersRandom[j]}] = item[${'answer_' + answers[j]}]");
-          extraItem["answer_${answersRandom[j]}"] =
-              item["answer_${answers[j]}"];
+        
+        // Shuffle remaining answer keys
+        answerKeys.shuffle(random);
+        
+        // Assign remaining answers to available keys
+        int keyIndex = 0;
+        for (var key in availableKeys) {
+          if (key == rightAnswer) continue;  // Skip to'g'ri javob pozitsiyasi
+          if (keyIndex < answerKeys.length) {
+            extraItem["answer_$key"] = allAnswers[answerKeys[keyIndex]] ?? "";
+            keyIndex++;
+          }
+        }
+        
+        // Add special answer at the end if exists
+        if (specialAnswerKey != null && specialAnswerValue != null) {
+          var allKeys = ["A", "B", "C", "D"];
+          // Find the unused key
+          for (var key in allKeys) {
+            if (!extraItem.containsKey("answer_$key")) {
+              extraItem["answer_$key"] = specialAnswerValue;
+              break;
+            }
+          }
         }
 
         resItems.add({
           "number": i + 1,
-
           "question": item["question"] ?? "",
-          "answer_A": extraItem["answer_A"],
-          "answer_B": extraItem["answer_B"],
-          "answer_C": extraItem["answer_C"],
-          "answer_D": extraItem["answer_D"],
+          "answer_A": extraItem["answer_A"] ?? "",
+          "answer_B": extraItem["answer_B"] ?? "",
+          "answer_C": extraItem["answer_C"] ?? "",
+          "answer_D": extraItem["answer_D"] ?? "",
           "answer": rightAnswer,
           "createdt": item["createdt"],
           "updatedAt": item["updatedAt"],
@@ -165,22 +285,6 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
   }
 
   List test_items = [];
-  @override
-  void initState() {
-    test_random_id = math.Random().nextInt(100000);
-    print("INITTTTTTTTTTTTTTTTTTTTTTTTT >>");
-    super.initState();
-    TestController.getRandom(
-      context,
-      count: widget.count,
-      sections: widget.sections,
-    );
-
-    // Load current question index from storage
-    Future.delayed(Duration(milliseconds: 100), () {
-      loadCurrentIndex();
-    });
-  }
 
   String realText(String data) {
     List<String> d = data.split(".");
@@ -325,14 +429,26 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
                                 onTap: () async {
                                   print(test["answer"]);
                                   if ((answer?.isEmpty ?? true)) {
+                                    final selectedAnswer = ["A", "B", "C", "D"][index];
                                     await writeAnswer(
                                       count,
                                       index: item_index,
-                                      result: ["A", "B", "C", "D"][index],
+                                      result: selectedAnswer,
                                     );
                                     setState(() {
-                                      answer = ["A", "B", "C", "D"][index];
+                                      answer = selectedAnswer;
                                     });
+                                    
+                                    // Vibrate on wrong answer (mobile only)
+                                    if (!kIsWeb && selectedAnswer != test["answer"]) {
+                                      try {
+                                        if (await Vibration.hasVibrator() ?? false) {
+                                          Vibration.vibrate(duration: 100);
+                                        }
+                                      } catch (e) {
+                                        print('Vibration error: $e');
+                                      }
+                                    }
                                   }
                                 },
                                 borderRadius: BorderRadius.circular(12.r),

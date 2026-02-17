@@ -5,6 +5,7 @@ import 'package:test_app/blocs/test/test_bloc.dart';
 import 'package:test_app/blocs/test/test_state.dart';
 import 'package:test_app/controller/result_controller.dart';
 import 'package:test_app/controller/test_controller.dart';
+import 'package:test_app/controller/student_controller.dart';
 import 'package:test_app/core/widgets/common_loading.dart';
 import 'package:test_app/export_files.dart';
 import 'package:test_app/models/section.dart';
@@ -13,6 +14,10 @@ import 'package:test_app/service/loading_Service.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+import 'package:vibration/vibration.dart';
 
 import 'dart:math' as math;
 
@@ -24,6 +29,51 @@ class TestScreenNotime extends StatefulWidget {
 }
 
 class _TestScreenNotimeState extends State<TestScreenNotime> {
+  @override
+  void initState() {
+    super.initState();
+    print('🔵 [test_screen_notime] initState() boshlandi - test_id: ${widget.section.test_id}');
+    _disableScreenshot();
+    loadCurrentIndex();
+    
+    print('🔵 [test_screen_notime] _loadGroupData() chaqirish oldidan...');
+    _loadGroupData();
+    
+    print('🔵 [test_screen_notime] TestController.getByid() chaqirilmoqda...');
+    TestController.getByid(
+      context,
+      id: int.tryParse(widget.section.test_id.toString()) ?? 0,
+    );
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    perQuestionTimer?.cancel();
+    _enableScreenshot();
+    super.dispose();
+  }
+
+  Future<void> _disableScreenshot() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
+      } catch (e) {
+        print('Screenshot bloklashda xato: $e');
+      }
+    }
+  }
+
+  Future<void> _enableScreenshot() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        await FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
+      } catch (e) {
+        print('Screenshot yoqishda xato: $e');
+      }
+    }
+  }
+
   // Maxsus javoblarni tekshirish
   bool _isSpecialAnswer(String? answer) {
     if (answer == null || answer.isEmpty) return false;
@@ -106,13 +156,16 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
     }
   }
 
-  // Save current question index to storage
+  // Save current question index and timer state to storage
   void saveCurrentIndex() {
     var test = StorageService().read(
       "${StorageService.test}-${widget.section.test_id}",
     );
     if (test != null) {
       test['current_index'] = item_index;
+      if (isPerQuestionTime()) {
+        test['per_question_time'] = perQuestionRemainingTime;
+      }
       StorageService().write(
         "${StorageService.test}-${widget.section.test_id}",
         test,
@@ -131,12 +184,201 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
     return count;
   }
 
+  bool isPerQuestionTime() {
+    if (groupData == null) return false;
+    bool hasTime = groupData?["hasTime"] ?? false;
+    if (!hasTime) return false;
+
+    int fullTime = groupData?["fullTime"] ?? 0;
+    int timeMinutes = groupData?["timeMinutes"] ?? 0;
+    bool forceNext = groupData?["forceNextQuestion"] ?? false;
+    
+    // Faqat forceNextQuestion=true bo'lganda har bir savol uchun alohida timer
+    // false bo'lsa umumiy vaqt ko'rsatamiz
+    return fullTime == 0 && timeMinutes > 0 && forceNext;
+  }
+
+  String formatTime(int seconds) {
+    if (seconds < 0) seconds = 0;
+    int minutes = seconds ~/ 60;
+    int secs = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  getFinishTime(int count) {
+    if (groupData == null) return 0;
+    bool hasTime = groupData?["hasTime"] ?? false;
+    if (!hasTime) return 0; // Timer yo'q
+
+    int fullTime = groupData?["fullTime"] ?? 0;
+    int timeSeconds = groupData?["timeMinutes"] ?? 0; // Backend nomi xato - bu sekundlar!
+
+    if (fullTime > 0) {
+      // Umumiy vaqt bor (minutlarda)
+      return fullTime * 60;
+    } else if (timeSeconds > 0) {
+      // Har bir savol uchun vaqt bor (sekundlarda)
+      return count * timeSeconds;  // 60 ga ko'paytirmaslik!
+    }
+
+    return 0;
+  }
+
+  Future<void> _loadGroupData() async {
+    print('🟢 [test_screen_notime] _loadGroupData boshlanmoqda...');
+    final group = await StudentController.getMyGroup(context);
+    print('🟢 [test_screen_notime] Guruh malumoti: $group');
+    if (group != null && mounted) {
+      setState(() {
+        groupData = group;
+      });
+      print('🟢 [test_screen_notime] groupData ornatildi: hasTime=${groupData?["hasTime"]}, timeMinutes=${groupData?["timeMinutes"]}, fullTime=${groupData?["fullTime"]}');
+    } else {
+      print('🔴 [test_screen_notime] Guruh malumoti null yoki widget unmounted');
+    }
+  }
+
+  void _startTimersIfNeeded() {
+    print('🟡 [test_screen_notime] _startTimersIfNeeded: _timersStarted=$_timersStarted, groupData=${groupData != null}, test_items.length=${test_items.length}');
+    
+    if (_timersStarted) {
+      print('⚠️ [test_screen_notime] Timer allaqachon ishga tushgan');
+      return;
+    }
+    
+    if (groupData == null) {
+      print('⚠️ [test_screen_notime] groupData null');
+      return;
+    }
+    
+    if (test_items.isEmpty) {
+      print('⚠️ [test_screen_notime] test_items bosh');
+      return;
+    }
+
+    bool hasTime = groupData?["hasTime"] ?? false;
+    print('🟡 [test_screen_notime] hasTime=$hasTime');
+    
+    if (!hasTime) {
+      print('⚠️ [test_screen_notime] Guruhda vaqt yoq (hasTime=false)');
+      return;
+    }
+
+    _timersStarted = true;
+    print('🟢 [test_screen_notime] Timer ishga tushmoqda...');
+
+    // Har bir savol uchun vaqt bo'lsa
+    if (isPerQuestionTime()) {
+      // DIQQAT: Backend 'timeMinutes' deb nomlagan lekin bu aslida SEKUNDLAR!
+      int timeSeconds = groupData?["timeMinutes"] ?? 0;
+      
+      // Storage dan oldingi savolning qolgan vaqtini yuklash
+      if (perQuestionRemainingTime == 0) {
+        var storageData = StorageService().read(
+          "${StorageService.test}-${widget.section.test_id}",
+        );
+        int savedTime = storageData?["per_question_time"] ?? 0;
+        
+        if (savedTime > 0) {
+          perQuestionRemainingTime = savedTime;
+          print('🟡 [test_screen_notime] Storage dan yuklandi: ${formatTime(perQuestionRemainingTime)}');
+        } else {
+          perQuestionRemainingTime = timeSeconds;  // timeMinutes aslida sekund!
+          print('🟢 [test_screen_notime] Yangi timer: ${formatTime(perQuestionRemainingTime)}');
+        }
+      }
+      print('🟢 [test_screen_notime] Per-question timer: ${timeSeconds}s (${formatTime(perQuestionRemainingTime)})');
+      
+      bool forceNext = groupData?["forceNextQuestion"] ?? false;
+      print('🟡 [test_screen_notime] forceNextQuestion: $forceNext');
+
+      perQuestionTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        if (mounted) {
+          if (perQuestionRemainingTime <= 0) {
+            // Vaqt tugadi
+            print('⚠️ [test_screen_notime] Vaqt tugadi! forceNextQuestion=$forceNext');
+            
+            if (forceNext) {
+              // Majburiy o'tish - avtomatik keyingi savolga
+              var count = test_items.length;
+              if (item_index < count - 1) {
+                setState(() {
+                  item_index++;
+                  perQuestionRemainingTime = timeSeconds;
+                  saveCurrentIndex();
+                });
+              } else {
+                // Oxirgi savol, testni tugatish
+                timer.cancel();
+                _finishTest();
+              }
+            } else {
+              // forceNextQuestion=false - timer to'xtaydi, o'tish uchun tugma bosish kerak
+              perQuestionRemainingTime = 0;
+              timer.cancel();
+              print('⚠️ [test_screen_notime] Timer to\'xtadi, foydalanuvchi o\'zi keyingi savolga o\'tishi kerak');
+              setState(() {});
+            }
+          } else {
+            perQuestionRemainingTime--;
+            saveCurrentIndex();
+            setState(() {});
+          }
+        }
+      });
+    } else if (remainingTime > 0) {
+      // Umumiy vaqt uchun timer
+      print('🟢 [test_screen_notime] Full test timer: ${remainingTime}s');
+      timer = Timer.periodic(Duration(seconds: 1), (timer) {
+        if (mounted) {
+          if (remainingTime <= 0) {
+            timer.cancel();
+            _finishTest();
+          } else {
+            remainingTime--;
+            setState(() {});
+          }
+        }
+      });
+    } else {
+      print('⚠️ [test_screen_notime] remainingTime <= 0, timer ishga tushmaydi');
+    }
+  }
+
+  Future<void> _finishTest() async {
+    var count = test_items.length;
+    var results = getAnswers(count);
+    var storageData = StorageService().read(
+      "${StorageService.test}-${widget.section.test_id}",
+    );
+    String? startTime = storageData?["time"];
+    String? finishTime = storageData?["finish_time"];
+
+    await ResultController.post(
+      context,
+      solved: rightAnswer(test_items),
+      test_id: int.tryParse(widget.section.test_id.toString()) ?? 0,
+      startTime: startTime,
+      answers: test_items
+          .map(
+            (e) => {
+              ...(e as Map),
+              "my_answer": results[e["number"].toString()],
+            },
+          )
+          .toList(),
+    );
+  }
+
   Map? getTestsFromStorage(List items) {
+    print('🟡 [test_screen_notime] getTestsFromStorage chaqirildi, items.length=${items.length}');
+    
     var test = StorageService().read(
       "${StorageService.test}-${widget.section.test_id}",
     );
 
     if (test == null) {
+      print('🟡 [test_screen_notime] Storage da malumot yoq, yangi test yaratilmoqda...');
       var resItems = [];
       math.Random random = math.Random();
 
@@ -178,33 +420,41 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
         }
         
         // Original shuffle logic for non-special answers
-        var rightIndex = random.nextInt(answerKeys.length);
-        var answers = List<String>.from(answerKeys);
-        var answersRandom = List<String>.from(answerKeys);
-
-        var rightAnswer = answers[rightIndex];
-        answersRandom.removeAt(rightIndex);
-        answers.removeAt(rightIndex);
-
         var ans = item["answer"] ?? "";
-        var ansText = item["answer_" + ans];
+        var ansText = allAnswers[ans] ?? item["answer_" + ans];
+        allAnswers.remove(ans);  // To'g'ri javobni olib tashlash
+        answerKeys.remove(ans);  // To'g'ri javob kalitini ro'yxatdan olib tashlash
+        
+        var rightIndex = random.nextInt(4);
+        var availableKeys = ["A", "B", "C", "D"];
+        var rightAnswer = availableKeys[rightIndex];
+        
         var extraItem = <String, String>{};
         extraItem["answer_$rightAnswer"] = ansText;
         
-        // Shuffle remaining answers
-        answersRandom.shuffle(random);
-
-        for (var j = 0; j < answers.length; j++) {
-          extraItem["answer_${answersRandom[j]}"] =
-              allAnswers[answers[j]] ?? "";
+        // Shuffle remaining answer keys
+        answerKeys.shuffle(random);
+        
+        // Assign remaining answers to available keys
+        int keyIndex = 0;
+        for (var key in availableKeys) {
+          if (key == rightAnswer) continue;  // Skip to'g'ri javob pozitsiyasi
+          if (keyIndex < answerKeys.length) {
+            extraItem["answer_$key"] = allAnswers[answerKeys[keyIndex]] ?? "";
+            keyIndex++;
+          }
         }
         
         // Add special answer at the end if exists
         if (specialAnswerKey != null && specialAnswerValue != null) {
           var allKeys = ["A", "B", "C", "D"];
-          var usedKeys = [rightAnswer, ...answersRandom];
-          var remainingKey = allKeys.firstWhere((k) => !usedKeys.contains(k));
-          extraItem["answer_$remainingKey"] = specialAnswerValue;
+          // Find the unused key
+          for (var key in allKeys) {
+            if (!extraItem.containsKey("answer_$key")) {
+              extraItem["answer_$key"] = specialAnswerValue;
+              break;
+            }
+          }
         }
 
         resItems.add({
@@ -223,7 +473,25 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
         //
       }
 
-      Map? data = {"data": resItems};
+      var now = DateTime.now();
+      int finishTime = getFinishTime(resItems.length); // in seconds
+      print('🟢 [test_screen_notime] finishTime hisoblandi: ${finishTime}s (${finishTime ~/ 60}min)');
+      
+      Map? data = {
+        "time": now.toString(),
+        "finish_time": now.add(Duration(seconds: finishTime)).toString(),
+        "data": resItems,
+        "current_index": 0,
+        "section": {
+          "id": widget.section.id,
+          "test_id": widget.section.test_id,
+          "name": widget.section.name,
+          "count": widget.section.count,
+          "percent": widget.section.percent,
+        },
+      };
+      
+      print('🟢 [test_screen_notime] Test ma\'lumotlari yaratildi, startTime: $now, finishTime: ${now.add(Duration(seconds: finishTime))}');
 
       StorageService().write(
         "${StorageService.test}-${widget.section.test_id}",
@@ -231,20 +499,8 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
       );
       return data;
     }
+    print('🟢 [test_screen_notime] Storage dan malumot topildi');
     return test;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Load current question index from storage
-    loadCurrentIndex();
-
-    TestController.getByid(
-      context,
-      id: int.tryParse(widget.section.test_id.toString()) ?? 0,
-    );
   }
 
   String realText(String data) {
@@ -264,7 +520,12 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
   // int totalQuestions = 30;
 
   List test_items = [];
-  // int remainingTime = 900; // 15 daqiqa
+  int remainingTime = 0;
+  Timer? timer;
+  Timer? perQuestionTimer;
+  int perQuestionRemainingTime = 0;
+  Map<String, dynamic>? groupData;
+  bool _timersStarted = false;
 
   LoadingService loadingService = LoadingService();
   ToastService toastService = ToastService();
@@ -336,11 +597,34 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
     return BlocBuilder<TestBloc, TestState>(
       builder: (context, state) {
         if (state is TestSuccessState) {
+          print('🟢 [test_screen_notime] TestSuccessState keldi, test_items yuklanyapti...');
+          
           Map? storageData = getTestsFromStorage(
             state.data["test_items"] ?? [],
           );
 
           test_items = storageData?["data"] ?? [];
+          print('🟢 [test_screen_notime] test_items yuklandi: ${test_items.length} ta savol');
+          
+          // Test ma'lumotlari tayyor bo'lganda timerlarni ishga tushirish
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            print('🟢 [test_screen_notime] PostFrameCallback: _startTimersIfNeeded chaqirilmoqda...');
+            _startTimersIfNeeded();
+          });
+          
+          remainingTime =
+              (DateTime.tryParse(
+                        (storageData?["finish_time"] ?? "").toString(),
+                      ) ??
+                      DateTime.now())
+                  .difference(DateTime.now())
+                  .inSeconds;
+          
+          int minutes = remainingTime ~/ 60;
+          int seconds = remainingTime % 60;
+          print(
+            "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}",
+          );
 
           // print(">>>>" + remainingTime.toString());
           // print(storage_data?["finish_time"] ?? "");
@@ -371,6 +655,27 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
                           width: 1.sw - 64,
                           child: Row(
                             children: [
+                              if (groupData != null && (groupData!["hasTime"] ?? false) && _timersStarted)
+                                Text(
+                                  isPerQuestionTime()
+                                      ? "Savol vaqti: ${formatTime(perQuestionRemainingTime)}"
+                                      : remainingTime >= 0
+                                      ? "Tugash vaqti: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"
+                                      : "Tugash vaqti:  00:00",
+                                  style: TextStyle(
+                                    color:
+                                        (isPerQuestionTime()
+                                                    ? perQuestionRemainingTime
+                                                    : remainingTime) >
+                                                5
+                                            ? AppConstant.blueColor1
+                                            : AppConstant.redColor, // 5 sekund qolganda qizil
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16.sp,
+                                  ),
+                                ),
+                              if (groupData != null && (groupData!["hasTime"] ?? false))
+                                SizedBox(width: 16.w),
                               Text(
                                 "[${item_index + 1}/$count]",
                                 style: TextStyle(
@@ -407,14 +712,26 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
                                 onTap: () async {
                                   print(test["answer"]);
                                   if ((answer?.isEmpty ?? true)) {
+                                    final selectedAnswer = ["A", "B", "C", "D"][index];
                                     await writeAnswer(
                                       count,
                                       index: item_index,
-                                      result: ["A", "B", "C", "D"][index],
+                                      result: selectedAnswer,
                                     );
                                     setState(() {
-                                      answer = ["A", "B", "C", "D"][index];
+                                      answer = selectedAnswer;
                                     });
+                                    
+                                    // Vibrate on wrong answer (mobile only)
+                                    if (!kIsWeb && selectedAnswer != test["answer"]) {
+                                      try {
+                                        if (await Vibration.hasVibrator() ?? false) {
+                                          Vibration.vibrate(duration: 100);
+                                        }
+                                      } catch (e) {
+                                        print('Vibration error: $e');
+                                      }
+                                    }
                                   }
                                 },
                                 borderRadius: BorderRadius.circular(12.r),
@@ -616,6 +933,11 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
                             child: InkWell(
                               onTap: () async {
                                 if (item_index == count - 1) {
+                                  var storageData = StorageService().read(
+                                    "${StorageService.test}-${widget.section.test_id}",
+                                  );
+                                  String? startTime = storageData?["time"];
+                                  
                                   test_items
                                       .map(
                                         (e) => {
@@ -637,6 +959,7 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
                                           widget.section.test_id.toString(),
                                         ) ??
                                         0,
+                                    startTime: startTime,
                                     answers:
                                         test_items
                                             .map(
@@ -690,12 +1013,14 @@ class _TestScreenNotimeState extends State<TestScreenNotime> {
                       ),
 
                       if (item_index > 0)
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16.w,
-                            vertical: 8.h,
-                          ),
-                          child: Container(
+                        // forceNextQuestion=true bo'lsa orqaga qaytish yo'q
+                        if (!(groupData?["forceNextQuestion"] ?? false))
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 8.h,
+                            ),
+                            child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12.r),
                               border: Border.all(

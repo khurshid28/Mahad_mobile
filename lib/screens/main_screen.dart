@@ -13,6 +13,7 @@ import 'package:test_app/screens/profile.dart';
 import 'package:test_app/screens/saved/saved_body.dart';
 import 'package:test_app/screens/special_test/special_test_detail_screen.dart';
 import 'package:test_app/screens/test/test_screen.dart';
+import 'package:test_app/screens/test/test_screen_notime.dart';
 import 'package:test_app/service/logout.dart';
 import 'package:test_app/service/storage_service.dart';
 import 'package:test_app/service/toast_service.dart';
@@ -200,6 +201,11 @@ class _MainScreenState extends State<MainScreen> {
   ) async {
     final testId = testData['testId'];
     final testType = testData['type'];
+    
+    print('🔵 _continueTest called');
+    print('📝 testId: $testId');
+    print('📝 testType: $testType');
+    print('📝 testData: $testData');
 
     if (testType == 'special') {
       Navigator.push(
@@ -215,29 +221,42 @@ class _MainScreenState extends State<MainScreen> {
       return;
     }
 
-    // Handle regular test
-    final sectionsData = StorageService().read(StorageService.sections);
-    if (sectionsData != null && sectionsData is List) {
-      for (var section in sectionsData) {
-        if (section['test_id'].toString() == testId) {
-          final sectionModel = Section(
-            id: section['id'],
-            test_id: section['test_id'].toString(),
-            name: section['name']?.toString(),
-            count: section['count'] ?? 0,
-            percent: section['percent'] ?? 0,
-          );
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TestScreen(section: sectionModel),
-            ),
-          );
-          return;
-        }
+    // Handle regular test - get section from test storage directly
+    final testStorageKey = '${StorageService.test}-$testId';
+    final testStorageData = StorageService().read(testStorageKey);
+    print('📦 testStorageData: $testStorageData');
+    
+    if (testStorageData != null && testStorageData is Map) {
+      final sectionData = testStorageData['section'];
+      print('📦 sectionData from test storage: $sectionData');
+      
+      if (sectionData != null && sectionData is Map) {
+        final sectionModel = Section(
+          id: sectionData['id'],
+          test_id: sectionData['test_id']?.toString(),
+          name: sectionData['name']?.toString(),
+          count: sectionData['count'] ?? 0,
+          percent: sectionData['percent'] ?? 0,
+        );
+        
+        // hasTime tekshiruvi
+        Map? user = StorageService().read(StorageService.user);
+        bool hasTime = user?['group']?['hasTime'] ?? false;
+        print('✅ Section topildi, hasTime: $hasTime');
+        
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => hasTime 
+              ? TestScreen(section: sectionModel)
+              : TestScreenNotime(section: sectionModel),
+          ),
+        );
+        return;
       }
     }
 
+    print('❌ Test yoki section ma\'lumotlari topilmadi');
     ToastService().error(message: 'Test topilmadi');
   }
 
