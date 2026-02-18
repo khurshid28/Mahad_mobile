@@ -115,7 +115,7 @@ class _SectionScreenState extends State<SectionScreen> {
                               Navigator.of(context).pop(); // Close dialog
                               Navigator.of(context).pop(); // Go back to previous screen
                             },
-                            child: Text("OK"),
+                            child: Text("Tushunarli"),
                           ),
                         ],
                       ),
@@ -171,7 +171,7 @@ class _SectionScreenState extends State<SectionScreen> {
                               ),
                             ),
                             child: Text(
-                              "OK",
+                              "Tushunarli",
                               style: TextStyle(color: Colors.white),
                             ),
                           ),

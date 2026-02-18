@@ -122,37 +122,48 @@ class SectionCard extends StatelessWidget {
                         vertical: 6.h,
                       ),
                       decoration: BoxDecoration(
-                        color: isFailed
-                            ? AppConstant.redColor.withOpacity(0.1)
-                            : Theme.of(context).primaryColor.withOpacity(0.1),
+                        color: section.percent == 0
+                            ? Colors.blue.withOpacity(0.1)
+                            : (isFailed
+                                ? AppConstant.redColor.withOpacity(0.1)
+                                : Theme.of(context).primaryColor.withOpacity(0.1)),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            "${section.percent.round()}/$passingPercentage",
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w700,
-                              color: isFailed
-                                  ? AppConstant.redColor
-                                  : Theme.of(context).primaryColor,
+                      child: section.percent == 0
+                          ? Text(
+                              "Boshlash",
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.blue.shade700,
+                              ),
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "${section.percent.round()}/$passingPercentage",
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: isFailed
+                                        ? AppConstant.redColor
+                                        : Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  "%",
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: isFailed
+                                        ? AppConstant.redColor
+                                        : Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            "%",
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w700,
-                              color: isFailed
-                                  ? AppConstant.redColor
-                                  : Theme.of(context).primaryColor,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                     SizedBox(height: 8.h),
                     Icon(
