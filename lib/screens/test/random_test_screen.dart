@@ -483,27 +483,41 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
   ToastService toastService = ToastService();
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        surfaceTintColor: Colors.transparent,
-        backgroundColor: AppConstant.whiteColor,
-        title: Text(
-          widget.section.name ?? "",
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: AppConstant.blackColor,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w500,
+    return WillPopScope(
+      onWillPop: () async {
+        // Android back button: go to previous question
+        if (item_index > 0) {
+          setState(() {
+            answer = "";
+            item_index--;
+            saveCurrentIndex();
+          });
+          return false; // Don't pop the route
+        }
+        return true; // Allow pop if on first question
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          surfaceTintColor: Colors.transparent,
+          backgroundColor: AppConstant.whiteColor,
+          title: Text(
+            widget.section.name ?? "",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: AppConstant.blackColor,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        centerTitle: true,
-        leading: Center(
-          child: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
+          centerTitle: true,
+          leading: Center(
+            child: IconButton(
+              onPressed: () {
+                // AppBar back button: exit completely
+                Navigator.pop(context);
+              },
             icon: Container(
               width: 36.w,
               height: 36.w,
@@ -541,6 +555,7 @@ class _RandomTestScreenState extends State<RandomTestScreen> {
             // );
           }
         },
+      ),
       ),
     );
   }

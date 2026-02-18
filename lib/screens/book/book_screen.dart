@@ -41,12 +41,17 @@ class _BookScreenState extends State<BookScreen> {
       return 0;
     }
     
-    // Get the latest result (first in the list since it's ordered by desc)
-    var latestResult = results.first;
-    int solved = latestResult["solved"] ?? 0;
+    // Get the maximum score from all results
+    num maxPercentage = 0;
+    for (var result in results) {
+      int solved = result["solved"] ?? 0;
+      num percentage = (solved * 100.0) / count;
+      if (percentage > maxPercentage) {
+        maxPercentage = percentage;
+      }
+    }
     
-    // Calculate percentage based on latest result
-    return ((solved * 100.0) / count).clamp(0, 100).roundToDouble();
+    return maxPercentage.clamp(0, 100).roundToDouble();
   }
 
   bool hasTime() {

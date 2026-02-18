@@ -7,19 +7,26 @@ import 'package:test_app/models/result.dart';
 class MyResultRandomCard extends StatelessWidget {
    final Result result;
     int count;
+    final int passingPercentage;
   // Har bir subject uchun alohida border rangi
   final VoidCallback onTap;
-  MyResultRandomCard({ required this.onTap,required this.result,required this.count});
+  MyResultRandomCard({ 
+    required this.onTap,
+    required this.result,
+    required this.count,
+    this.passingPercentage = 60,
+  });
 
   bool isFailed() {
     if (result.solved == null || count == 0) return false;
-    return 0.56 > (result.solved! / count);
+    final percentage = (result.solved! / count) * 100;
+    return percentage < passingPercentage;
   }
 
   @override
   Widget build(BuildContext context) {
     final percentage = count > 0 ? (result.solved! / count * 100) : 0;
-    final isPassed = percentage >= 56;
+    final isPassed = percentage >= passingPercentage;
     
     return GestureDetector(
       onTap: onTap,

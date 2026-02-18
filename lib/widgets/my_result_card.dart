@@ -11,15 +11,21 @@ class MyResultCard extends StatelessWidget {
   MyResultCard({ required this.onTap,required this.result});
 
   int get test_count  =>result.test["_count"]?["test_items"] ?? 1;
+  
+  int get passingPercentage {
+    return result.test?["section"]?["book"]?["passingPercentage"] ?? 60;
+  }
+  
   bool isFailed() {
     if (result.solved == null) return false;
-    return 0.56 > (result.solved! / test_count);
+    final percentage = (result.solved! / test_count) * 100;
+    return percentage < passingPercentage;
   }
 
   @override
   Widget build(BuildContext context) {
     final percentage = test_count > 0 ? (result.solved! / test_count * 100) : 0;
-    final isPassed = percentage >= 56;
+    final isPassed = percentage >= passingPercentage;
     
     return GestureDetector(
       onTap: onTap,

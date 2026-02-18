@@ -8,18 +8,21 @@ class MyResultSpecialTestCard extends StatelessWidget {
   final Result result;
   final Map<String, dynamic> specialTest;
   final VoidCallback onTap;
+  final int passingPercentage;
   
   MyResultSpecialTestCard({
     required this.onTap,
     required this.result,
     required this.specialTest,
+    this.passingPercentage = 60,
   });
 
   int get questionCount => specialTest["question_count"] ?? 0;
   
   bool isFailed() {
     if (result.solved == null || questionCount == 0) return false;
-    return 0.56 > (result.solved! / questionCount);
+    final percentage = (result.solved! / questionCount) * 100;
+    return percentage < passingPercentage;
   }
 
   @override
@@ -27,7 +30,7 @@ class MyResultSpecialTestCard extends StatelessWidget {
     // Safely get solved count with fallback to 0
     final solvedCount = result.solved ?? 0;
     final percentage = questionCount > 0 ? (solvedCount / questionCount * 100) : 0;
-    final isPassed = percentage >= 56;
+    final isPassed = percentage >= passingPercentage;
     
     print('🟡 [SpecialTestCard] Building card:');
     print('  - solvedCount: $solvedCount');

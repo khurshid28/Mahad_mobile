@@ -96,6 +96,7 @@ class _SectionScreenState extends State<SectionScreen> {
                     // Forbidden - access denied (e.g., previous section not passed)
                     showDialog(
                       context: context,
+                      barrierDismissible: false,
                       builder: (context) => AlertDialog(
                         title: Text(
                           "Ruxsat berilmadi",
@@ -111,7 +112,7 @@ class _SectionScreenState extends State<SectionScreen> {
                         actions: [
                           TextButton(
                             onPressed: () {
-                              Navigator.of(context).pop();
+                              Navigator.of(context).pop(); // Close dialog
                               Navigator.of(context).pop(); // Go back to previous screen
                             },
                             child: Text("OK"),
@@ -122,7 +123,63 @@ class _SectionScreenState extends State<SectionScreen> {
                   } else {
                     toastService.error(message: state.message ?? "Xatolik Bor");
                   }
-                } else if (state is SectionSuccessState) {}
+                } else if (state is SectionSuccessState) {
+                  // Check if section is blocked
+                  final isBlocked = state.data["isBlocked"] ?? false;
+                  final blockReason = state.data["blockReason"] ?? "";
+                  
+                  if (isBlocked == true && blockReason.isNotEmpty) {
+                    // Show modal and go back
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (dialogContext) => AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                        title: Row(
+                          children: [
+                            Icon(
+                              Icons.lock_outline,
+                              color: AppConstant.redColor,
+                              size: 24.sp,
+                            ),
+                            SizedBox(width: 8.w),
+                            Text(
+                              "Ruxsat berilmadi",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18.sp,
+                              ),
+                            ),
+                          ],
+                        ),
+                        content: Text(
+                          blockReason,
+                          style: TextStyle(fontSize: 14.sp),
+                        ),
+                        actions: [
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop(); // Close dialog
+                              Navigator.of(context).pop(); // Go back to previous screen
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppConstant.primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                            ),
+                            child: Text(
+                              "OK",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                }
               },
             ),
             resultSection(),
