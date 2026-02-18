@@ -307,7 +307,6 @@ class _RandomTestScreenNotimeState extends State<RandomTestScreenNotime> {
         // Android back button: go to previous question
         if (item_index > 0) {
           setState(() {
-            answer = "";
             item_index--;
             saveCurrentIndex();
           });

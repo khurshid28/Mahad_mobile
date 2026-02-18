@@ -536,7 +536,6 @@ class _TestScreenState extends State<TestScreen> {
         // Android back button: go to previous question
         if (item_index > 0) {
           setState(() {
-            answer = "";
             item_index--;
             saveCurrentIndex();
           });
