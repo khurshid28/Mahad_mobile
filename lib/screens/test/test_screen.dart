@@ -529,6 +529,68 @@ class _TestScreenState extends State<TestScreen> {
 
   LoadingService loadingService = LoadingService();
   ToastService toastService = ToastService();
+  Future<bool> _showExitDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          title: Text(
+            "Testni tugatish",
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Text(
+            "Testni tugatmoqchimisiz? Barcha javoblaringiz saqlanadi.",
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: Text(
+                "Yo'q",
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstant.primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: Text(
+                "Ha",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -541,7 +603,8 @@ class _TestScreenState extends State<TestScreen> {
           });
           return false; // Don't pop the route
         }
-        return true; // Allow pop if on first question
+        // On first question, show confirmation dialog
+        return await _showExitDialog();
       },
       child: Scaffold(
         appBar: AppBar(
