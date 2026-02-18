@@ -487,9 +487,7 @@ class _BookScreenState extends State<BookScreen> {
                                   borderRadius: BorderRadius.circular(12.r),
                                 ),
                                 child: Icon(
-                                  isRandomTestBlocked
-                                      ? Icons.lock_rounded
-                                      : Icons.shuffle_rounded,
+                                  Icons.shuffle_rounded,
                                   color: Colors.white,
                                   size: 28.sp,
                                 ),
