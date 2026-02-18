@@ -59,6 +59,103 @@ class _BookScreenState extends State<BookScreen> {
     return user?["group"]?["hasTime"] ?? false;
   }
 
+  // Check if all sections have passed with passing percentage
+  bool allSectionsPassed(List data) {
+    for (var section in data) {
+      num percent = getPercent(section);
+      if (percent < widget.book.passingPercentage) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Check if random test should be accessible
+  Map<String, dynamic> checkRandomTestAccess(List data) {
+    // If fullBlock is false and stepBlock is false, always allow
+    if (!widget.fullBlock && !widget.stepBlock) {
+      return {"allowed": true, "reason": ""};
+    }
+
+    // If stepBlock is true, check if all sections passed
+    if (widget.stepBlock) {
+      if (allSectionsPassed(data)) {
+        return {"allowed": true, "reason": ""};
+      } else {
+        return {
+          "allowed": false,
+          "reason": "Tasodifiy testdan foydalanish uchun barcha bo'limlardan ${widget.book.passingPercentage}% dan yuqori natija olishingiz kerak"
+        };
+      }
+    }
+
+    return {"allowed": true, "reason": ""};
+  }
+
+  // Show blocked modal
+  void showBlockedModal(BuildContext context, String reason) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.lock_rounded,
+                color: AppConstant.redColor,
+                size: 24.sp,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                "Qulflangan",
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            reason,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstant.primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 10.h,
+                ),
+              ),
+              child: Text(
+                "Tushunarli",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void showRandomTestDialog(BuildContext context, List data) {
     int testCount = 20;
     
@@ -359,7 +456,15 @@ class _BookScreenState extends State<BookScreen> {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () => showRandomTestDialog(context, data),
+                        onTap: () {
+                          // Check if random test is accessible
+                          Map<String, dynamic> accessCheck = checkRandomTestAccess(data);
+                          if (accessCheck["allowed"]) {
+                            showRandomTestDialog(context, data);
+                          } else {
+                            showBlockedModal(context, accessCheck["reason"]);
+                          }
+                        },
                         borderRadius: BorderRadius.circular(16.r),
                         child: Padding(
                           padding: EdgeInsets.all(20.w),
