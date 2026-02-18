@@ -432,22 +432,33 @@ class _BookScreenState extends State<BookScreen> {
             itemBuilder: (context, index) {
               // First item - Random Test Button
               if (index == 0) {
+                // Check if random test is accessible
+                Map<String, dynamic> accessCheck = checkRandomTestAccess(data);
+                bool isRandomTestBlocked = !accessCheck["allowed"];
+                
                 return Padding(
                   padding: EdgeInsets.only(bottom: 16.h),
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          AppConstant.primaryColor,
-                          AppConstant.primaryColor.withOpacity(0.8),
-                        ],
+                        colors: isRandomTestBlocked
+                            ? [
+                                Colors.grey.shade400,
+                                Colors.grey.shade500,
+                              ]
+                            : [
+                                AppConstant.primaryColor,
+                                AppConstant.primaryColor.withOpacity(0.8),
+                              ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16.r),
                       boxShadow: [
                         BoxShadow(
-                          color: AppConstant.primaryColor.withOpacity(0.3),
+                          color: isRandomTestBlocked
+                              ? Colors.grey.withOpacity(0.3)
+                              : AppConstant.primaryColor.withOpacity(0.3),
                           blurRadius: 12,
                           offset: Offset(0, 4),
                         ),
@@ -457,8 +468,6 @@ class _BookScreenState extends State<BookScreen> {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () {
-                          // Check if random test is accessible
-                          Map<String, dynamic> accessCheck = checkRandomTestAccess(data);
                           if (accessCheck["allowed"]) {
                             showRandomTestDialog(context, data);
                           } else {
@@ -478,7 +487,9 @@ class _BookScreenState extends State<BookScreen> {
                                   borderRadius: BorderRadius.circular(12.r),
                                 ),
                                 child: Icon(
-                                  Icons.shuffle_rounded,
+                                  isRandomTestBlocked
+                                      ? Icons.lock_rounded
+                                      : Icons.shuffle_rounded,
                                   color: Colors.white,
                                   size: 28.sp,
                                 ),
@@ -498,7 +509,9 @@ class _BookScreenState extends State<BookScreen> {
                                     ),
                                     SizedBox(height: 4.h),
                                     Text(
-                                      "Barcha bo'limlardan aralash",
+                                      isRandomTestBlocked
+                                          ? "Qulflangan"
+                                          : "Barcha bo'limlardan aralash",
                                       style: TextStyle(
                                         color: Colors.white.withOpacity(0.9),
                                         fontSize: 13.sp,
@@ -509,7 +522,9 @@ class _BookScreenState extends State<BookScreen> {
                                 ),
                               ),
                               Icon(
-                                Icons.arrow_forward_ios_rounded,
+                                isRandomTestBlocked
+                                    ? Icons.lock_rounded
+                                    : Icons.arrow_forward_ios_rounded,
                                 color: Colors.white,
                                 size: 20.sp,
                               ),
@@ -552,7 +567,7 @@ class _BookScreenState extends State<BookScreen> {
                 child: SectionCard(
                   section: section,
                   block: isBlocked,
-                  isFailed: widget.book.passingPercentage > section.percent,
+                  isFailed: section.percent > 0 && section.percent < widget.book.passingPercentage,
                   passingPercentage: widget.book.passingPercentage,
                   onTap: () {
                     if (isBlocked) {
